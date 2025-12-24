@@ -1,3 +1,7 @@
+import { useRoutes } from 'react-router-dom'
+import { routes } from '@/common/router'
+
 export default function App() {
-  return <div className="bg-black w-full h-full">asdf</div>
+  const element = useRoutes(routes)
+  return element
 }
