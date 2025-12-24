@@ -11,7 +11,7 @@ export default function Sidebar(props: SidebarProps) {
 
   return (
     <aside
-      className={`fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-[#1c223f] border-r border-[#2a2d4a] flex flex-col transition-transform duration-300 ${
+      className={`fixed left-0 top-10 h-[calc(100vh-40px)] w-64 bg-[#1c223f] border-r border-[#2a2d4a] flex flex-col transition-transform duration-300 ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
     >

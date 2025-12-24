@@ -1,8 +1,8 @@
-import type { MenuGroup } from '@/common/types'
+import type { MenuItem } from '@/common/types'
 import MenuGroupComponent from './MenuGroupComponent'
 
 interface MenuSectionProps {
-  groups: Array<MenuGroup>
+  groups: Array<MenuItem>
 }
 
 export default function MenuSection(props: MenuSectionProps) {

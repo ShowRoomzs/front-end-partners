@@ -11,7 +11,7 @@ export default function Header(props: HeaderProps) {
   const navigate = useNavigate()
 
   return (
-    <header className="h-16 bg-white border-b border-[#e3e6f0] flex items-center px-3">
+    <header className="h-10 bg-white border-b border-[#e3e6f0] flex items-center px-3">
       <button
         onClick={onToggleSidebar}
         className="mr-4 p-2 hover:bg-[#f7f8fa] rounded transition-colors cursor-pointer"

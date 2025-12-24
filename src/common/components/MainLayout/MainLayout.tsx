@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from '../Sidebar'
 import Header from './Header'
 import {
@@ -8,19 +8,37 @@ import {
   COMMON_MENU,
   CURRENT_USER_ROLE,
 } from '@/common/constants'
-import { getMenuTypeByRole } from '@/common/types'
+import { getMenuTypeByRole, type MenuItem } from '@/common/types'
 
-interface MainLayoutProps {
-  children: ReactNode
-}
-
-export default function MainLayout(props: MainLayoutProps) {
-  const { children } = props
+export default function MainLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const menuType = getMenuTypeByRole(CURRENT_USER_ROLE)
+  const location = useLocation()
 
-  const roleMenu = menuType === 'SELLER' ? SELLER_MENU : CREATOR_MENU
-  const menus = [roleMenu, COMMON_MENU]
+  const menus = useMemo(() => {
+    const roleMenu = menuType === 'SELLER' ? SELLER_MENU : CREATOR_MENU
+    return [roleMenu, COMMON_MENU]
+  }, [menuType])
+
+  const flattenMenus = menus.flatMap(m => m.groups)
+
+  const title = useMemo(() => {
+    const find = (menus: Array<MenuItem>): string | undefined => {
+      for (const menu of menus) {
+        if (menu.path === location.pathname) {
+          return menu.label
+        }
+        if (menu.children && menu.children.length > 0) {
+          const result = find(menu.children)
+
+          if (result) {
+            return result
+          }
+        }
+      }
+    }
+    return find(flattenMenus)
+  }, [flattenMenus, location.pathname])
 
   return (
     <div className="h-screen bg-[#f7f8fa] flex flex-col">
@@ -33,11 +51,12 @@ export default function MainLayout(props: MainLayoutProps) {
         <Sidebar menus={menus} isOpen={isSidebarOpen} />
 
         <main
-          className={`flex-1 overflow-y-auto p-8 bg-[#f7f8fa] transition-[margin] duration-300 ${
+          className={`flex-1 overflow-y-auto p-[20px] bg-[#f7f8fa] transition-[margin] duration-300 ${
             isSidebarOpen ? 'ml-64' : 'ml-0'
           }`}
         >
-          {children}
+          <h1 className="text-[20px] font-bold">{title}</h1>
+          <Outlet />
         </main>
       </div>
     </div>

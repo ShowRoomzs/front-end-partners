@@ -7,14 +7,7 @@ export interface MenuItem {
   children?: Array<MenuItem>
 }
 
-export interface MenuGroup {
-  id: string
-  label: string
-  path?: string
-  items?: Array<MenuItem>
-}
-
 export interface MenuConfig {
   menuType: MenuType | 'COMMON'
-  groups: Array<MenuGroup>
+  groups: Array<MenuItem>
 }

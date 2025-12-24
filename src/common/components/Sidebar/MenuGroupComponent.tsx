@@ -1,11 +1,11 @@
 import { useMemo, useState, useEffect } from 'react'
-import type { MenuGroup } from '@/common/types'
+import type { MenuItem } from '@/common/types'
 import MenuItemComponent from './MenuItemComponent'
 import MenuGroupButton from './MenuGroupButton'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 interface MenuGroupComponentProps {
-  group: MenuGroup
+  group: MenuItem
 }
 
 export default function MenuGroupComponent(props: MenuGroupComponentProps) {
@@ -46,10 +46,10 @@ export default function MenuGroupComponent(props: MenuGroupComponentProps) {
     if (hasPath) {
       return group.path === location.pathname
     }
-    const childPaths = group.items?.map(v => v.path)
+    const childPaths = group.children?.map(v => v.path)
 
     return childPaths?.some(v => v === location.pathname) ?? false
-  }, [group.items, group.path, isOpen, location.pathname])
+  }, [group.children, group.path, isOpen, location.pathname])
 
   return (
     <div className="mb-3">
@@ -58,14 +58,14 @@ export default function MenuGroupComponent(props: MenuGroupComponentProps) {
           label={group.label}
           isActive={isActive}
           isOpen={isOpen}
-          hasItems={Boolean(group.items && group.items.length > 0)}
+          hasItems={Boolean(group.children && group.children.length > 0)}
           onClick={handleClickMenu}
         />
       )}
 
       {isOpen && (
         <div className={group.label ? 'mt-1 mb-2' : ''}>
-          {group.items?.map(item => (
+          {group.children?.map(item => (
             <MenuItemComponent key={item.id} item={item} />
           ))}
         </div>

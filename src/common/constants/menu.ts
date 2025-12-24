@@ -6,7 +6,7 @@ export const SELLER_MENU: MenuConfig = {
     {
       id: 'store',
       label: '스토어 관리',
-      items: [
+      children: [
         {
           id: 'store-basic',
           label: '기본정보 관리',
@@ -17,7 +17,7 @@ export const SELLER_MENU: MenuConfig = {
     {
       id: 'product',
       label: '상품 관리',
-      items: [
+      children: [
         {
           id: 'product-register',
           label: '상품 등록',
@@ -44,7 +44,7 @@ export const CREATOR_MENU: MenuConfig = {
     {
       id: 'showroom',
       label: '쇼룸 관리',
-      items: [
+      children: [
         {
           id: 'showroom-basic',
           label: '기본정보 관리',
@@ -75,7 +75,7 @@ export const CREATOR_MENU: MenuConfig = {
     {
       id: 'goods',
       label: '굿즈 관리',
-      items: [
+      children: [
         {
           id: 'goods-store',
           label: '스토어 관리',
@@ -107,7 +107,7 @@ export const COMMON_MENU: MenuConfig = {
     {
       id: 'sales',
       label: '판매 관리',
-      items: [
+      children: [
         {
           id: 'sales-all-orders',
           label: '전체 주문 내역',
@@ -153,7 +153,7 @@ export const COMMON_MENU: MenuConfig = {
     {
       id: 'coupon',
       label: '쿠폰 관리',
-      items: [
+      children: [
         {
           id: 'coupon-list',
           label: '쿠폰 목록',
@@ -169,7 +169,7 @@ export const COMMON_MENU: MenuConfig = {
     {
       id: 'settlement',
       label: '정산 관리',
-      items: [
+      children: [
         {
           id: 'settlement-history',
           label: '정산 내역',
@@ -190,7 +190,7 @@ export const COMMON_MENU: MenuConfig = {
     {
       id: 'review',
       label: '리뷰 관리',
-      items: [
+      children: [
         {
           id: 'review-list',
           label: '리뷰 목록',
@@ -201,7 +201,7 @@ export const COMMON_MENU: MenuConfig = {
     {
       id: 'inquiry',
       label: '문의 관리',
-      items: [
+      children: [
         {
           id: 'inquiry-respond',
           label: '문의 확인 / 답변',
