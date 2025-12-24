@@ -13,19 +13,19 @@ export default function MenuGroupComponent(props: MenuGroupComponentProps) {
   const navigate = useNavigate()
   const location = useLocation()
 
-  // 로컬스토리지에서 초기값 읽기
+  // 세션스토리지에서 초기값 읽기
   const getInitialOpenState = () => {
     const storageKey = `menu-group-${group.id}`
-    const stored = localStorage.getItem(storageKey)
+    const stored = sessionStorage.getItem(storageKey)
     return stored === 'true'
   }
 
   const [isOpen, setIsOpen] = useState(getInitialOpenState)
 
-  // 상태 변경 시 로컬스토리지에 저장
+  // 상태 변경 시 세션스토리지에 저장
   useEffect(() => {
     const storageKey = `menu-group-${group.id}`
-    localStorage.setItem(storageKey, String(isOpen))
+    sessionStorage.setItem(storageKey, String(isOpen))
   }, [isOpen, group.id])
 
   const handleClickMenu = () => {
