@@ -1,3 +1,3 @@
 export default function RegisterProductPage() {
-  return <div>RegisterProduct</div>
+  return <div>d</div>
 }

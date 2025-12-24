@@ -1,5 +1,5 @@
 import type { RouteObject } from 'react-router-dom'
-import { MainLayout, PlaceholderPage } from '@/common/components'
+import { MainLayout } from '@/common/components'
 import RegisterProductPage from '@/features/productManagement/pages/RegisterProductPage'
 
 export const routes: Array<RouteObject> = [
@@ -9,12 +9,12 @@ export const routes: Array<RouteObject> = [
     children: [
       {
         index: true,
-        element: <PlaceholderPage title="Dashboard" />,
+        element: <div>aasdf</div>,
       },
       // Seller routes
       {
         path: 'store/basic',
-        element: <PlaceholderPage title="기본정보 관리" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'product/register',
@@ -22,129 +22,129 @@ export const routes: Array<RouteObject> = [
       },
       {
         path: 'product/list',
-        element: <PlaceholderPage title="상품 목록" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'product/notice',
-        element: <PlaceholderPage title="상품 공지사항 관리" />,
+        element: <div>aasdf</div>,
       },
       // Creator routes
       {
         path: 'showroom/basic',
-        element: <PlaceholderPage title="기본정보 관리" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'showroom/product',
-        element: <PlaceholderPage title="상품 관리" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'showroom/post',
-        element: <PlaceholderPage title="게시물" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'showroom/coupon',
-        element: <PlaceholderPage title="쿠폰" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'showroom/lottery',
-        element: <PlaceholderPage title="추첨" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'goods/store',
-        element: <PlaceholderPage title="스토어 관리" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'goods/register',
-        element: <PlaceholderPage title="굿즈 등록" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'goods/list',
-        element: <PlaceholderPage title="굿즈 목록" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'goods/notice',
-        element: <PlaceholderPage title="굿즈 공지사항 관리" />,
+        element: <div>aasdf</div>,
       },
       // Common routes
       {
         path: 'sales/orders',
-        element: <PlaceholderPage title="전체 주문 내역" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'sales/purchase-orders',
-        element: <PlaceholderPage title="발주 관리" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'sales/shipping-out',
-        element: <PlaceholderPage title="발송 관리" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'sales/delivery',
-        element: <PlaceholderPage title="배송 관리" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'sales/confirmed',
-        element: <PlaceholderPage title="구매 확정 내역" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'sales/cancel',
-        element: <PlaceholderPage title="취소 관리" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'sales/return',
-        element: <PlaceholderPage title="반품 관리" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'sales/exchange',
-        element: <PlaceholderPage title="교환 관리" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'coupon/list',
-        element: <PlaceholderPage title="쿠폰 목록" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'coupon/register',
-        element: <PlaceholderPage title="쿠폰 등록" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'settlement/history',
-        element: <PlaceholderPage title="정산 내역" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'settlement/by-product',
-        element: <PlaceholderPage title="상품별 정산 내역" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'settlement/vat',
-        element: <PlaceholderPage title="부가세 신고 내역" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'review/list',
-        element: <PlaceholderPage title="리뷰 목록" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'inquiry/respond',
-        element: <PlaceholderPage title="문의 확인 / 답변" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'inquiry/product',
-        element: <PlaceholderPage title="상품 문의 정보" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'inquiry/order',
-        element: <PlaceholderPage title="주문 문의 정보" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'inquiry/template',
-        element: <PlaceholderPage title="답변 템플릿" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'support/bug',
-        element: <PlaceholderPage title="오류 제보" />,
+        element: <div>aasdf</div>,
       },
       {
         path: 'support/feature',
-        element: <PlaceholderPage title="기능 제안" />,
+        element: <div>aasdf</div>,
       },
     ],
   },
