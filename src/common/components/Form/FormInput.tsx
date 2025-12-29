@@ -8,6 +8,7 @@ interface FormInputProps {
   onChange?: (value: string) => void
   onBlur?: () => void
   id?: string
+  type?: 'text' | 'number'
 }
 
 const FormInput = forwardRef<HTMLInputElement, FormInputProps>((props, ref) => {
@@ -18,13 +19,14 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>((props, ref) => {
     onChange,
     onBlur,
     id,
+    type = 'text',
   } = props
 
   return (
     <Input
       ref={ref}
       id={id}
-      type="text"
+      type={type}
       placeholder={placeholder}
       maxLength={maxLength}
       disabled={disabled}

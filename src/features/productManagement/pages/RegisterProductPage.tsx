@@ -13,6 +13,7 @@ import FormOptionCombinationTable, {
 } from '@/common/components/Form/FormOptionCombinationTable'
 import { Button } from '@/components/ui/button'
 import { Trash2, ArrowDown } from 'lucide-react'
+import FormCheckbox from '@/common/components/Form/FormCheckbox'
 
 interface OptionGroup {
   id: string
@@ -22,7 +23,13 @@ interface OptionGroup {
 
 interface ProductFormData {
   displayStatus: string
+  forceSoldOut: boolean
   productName: string
+  sellerProductNumber: string
+  purchasePrice: number
+  isDiscount: string
+  salePrice: number
+  discountRate: number
   category: {
     main: string
     sub: string
@@ -70,7 +77,7 @@ const categoryData = {
 }
 
 export default function RegisterProductPage() {
-  const { control, handleSubmit, setValue, getValues } =
+  const { control, handleSubmit, setValue, getValues, watch } =
     useForm<ProductFormData>({
       defaultValues: {
         displayStatus: 'DISPLAY',
@@ -167,6 +174,17 @@ export default function RegisterProductPage() {
     ])
   }
 
+  const getDiscountedPrice = () => {
+    const salePrice = Number(watch('salePrice'))
+    const discountRate = Number(watch('discountRate'))
+    const isDiscount = watch('isDiscount')
+    if (isDiscount === 'true') {
+      return (salePrice - discountRate).toLocaleString()
+    }
+
+    return salePrice.toLocaleString()
+  }
+
   const onSubmit = (data: ProductFormData) => {
     // eslint-disable-next-line no-console
     console.log('Form data:', data)
@@ -174,7 +192,7 @@ export default function RegisterProductPage() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <Section title="표시 여부" required>
+      <Section title="표시 여부">
         <Controller
           name="displayStatus"
           control={control}
@@ -196,9 +214,28 @@ export default function RegisterProductPage() {
             </FormItem>
           )}
         />
+        <Controller
+          name="forceSoldOut"
+          control={control}
+          render={({ field, fieldState }) => (
+            <FormItem
+              tooltipInfo={
+                '강제 품절을 체크하면 해당 상품은 고객에게 품절로 노출되며,\n구매가 불가능하게 됩니다.'
+              }
+              label="강제품절처리"
+              error={fieldState.error?.message}
+            >
+              <FormCheckbox
+                label="품절"
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+            </FormItem>
+          )}
+        />
       </Section>
 
-      <Section title="카테고리(한 개만 지정 가능)" required>
+      <Section title="카테고리(한 개만 지정 가능)">
         <Controller
           name="category"
           control={control}
@@ -219,7 +256,7 @@ export default function RegisterProductPage() {
         />
       </Section>
 
-      <Section title="기본 정보" required>
+      <Section title="기본 정보">
         <Controller
           name="productName"
           control={control}
@@ -245,8 +282,77 @@ export default function RegisterProductPage() {
         <FormItem label="상품번호">
           <FormDisplay value="자동입력됩니다." />
         </FormItem>
+        <Controller
+          name="sellerProductNumber"
+          control={control}
+          render={({ field }) => (
+            <FormItem label="판매자상품코드">
+              <FormInput onChange={field.onChange} onBlur={field.onBlur} />
+            </FormItem>
+          )}
+        />
       </Section>
-
+      <Section title="가격 설정">
+        <Controller
+          name="purchasePrice"
+          control={control}
+          render={({ field }) => (
+            <FormItem label="매입가">
+              <FormInput
+                type="number"
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+              />
+            </FormItem>
+          )}
+        />
+        <Controller
+          name="salePrice"
+          control={control}
+          render={({ field }) => (
+            <FormItem label="판매가">
+              <FormInput
+                type="number"
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+              />
+            </FormItem>
+          )}
+        />
+        <Controller
+          name="isDiscount"
+          control={control}
+          render={({ field }) => (
+            <FormItem label="할인">
+              <FormRadioGroup
+                options={[
+                  { label: '설정', value: 'true' },
+                  { label: '설정 안함', value: 'false' },
+                ]}
+                value={field.value}
+                onChange={field.onChange}
+              />
+            </FormItem>
+          )}
+        />
+        <Controller
+          name="discountRate"
+          control={control}
+          render={({ field }) => (
+            <FormItem label="">
+              <FormInput
+                disabled={watch('isDiscount') === 'false'}
+                type="number"
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+              />
+            </FormItem>
+          )}
+        />
+        <FormItem label="할인 판매가">
+          <FormDisplay value={getDiscountedPrice()} />
+        </FormItem>
+      </Section>
       <Section title="옵션 설정">
         <div className="space-y-6">
           {fields.map((field, index) => (
