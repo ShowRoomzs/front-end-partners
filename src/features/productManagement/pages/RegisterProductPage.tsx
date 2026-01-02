@@ -1,4 +1,4 @@
-import { useForm, Controller, useFieldArray } from 'react-hook-form'
+import { useForm, Controller, useFieldArray, useWatch } from 'react-hook-form'
 import Section from '@/common/components/Section/Section'
 import FormItem from '@/common/components/Form/FormItem'
 import FormInput from '@/common/components/Form/FormInput'
@@ -77,7 +77,7 @@ const categoryData = {
 }
 
 export default function RegisterProductPage() {
-  const { control, handleSubmit, setValue, getValues, watch } =
+  const { control, handleSubmit, setValue, getValues } =
     useForm<ProductFormData>({
       defaultValues: {
         displayStatus: 'DISPLAY',
@@ -102,6 +102,24 @@ export default function RegisterProductPage() {
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'optionGroups',
+  })
+
+  const salePrice = useWatch({
+    control,
+    name: 'salePrice',
+    defaultValue: 0,
+  })
+
+  const discountRate = useWatch({
+    control,
+    name: 'discountRate',
+    defaultValue: 0,
+  })
+
+  const isDiscount = useWatch({
+    control,
+    name: 'isDiscount',
+    defaultValue: 'false',
   })
 
   const handleAddOptionGroup = () => {
@@ -175,14 +193,13 @@ export default function RegisterProductPage() {
   }
 
   const getDiscountedPrice = () => {
-    const salePrice = Number(watch('salePrice'))
-    const discountRate = Number(watch('discountRate'))
-    const isDiscount = watch('isDiscount')
+    const salePriceNum = Number(salePrice)
+    const discountRateNum = Number(discountRate)
     if (isDiscount === 'true') {
-      return (salePrice - discountRate).toLocaleString()
+      return Math.max(salePriceNum - discountRateNum, 0).toLocaleString()
     }
 
-    return salePrice.toLocaleString()
+    return salePriceNum.toLocaleString()
   }
 
   const onSubmit = (data: ProductFormData) => {
@@ -261,7 +278,7 @@ export default function RegisterProductPage() {
           name="productName"
           control={control}
           rules={{
-            required: '상품명을 입력해주세요',
+            required: '상품명을 입력해 주세요',
             maxLength: {
               value: 100,
               message: '상품명은 최대 100자까지 입력 가능합니다',
@@ -270,7 +287,7 @@ export default function RegisterProductPage() {
           render={({ field, fieldState }) => (
             <FormItem label="상품명" required error={fieldState.error?.message}>
               <FormInput
-                placeholder="상품명을 입력해주세요(특수문자 입력은 피해주세요)"
+                placeholder="상품명을 입력해 주세요(특수문자 입력은 피해 주세요)"
                 maxLength={100}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
@@ -341,7 +358,7 @@ export default function RegisterProductPage() {
           render={({ field }) => (
             <FormItem label="">
               <FormInput
-                disabled={watch('isDiscount') === 'false'}
+                disabled={isDiscount === 'false'}
                 type="number"
                 onChange={field.onChange}
                 onBlur={field.onBlur}
