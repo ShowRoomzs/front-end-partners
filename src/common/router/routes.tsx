@@ -1,11 +1,26 @@
 import type { RouteObject } from 'react-router-dom'
 import { MainLayout } from '@/common/components'
 import RegisterProductPage from '@/features/productManagement/pages/RegisterProductPage'
+import LoginPage from '@/features/auth/pages/LoginPage'
+import RegisterPage from '@/features/auth/pages/RegisterPage'
+import AuthGuard from '@/features/auth/components/AuthGuard'
 
 export const routes: Array<RouteObject> = [
   {
+    path: '/login',
+    element: <LoginPage />,
+  },
+  {
+    path: '/register',
+    element: <RegisterPage />,
+  },
+  {
     path: '/',
-    element: <MainLayout />,
+    element: (
+      <AuthGuard>
+        <MainLayout />
+      </AuthGuard>
+    ),
     children: [
       {
         index: true,
