@@ -3,9 +3,8 @@ import { MainLayout } from '@/common/components'
 import RegisterProductPage from '@/features/productManagement/pages/RegisterProductPage'
 import LoginPage from '@/features/auth/pages/LoginPage'
 import RegisterPage from '@/features/auth/pages/RegisterPage'
-import AuthGuard from '@/features/auth/components/AuthGuard'
 
-export const routes: Array<RouteObject> = [
+export const authRoutes: Array<RouteObject> = [
   {
     path: '/login',
     element: <LoginPage />,
@@ -15,12 +14,15 @@ export const routes: Array<RouteObject> = [
     element: <RegisterPage />,
   },
   {
+    path: '*',
+    element: <LoginPage />,
+  },
+]
+
+export const mainRoutes: Array<RouteObject> = [
+  {
     path: '/',
-    element: (
-      <AuthGuard>
-        <MainLayout />
-      </AuthGuard>
-    ),
+    element: <MainLayout />,
     children: [
       {
         index: true,
