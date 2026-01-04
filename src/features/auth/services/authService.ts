@@ -1,3 +1,4 @@
+import { apiInstance } from '@/common/lib/apiInstance'
 import { authInstance } from '@/common/lib/authInstance'
 
 export interface RegisterData {
@@ -21,6 +22,32 @@ export interface LoginData {
   email: string
   password: string
 }
+
+export interface CheckDuplicateResponse {
+  available: boolean
+  code: string
+  message: string
+}
+export type MarketImageStatus = 'APPROVED' | 'UNDER_REVIEW' | 'REJECTED'
+
+export type SnsType = 'INSTAGRAM' | 'YOUTUBE'
+export interface SnsLink {
+  snsType: SnsType
+  snsUrl: string
+}
+
+export interface MarketInfo {
+  marketId: number
+  marketName: string
+  csNumber: string
+  marketImageUrl: string
+  marketImageStatus: MarketImageStatus
+  marketDescription: string
+  marketUrl: string
+  mainCategory: string
+  snsLinks: Array<SnsLink>
+  followerCount: number
+}
 export const authService = {
   register: async (data: RegisterData) => {
     const { data: response } = await authInstance.post<RegisterResponse>(
@@ -38,26 +65,32 @@ export const authService = {
 
     return response
   },
-  // true 시 중복, false 시 사용 가능
   checkEmailDuplicate: async (email: string) => {
-    const { data: response } = await authInstance.get('admin/check-email', {
-      params: {
-        email,
-      },
-    })
+    const { data: response } = await authInstance.get<CheckDuplicateResponse>(
+      'admin/check-email',
+      {
+        params: {
+          email,
+        },
+      }
+    )
 
     return response
   },
-  // true 시 중복, false 시 사용 가능
   checkMarketNameDuplicate: async (marketName: string) => {
-    const { data: response } = await authInstance.get(
-      'admin/check-market-name',
+    const { data: response } = await authInstance.get<CheckDuplicateResponse>(
+      'markets/check-name',
       {
         params: {
           marketName,
         },
       }
     )
+
+    return response
+  },
+  getMarketInfo: async () => {
+    const { data: response } = await apiInstance.get<MarketInfo>('markets/me')
 
     return response
   },
