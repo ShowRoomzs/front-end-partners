@@ -5,12 +5,12 @@ import { authService } from '@/features/auth/services/authService'
 import { useCookie } from '@/common/hooks/useCookie'
 import { COOKIE_NAME } from '@/common/constants'
 import toast from 'react-hot-toast'
-import { isAxiosError } from 'axios'
+import { useNavigate } from 'react-router-dom'
 
 export default function LoginPage() {
+  const navigate = useNavigate()
   const [, setAccessToken] = useCookie<string>(COOKIE_NAME.ACCESS_TOKEN)
   const [, setRefreshToken] = useCookie<string>(COOKIE_NAME.REFRESH_TOKEN)
-
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -58,6 +58,7 @@ export default function LoginPage() {
       setAccessToken(accessToken)
       setRefreshToken(refreshToken)
       toast.success('로그인 성공')
+      navigate('/')
     }
   }
 
