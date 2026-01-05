@@ -487,6 +487,7 @@ export default function RegisterProductPage() {
                 maxLength={4}
                 maxStorage={1024}
                 recommendSize={{ width: 640, height: 640 }}
+                requiredSquare
               />
             </FormItem>
           )}

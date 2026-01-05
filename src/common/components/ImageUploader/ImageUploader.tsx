@@ -4,6 +4,7 @@ import { formatFileSizeFromKB } from "@/common/utils/formatFileSizeFromKB"
 import { fileService, type FileType } from "@/common/services/fileService"
 import { PreviewModal } from "@/common/components/PreviewModal/PreviewModal"
 import { usePreviewModal } from "@/common/hooks/usePreviewModal"
+import { getImageDimensions } from "@/common/utils/getImageDimensions"
 
 interface Size {
   width: number
@@ -14,10 +15,11 @@ export interface ImageUploaderProps {
   value?: string[] | string
   accept?: string
   onImagesChange?: (images: string[]) => void
-
-  maxLength?: number
-  maxStorage?: number
-  recommendSize?: Size
+  requiredSquare?: boolean // 정방형 여부
+  maxLength?: number // 최대 업로드 갯수
+  maxStorage?: number // 최대 업로드 용량 kb 기준
+  recommendSize?: Size // 권장 이미지 크기(추가 검증 로직은 x)
+  additionalInfoText?: string // 추가 정보 텍스트
   type: FileType
 }
 
@@ -35,6 +37,8 @@ export default function ImageUploader(props: ImageUploaderProps) {
     maxLength = 1,
     maxStorage = 1024, // kb기준
     recommendSize,
+    requiredSquare,
+    additionalInfoText,
     type,
   } = props
 
@@ -56,7 +60,13 @@ export default function ImageUploader(props: ImageUploaderProps) {
       alert(`최대 ${maxLength}개까지만 업로드 가능합니다.`)
       return
     }
-
+    if (requiredSquare) {
+      const { height, width } = await getImageDimensions(files[0])
+      if (height !== width) {
+        alert("정방형 이미지를 업로드해 주세요.")
+        return
+      }
+    }
     const invalidFiles = files.filter(file => {
       const fileSizeInKB = file.size / 1024
       return fileSizeInKB > maxStorage
@@ -166,8 +176,21 @@ export default function ImageUploader(props: ImageUploaderProps) {
     if (accept) {
       text.push(`허용 파일 형식: ${accept}`)
     }
+    if (requiredSquare) {
+      text.push("정방형 이미지만 업로드 가능")
+    }
+    if (additionalInfoText) {
+      text.push(additionalInfoText)
+    }
     return text.join(" / ")
-  }, [accept, maxLength, maxStorage, recommendSize])
+  }, [
+    accept,
+    additionalInfoText,
+    maxLength,
+    maxStorage,
+    recommendSize,
+    requiredSquare,
+  ])
 
   return (
     <>
