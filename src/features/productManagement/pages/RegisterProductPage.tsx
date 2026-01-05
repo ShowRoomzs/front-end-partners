@@ -1,19 +1,20 @@
-import { useForm, Controller, useFieldArray, useWatch } from 'react-hook-form'
-import Section from '@/common/components/Section/Section'
-import FormItem from '@/common/components/Form/FormItem'
-import FormInput from '@/common/components/Form/FormInput'
-import FormCategorySelector from '@/common/components/Form/FormCategorySelector'
-import FormDisplay from '@/common/components/Form/FormDisplay'
-import FormRadioGroup from '@/common/components/Form/FormRadioGroup'
+import { useForm, Controller, useFieldArray, useWatch } from "react-hook-form"
+import Section from "@/common/components/Section/Section"
+import FormItem from "@/common/components/Form/FormItem"
+import FormInput from "@/common/components/Form/FormInput"
+import FormCategorySelector from "@/common/components/Form/FormCategorySelector"
+import FormDisplay from "@/common/components/Form/FormDisplay"
+import FormRadioGroup from "@/common/components/Form/FormRadioGroup"
 import FormOptionTable, {
   type OptionItem,
-} from '@/common/components/Form/FormOptionTable'
+} from "@/common/components/Form/FormOptionTable"
 import FormOptionCombinationTable, {
   type OptionCombination,
-} from '@/common/components/Form/FormOptionCombinationTable'
-import { Button } from '@/components/ui/button'
-import { Trash2, ArrowDown } from 'lucide-react'
-import FormCheckbox from '@/common/components/Form/FormCheckbox'
+} from "@/common/components/Form/FormOptionCombinationTable"
+import { Button } from "@/components/ui/button"
+import { Trash2, ArrowDown } from "lucide-react"
+import FormCheckbox from "@/common/components/Form/FormCheckbox"
+import FormImageUploader from "@/common/components/Form/FormImageUploader"
 
 interface OptionGroup {
   id: string
@@ -38,40 +39,42 @@ interface ProductFormData {
   optionGroups: Array<OptionGroup>
   optionCombinations: Array<OptionCombination>
   representativeOption: string
+  titleImage: string
+  coverImages: Array<string>
 }
 
 // 임시 카테고리 데이터
 const categoryData = {
   mainCategories: [
-    { label: '패션 의류', value: 'fashion' },
-    { label: '뷰티', value: 'beauty' },
+    { label: "패션 의류", value: "fashion" },
+    { label: "뷰티", value: "beauty" },
   ],
   subCategories: {
     fashion: [
-      { label: '아우터', value: 'outer' },
-      { label: '상의', value: 'top' },
+      { label: "아우터", value: "outer" },
+      { label: "상의", value: "top" },
     ],
     beauty: [
-      { label: '스킨케어', value: 'skincare' },
-      { label: '메이크업', value: 'makeup' },
+      { label: "스킨케어", value: "skincare" },
+      { label: "메이크업", value: "makeup" },
     ],
   },
   detailCategories: {
     outer: [
-      { label: '코트', value: 'coat' },
-      { label: '자켓', value: 'jacket' },
+      { label: "코트", value: "coat" },
+      { label: "자켓", value: "jacket" },
     ],
     top: [
-      { label: '티셔츠', value: 'tshirt' },
-      { label: '셔츠', value: 'shirt' },
+      { label: "티셔츠", value: "tshirt" },
+      { label: "셔츠", value: "shirt" },
     ],
     skincare: [
-      { label: '토너', value: 'toner' },
-      { label: '세럼', value: 'serum' },
+      { label: "토너", value: "toner" },
+      { label: "세럼", value: "serum" },
     ],
     makeup: [
-      { label: '파운데이션', value: 'foundation' },
-      { label: '립스틱', value: 'lipstick' },
+      { label: "파운데이션", value: "foundation" },
+      { label: "립스틱", value: "lipstick" },
     ],
   },
 }
@@ -80,58 +83,58 @@ export default function RegisterProductPage() {
   const { control, handleSubmit, setValue, getValues } =
     useForm<ProductFormData>({
       defaultValues: {
-        displayStatus: 'DISPLAY',
-        productName: '',
+        displayStatus: "DISPLAY",
+        productName: "",
         category: {
-          main: '',
-          sub: '',
-          detail: '',
+          main: "",
+          sub: "",
+          detail: "",
         },
         optionGroups: [
           {
             id: crypto.randomUUID(),
-            name: '',
-            items: [{ id: crypto.randomUUID(), name: '', price: '' }],
+            name: "",
+            items: [{ id: crypto.randomUUID(), name: "", price: "" }],
           },
         ],
         optionCombinations: [],
-        representativeOption: '',
+        representativeOption: "",
       },
     })
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: 'optionGroups',
+    name: "optionGroups",
   })
 
   const salePrice = useWatch({
     control,
-    name: 'salePrice',
+    name: "salePrice",
     defaultValue: 0,
   })
 
   const discountRate = useWatch({
     control,
-    name: 'discountRate',
+    name: "discountRate",
     defaultValue: 0,
   })
 
   const isDiscount = useWatch({
     control,
-    name: 'isDiscount',
-    defaultValue: 'false',
+    name: "isDiscount",
+    defaultValue: "false",
   })
 
   const handleAddOptionGroup = () => {
     append({
       id: crypto.randomUUID(),
-      name: '',
-      items: [{ id: crypto.randomUUID(), name: '', price: '' }],
+      name: "",
+      items: [{ id: crypto.randomUUID(), name: "", price: "" }],
     })
   }
 
   const handleMoveToCombinations = () => {
-    const optionGroups = getValues('optionGroups')
+    const optionGroups = getValues("optionGroups")
 
     const validGroups = optionGroups.filter(
       group =>
@@ -141,7 +144,7 @@ export default function RegisterProductPage() {
     )
 
     if (validGroups.length === 0) {
-      alert('옵션을 입력해주세요.')
+      alert("옵션을 입력해주세요.")
       return
     }
 
@@ -175,19 +178,19 @@ export default function RegisterProductPage() {
       price: combo
         .reduce((sum, item) => sum + Number(item.price || 0), 0)
         .toString(),
-      stock: '0',
+      stock: "0",
       isDisplayed: true,
     }))
 
-    const currentCombinations = getValues('optionCombinations') || []
-    setValue('optionCombinations', [...currentCombinations, ...newCombinations])
+    const currentCombinations = getValues("optionCombinations") || []
+    setValue("optionCombinations", [...currentCombinations, ...newCombinations])
 
     // 옵션 설정 초기화
-    setValue('optionGroups', [
+    setValue("optionGroups", [
       {
         id: crypto.randomUUID(),
-        name: '',
-        items: [{ id: crypto.randomUUID(), name: '', price: '' }],
+        name: "",
+        items: [{ id: crypto.randomUUID(), name: "", price: "" }],
       },
     ])
   }
@@ -195,7 +198,7 @@ export default function RegisterProductPage() {
   const getDiscountedPrice = () => {
     const salePriceNum = Number(salePrice)
     const discountRateNum = Number(discountRate)
-    if (isDiscount === 'true') {
+    if (isDiscount === "true") {
       return Math.max(salePriceNum - discountRateNum, 0).toLocaleString()
     }
 
@@ -204,7 +207,7 @@ export default function RegisterProductPage() {
 
   const onSubmit = (data: ProductFormData) => {
     // eslint-disable-next-line no-console
-    console.log('Form data:', data)
+    console.log("Form data:", data)
   }
 
   return (
@@ -213,7 +216,7 @@ export default function RegisterProductPage() {
         <Controller
           name="displayStatus"
           control={control}
-          rules={{ required: '진열상태를 선택해주세요' }}
+          rules={{ required: "진열상태를 선택해주세요" }}
           render={({ field, fieldState }) => (
             <FormItem
               label="진열상태"
@@ -222,8 +225,8 @@ export default function RegisterProductPage() {
             >
               <FormRadioGroup
                 options={[
-                  { label: '진열', value: 'DISPLAY' },
-                  { label: '미진열', value: 'HIDDEN' },
+                  { label: "진열", value: "DISPLAY" },
+                  { label: "미진열", value: "HIDDEN" },
                 ]}
                 value={field.value}
                 onChange={field.onChange}
@@ -237,7 +240,7 @@ export default function RegisterProductPage() {
           render={({ field, fieldState }) => (
             <FormItem
               tooltipInfo={
-                '강제 품절을 체크하면 해당 상품은 고객에게 품절로 노출되며,\n구매가 불가능하게 됩니다.'
+                "강제 품절을 체크하면 해당 상품은 고객에게 품절로 노출되며,\n구매가 불가능하게 됩니다."
               }
               label="강제품절처리"
               error={fieldState.error?.message}
@@ -256,7 +259,7 @@ export default function RegisterProductPage() {
         <Controller
           name="category"
           control={control}
-          rules={{ required: '카테고리를 선택해주세요' }}
+          rules={{ required: "카테고리를 선택해주세요" }}
           render={({ field, fieldState }) => (
             <FormItem
               label="카테고리"
@@ -278,10 +281,10 @@ export default function RegisterProductPage() {
           name="productName"
           control={control}
           rules={{
-            required: '상품명을 입력해 주세요',
+            required: "상품명을 입력해 주세요",
             maxLength: {
               value: 100,
-              message: '상품명은 최대 100자까지 입력 가능합니다',
+              message: "상품명은 최대 100자까지 입력 가능합니다",
             },
           }}
           render={({ field, fieldState }) => (
@@ -343,8 +346,8 @@ export default function RegisterProductPage() {
             <FormItem label="할인">
               <FormRadioGroup
                 options={[
-                  { label: '설정', value: 'true' },
-                  { label: '설정 안함', value: 'false' },
+                  { label: "설정", value: "true" },
+                  { label: "설정 안함", value: "false" },
                 ]}
                 value={field.value}
                 onChange={field.onChange}
@@ -358,7 +361,7 @@ export default function RegisterProductPage() {
           render={({ field }) => (
             <FormItem label="">
               <FormInput
-                disabled={isDiscount === 'false'}
+                disabled={isDiscount === "false"}
                 type="number"
                 onChange={field.onChange}
                 onBlur={field.onBlur}
@@ -453,7 +456,42 @@ export default function RegisterProductPage() {
           )}
         />
       </Section>
-
+      <Section title="이미지 설정">
+        <Controller
+          name="titleImage"
+          control={control}
+          render={({ field: titleImageField }) => (
+            <FormItem label="대표 이미지">
+              <FormImageUploader
+                value={titleImageField.value}
+                onImagesChange={titleImageField.onChange}
+                accept=".jpg, .jpeg, .png, .gif"
+                type="PRODUCT"
+                maxLength={1}
+                maxStorage={1024}
+                recommendSize={{ width: 640, height: 768 }}
+              />
+            </FormItem>
+          )}
+        />
+        <Controller
+          name="coverImages"
+          control={control}
+          render={({ field: coverImageField }) => (
+            <FormItem label="커버 이미지">
+              <FormImageUploader
+                value={coverImageField.value}
+                onImagesChange={coverImageField.onChange}
+                accept=".jpg, .jpeg, .png, .gif"
+                type="PRODUCT"
+                maxLength={4}
+                maxStorage={1024}
+                recommendSize={{ width: 640, height: 640 }}
+              />
+            </FormItem>
+          )}
+        />
+      </Section>
       <div className="flex gap-3 justify-end mt-6">
         <button
           type="button"
