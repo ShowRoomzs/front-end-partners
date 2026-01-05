@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import type { MenuItem } from '@/common/types'
+import { menuStorage } from '@/common/utils/menuStorage'
 import MenuItemButton from './MenuItemButton'
 import MenuSubItem from './MenuSubItem'
 import MenuItemLink from './MenuItemLink'
@@ -13,20 +14,11 @@ export default function MenuItemComponent(props: MenuItemComponentProps) {
   const { item } = props
   const location = useLocation()
 
-  // 로컬스토리지에서 초기값 읽기
-  const getInitialOpenState = () => {
-    const storageKey = `menu-item-${item.id}`
-    const stored = localStorage.getItem(storageKey)
-    return stored === 'true'
-  }
-
-  const [isOpen, setIsOpen] = useState(getInitialOpenState)
+  const [isOpen, setIsOpen] = useState(() => menuStorage.get(item.id))
   const hasChildren = item.children && item.children.length > 0
 
-  // 상태 변경 시 로컬스토리지에 저장
   useEffect(() => {
-    const storageKey = `menu-item-${item.id}`
-    localStorage.setItem(storageKey, String(isOpen))
+    menuStorage.set(item.id, isOpen)
   }, [isOpen, item.id])
 
   const handleToggle = () => {
