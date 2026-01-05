@@ -1,18 +1,18 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useForm, type RegisterOptions } from 'react-hook-form'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { useForm, type RegisterOptions } from "react-hook-form"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Eye, EyeOff, Loader2 } from "lucide-react"
 
-import { VALIDATION_RULES } from '../constants/validationRules'
+import { VALIDATION_RULES } from "../constants/validationRules"
 import {
   authService,
   type RegisterData,
-} from '@/features/auth/services/authService'
-import { formatPhoneNumber } from '@/features/auth/utils/formatPhoneNumber'
-import { useCookie } from '@/common/hooks/useCookie'
-import { COOKIE_NAME } from '@/common/constants'
+} from "@/features/auth/services/authService"
+import { formatPhoneNumber } from "@/features/auth/utils/formatPhoneNumber"
+import { useCookie } from "@/common/hooks/useCookie"
+import { COOKIE_NAME } from "@/common/constants"
 
 export default function RegisterPage() {
   const navigate = useNavigate()
@@ -27,8 +27,8 @@ export default function RegisterPage() {
     formState: { errors, isSubmitting },
     getValues,
   } = useForm<RegisterData>({
-    mode: 'onChange',
-    reValidateMode: 'onChange',
+    mode: "onChange",
+    reValidateMode: "onChange",
   })
 
   const onSubmit = async () => {
@@ -43,7 +43,7 @@ export default function RegisterPage() {
     if (accessToken && refreshToken) {
       setAccessToken(accessToken)
       setRefreshToken(refreshToken)
-      navigate('/')
+      navigate("/")
     }
   }
 
@@ -90,10 +90,10 @@ export default function RegisterPage() {
               type="email"
               placeholder="이메일"
               {...register(
-                'email',
-                VALIDATION_RULES.email as RegisterOptions<RegisterData, 'email'>
+                "email",
+                VALIDATION_RULES.email as RegisterOptions<RegisterData, "email">
               )}
-              className={errors.email ? 'border-red-500' : ''}
+              className={errors.email ? "border-red-500" : ""}
             />
             {errors.email && (
               <p className="mt-1 text-sm text-red-500">
@@ -108,16 +108,16 @@ export default function RegisterPage() {
             </label>
             <div className="relative">
               <Input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 placeholder="비밀번호 (8~16자 이내의 영문자, 숫자, 특수문자 조합)"
                 {...register(
-                  'password',
+                  "password",
                   VALIDATION_RULES.password as RegisterOptions<
                     RegisterData,
-                    'password'
+                    "password"
                   >
                 )}
-                className={errors.password ? 'border-red-500 pr-10' : 'pr-10'}
+                className={errors.password ? "border-red-500 pr-10" : "pr-10"}
               />
               <button
                 type="button"
@@ -140,17 +140,17 @@ export default function RegisterPage() {
             </label>
             <div className="relative">
               <Input
-                type={showPasswordConfirm ? 'text' : 'password'}
+                type={showPasswordConfirm ? "text" : "password"}
                 placeholder="비밀번호 재입력"
                 {...register(
-                  'passwordConfirm',
+                  "passwordConfirm",
                   VALIDATION_RULES.passwordConfirm as RegisterOptions<
                     RegisterData,
-                    'passwordConfirm'
+                    "passwordConfirm"
                   >
                 )}
                 className={
-                  errors.passwordConfirm ? 'border-red-500 pr-10' : 'pr-10'
+                  errors.passwordConfirm ? "border-red-500 pr-10" : "pr-10"
                 }
               />
               <button
@@ -178,13 +178,13 @@ export default function RegisterPage() {
               type="text"
               placeholder="판매 담당자 이름"
               {...register(
-                'sellerName',
+                "sellerName",
                 VALIDATION_RULES.sellerName as RegisterOptions<
                   RegisterData,
-                  'sellerName'
+                  "sellerName"
                 >
               )}
-              className={errors.sellerName ? 'border-red-500' : ''}
+              className={errors.sellerName ? "border-red-500" : ""}
             />
             {errors.sellerName && (
               <p className="mt-1 text-sm text-red-500">
@@ -201,13 +201,13 @@ export default function RegisterPage() {
               type="tel"
               placeholder="판매 담당자 연락처 (문자 수신 가능한 핸드폰 번호)"
               {...register(
-                'sellerContact',
+                "sellerContact",
                 VALIDATION_RULES.sellerContact as RegisterOptions<
                   RegisterData,
-                  'sellerContact'
+                  "sellerContact"
                 >
               )}
-              className={errors.sellerContact ? 'border-red-500' : ''}
+              className={errors.sellerContact ? "border-red-500" : ""}
             />
             {errors.sellerContact && (
               <p className="mt-1 text-sm text-red-500">
@@ -226,13 +226,13 @@ export default function RegisterPage() {
               type="text"
               placeholder="마켓명 (공백, 특수문자, 한/영 혼용 사용불가)"
               {...register(
-                'marketName',
+                "marketName",
                 VALIDATION_RULES.marketName as RegisterOptions<
                   RegisterData,
-                  'marketName'
+                  "marketName"
                 >
               )}
-              className={errors.marketName ? 'border-red-500' : ''}
+              className={errors.marketName ? "border-red-500" : ""}
             />
             {errors.marketName && (
               <p className="mt-1 text-sm text-red-500">
@@ -249,13 +249,13 @@ export default function RegisterPage() {
               type="tel"
               placeholder="고객센터 전화번호(존재하지 않는 번호 입력 시, 서비스 이용 제한)"
               {...register(
-                'csNumber',
+                "csNumber",
                 VALIDATION_RULES.csNumber as RegisterOptions<
                   RegisterData,
-                  'csNumber'
+                  "csNumber"
                 >
               )}
-              className={errors.csNumber ? 'border-red-500' : ''}
+              className={errors.csNumber ? "border-red-500" : ""}
             />
             {errors.csNumber && (
               <p className="mt-1 text-sm text-red-500">
@@ -269,7 +269,7 @@ export default function RegisterPage() {
               type="button"
               variant="outline"
               className="flex-1 h-12"
-              onClick={() => navigate('/login')}
+              onClick={() => navigate("/login")}
             >
               이전
             </Button>
@@ -284,7 +284,7 @@ export default function RegisterPage() {
                   검증 중...
                 </>
               ) : (
-                '다음'
+                "다음"
               )}
             </Button>
           </div>
