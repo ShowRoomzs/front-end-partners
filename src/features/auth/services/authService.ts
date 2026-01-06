@@ -1,5 +1,5 @@
-import { apiInstance } from '@/common/lib/apiInstance'
-import { authInstance } from '@/common/lib/authInstance'
+import { apiInstance } from "@/common/lib/apiInstance"
+import { authInstance } from "@/common/lib/authInstance"
 
 export interface RegisterData {
   email: string
@@ -28,9 +28,9 @@ export interface CheckDuplicateResponse {
   code: string
   message: string
 }
-export type MarketImageStatus = 'APPROVED' | 'UNDER_REVIEW' | 'REJECTED'
+export type MarketImageStatus = "APPROVED" | "UNDER_REVIEW" | "REJECTED"
 
-export type SnsType = 'INSTAGRAM' | 'YOUTUBE'
+export type SnsType = "INSTAGRAM" | "YOUTUBE"
 export interface SnsLink {
   snsType: SnsType
   snsUrl: string
@@ -51,7 +51,7 @@ export interface MarketInfo {
 export const authService = {
   register: async (data: RegisterData) => {
     const { data: response } = await authInstance.post<RegisterResponse>(
-      '/admin/signup',
+      "/admin/signup",
       data
     )
 
@@ -59,15 +59,24 @@ export const authService = {
   },
   login: async (data: LoginData) => {
     const { data: response } = await authInstance.post<RegisterResponse>(
-      'admin/login',
+      "admin/login",
       data
     )
 
     return response
   },
+  refresh: async (refreshToken: string) => {
+    const { data: response } = await authInstance.post<RegisterResponse>(
+      "admin/refresh",
+      {
+        refreshToken,
+      }
+    )
+    return response
+  },
   checkEmailDuplicate: async (email: string) => {
     const { data: response } = await authInstance.get<CheckDuplicateResponse>(
-      'admin/check-email',
+      "admin/check-email",
       {
         params: {
           email,
@@ -79,7 +88,7 @@ export const authService = {
   },
   checkMarketNameDuplicate: async (marketName: string) => {
     const { data: response } = await authInstance.get<CheckDuplicateResponse>(
-      'markets/check-name',
+      "markets/check-name",
       {
         params: {
           marketName,
@@ -90,7 +99,7 @@ export const authService = {
     return response
   },
   getMarketInfo: async () => {
-    const { data: response } = await apiInstance.get<MarketInfo>('markets/me')
+    const { data: response } = await apiInstance.get<MarketInfo>("markets/me")
 
     return response
   },
