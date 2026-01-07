@@ -1,21 +1,21 @@
-import { useMemo, useState, useEffect } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
-import Sidebar from '../Sidebar'
-import Header from './Header'
+import { useMemo, useState, useEffect } from "react"
+import { Outlet, useLocation } from "react-router-dom"
+import Sidebar from "../Sidebar"
+import Header from "./Header"
 import {
   SELLER_MENU,
   CREATOR_MENU,
   COMMON_MENU,
   CURRENT_USER_ROLE,
-} from '@/common/constants'
-import { getMenuTypeByRole, type MenuItem } from '@/common/types'
-import { SIDEBAR_WIDTH } from '../Sidebar/config'
-import { SIDEBAR_STORAGE_KEY } from './config'
+} from "@/common/constants"
+import { getMenuTypeByRole, type MenuItem } from "@/common/types"
+import { SIDEBAR_WIDTH } from "../Sidebar/config"
+import { SIDEBAR_STORAGE_KEY } from "./config"
 
 export default function MainLayout() {
   const getInitialSidebarState = () => {
     const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY)
-    return stored === null ? true : stored === 'true'
+    return stored === null ? true : stored === "true"
   }
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(getInitialSidebarState)
@@ -27,7 +27,7 @@ export default function MainLayout() {
   }, [isSidebarOpen])
 
   const menus = useMemo(() => {
-    const roleMenu = menuType === 'SELLER' ? SELLER_MENU : CREATOR_MENU
+    const roleMenu = menuType === "SELLER" ? SELLER_MENU : CREATOR_MENU
     return [roleMenu, COMMON_MENU]
   }, [menuType])
 
@@ -62,7 +62,7 @@ export default function MainLayout() {
         <Sidebar menus={menus} isOpen={isSidebarOpen} />
 
         <main
-          className="flex-1 overflow-y-auto p-[20px] bg-[#f7f8fa] transition-[margin] duration-300"
+          className="flex-1 overflow-y-auto px-[20px] pt-[20px] bg-[#f7f8fa] transition-[margin] duration-300"
           style={{ marginLeft: isSidebarOpen ? 0 : `-${SIDEBAR_WIDTH}px` }}
         >
           <h1 className="text-[20px] font-bold mb-4">{title}</h1>
