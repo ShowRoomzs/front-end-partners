@@ -1,68 +1,114 @@
-import { forwardRef } from 'react'
+import { forwardRef, useMemo, useState, useEffect } from "react"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import type { SelectOption } from './FormSelect'
-
-interface CategoryData {
-  mainCategories: Array<SelectOption>
-  subCategories: Record<string, Array<SelectOption>>
-  detailCategories: Record<string, Array<SelectOption>>
-}
+} from "@/components/ui/select"
+import type { CategoryMap } from "@/common/hooks/useGetCategory"
 
 interface FormCategorySelectorProps {
-  categoryData: CategoryData
-  onChange?: (values: { main: string; sub: string; detail: string }) => void
-  value?: {
-    main: string
-    sub: string
-    detail: string
-  }
+  categoryMap: CategoryMap | null
+  onChange?: (categoryId: number) => void
+  value?: number
 }
 
 const FormCategorySelector = forwardRef<
   HTMLButtonElement,
   FormCategorySelectorProps
 >((props, ref) => {
-  const { categoryData, onChange, value } = props
+  const { categoryMap, onChange, value } = props
 
-  const mainCategory = value?.main || ''
-  const subCategory = value?.sub || ''
-  const detailCategory = value?.detail || ''
+  const initialState = useMemo(() => {
+    if (!value || !categoryMap) {
+      return { main: null, sub: null, detail: null }
+    }
 
-  const subOptions = mainCategory
-    ? categoryData.subCategories[mainCategory] || []
-    : []
-  const detailOptions = subCategory
-    ? categoryData.detailCategories[subCategory] || []
-    : []
+    const detail = categoryMap.byId.get(value)
+    if (!detail) return { main: null, sub: null, detail: null }
 
-  const handleMainChange = (newMain: string) => {
-    onChange?.({ main: newMain, sub: '', detail: '' })
+    const sub = detail.parentId ? categoryMap.byId.get(detail.parentId) : null
+    const main = sub?.parentId ? categoryMap.byId.get(sub.parentId) : null
+
+    return {
+      main: main?.categoryId ?? null,
+      sub: sub?.categoryId ?? null,
+      detail: detail.categoryId,
+    }
+  }, [value, categoryMap])
+
+  const [selectedMain, setSelectedMain] = useState<number | null>(
+    initialState.main
+  )
+  const [selectedSub, setSelectedSub] = useState<number | null>(
+    initialState.sub
+  )
+  const [selectedDetail, setSelectedDetail] = useState<number | null>(
+    initialState.detail
+  )
+  const [prevValue, setPrevValue] = useState<number | undefined>(value)
+
+  // value prop이 외부에서 변경되었을 때만 내부 상태 동기화
+  useEffect(() => {
+    if (value !== prevValue) {
+      setPrevValue(value)
+      setSelectedMain(initialState.main)
+      setSelectedSub(initialState.sub)
+      setSelectedDetail(initialState.detail)
+    }
+  }, [value, prevValue, initialState])
+
+  const subCategories = useMemo(() => {
+    if (!selectedMain || !categoryMap) return []
+    return categoryMap.byParentId.get(selectedMain) || []
+  }, [selectedMain, categoryMap])
+
+  const detailCategories = useMemo(() => {
+    if (!selectedSub || !categoryMap) return []
+    return categoryMap.byParentId.get(selectedSub) || []
+  }, [selectedSub, categoryMap])
+
+  const handleMainChange = (mainStr: string) => {
+    const main = Number(mainStr)
+    setSelectedMain(main)
+    setSelectedSub(null)
+    setSelectedDetail(null)
   }
 
-  const handleSubChange = (newSub: string) => {
-    onChange?.({ main: mainCategory, sub: newSub, detail: '' })
+  const handleSubChange = (subStr: string) => {
+    const sub = Number(subStr)
+    setSelectedSub(sub)
+    setSelectedDetail(null)
   }
 
-  const handleDetailChange = (newDetail: string) => {
-    onChange?.({ main: mainCategory, sub: subCategory, detail: newDetail })
+  const handleDetailChange = (detailStr: string) => {
+    const detail = Number(detailStr)
+    setSelectedDetail(detail)
+    onChange?.(detail)
+  }
+  if (!categoryMap) {
+    return (
+      <div className="text-sm text-muted-foreground">카테고리 로딩 중...</div>
+    )
   }
 
   return (
     <div className="flex items-center gap-3">
-      <Select value={mainCategory} onValueChange={handleMainChange}>
+      <Select
+        value={selectedMain?.toString() ?? ""}
+        onValueChange={handleMainChange}
+      >
         <SelectTrigger ref={ref} className="flex-1">
           <SelectValue placeholder="대분류 선택" />
         </SelectTrigger>
         <SelectContent position="popper" sideOffset={4}>
-          {categoryData.mainCategories.map(option => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
+          {categoryMap.mainCategories.map(category => (
+            <SelectItem
+              key={category.categoryId}
+              value={category.categoryId.toString()}
+            >
+              {category.name}
             </SelectItem>
           ))}
         </SelectContent>
@@ -71,17 +117,20 @@ const FormCategorySelector = forwardRef<
       <span className="text-muted-foreground">&gt;</span>
 
       <Select
-        value={subCategory}
+        value={selectedSub?.toString() ?? ""}
         onValueChange={handleSubChange}
-        disabled={!mainCategory}
+        disabled={!selectedMain}
       >
         <SelectTrigger className="flex-1">
           <SelectValue placeholder="중분류 선택" />
         </SelectTrigger>
         <SelectContent position="popper" sideOffset={4}>
-          {subOptions.map(option => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
+          {subCategories.map(category => (
+            <SelectItem
+              key={category.categoryId}
+              value={category.categoryId.toString()}
+            >
+              {category.name}
             </SelectItem>
           ))}
         </SelectContent>
@@ -90,17 +139,20 @@ const FormCategorySelector = forwardRef<
       <span className="text-muted-foreground">&gt;</span>
 
       <Select
-        value={detailCategory}
+        value={selectedDetail?.toString() ?? ""}
         onValueChange={handleDetailChange}
-        disabled={!subCategory}
+        disabled={!selectedSub}
       >
         <SelectTrigger className="flex-1">
           <SelectValue placeholder="소분류 선택" />
         </SelectTrigger>
         <SelectContent position="popper" sideOffset={4}>
-          {detailOptions.map(option => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
+          {detailCategories.map(category => (
+            <SelectItem
+              key={category.categoryId}
+              value={category.categoryId.toString()}
+            >
+              {category.name}
             </SelectItem>
           ))}
         </SelectContent>
@@ -109,6 +161,6 @@ const FormCategorySelector = forwardRef<
   )
 })
 
-FormCategorySelector.displayName = 'FormCategorySelector'
+FormCategorySelector.displayName = "FormCategorySelector"
 
 export default FormCategorySelector
