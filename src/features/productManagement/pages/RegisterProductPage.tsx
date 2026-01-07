@@ -15,6 +15,14 @@ import { Button } from "@/components/ui/button"
 import { Trash2, ArrowDown } from "lucide-react"
 import FormCheckbox from "@/common/components/Form/FormCheckbox"
 import FormImageUploader from "@/common/components/Form/FormImageUploader"
+import FormEditor from "@/common/components/Form/FormEditor"
+import { useGetCategory } from "@/common/hooks/useGetCategory"
+import {
+  productService,
+  type ProductNotice,
+} from "@/features/productManagement/services/productService"
+import { useCallback } from "react"
+import toast from "react-hot-toast"
 
 interface OptionGroup {
   id: string
@@ -23,73 +31,38 @@ interface OptionGroup {
 }
 
 interface ProductFormData {
-  displayStatus: string
-  forceSoldOut: boolean
+  isDisplay: boolean
+  isOutOfStockForced: boolean
+  categoryId: number
   productName: string
-  sellerProductNumber: string
+  sellerProductCode: string
   purchasePrice: number
-  isDiscount: string
-  salePrice: number
+  isDiscount: boolean
+  regularPrice: number
   discountRate: number
-  category: {
-    main: string
-    sub: string
-    detail: string
-  }
   optionGroups: Array<OptionGroup>
   optionCombinations: Array<OptionCombination>
-  representativeOption: string
   titleImage: string
   coverImages: Array<string>
-}
-
-// 임시 카테고리 데이터
-const categoryData = {
-  mainCategories: [
-    { label: "패션 의류", value: "fashion" },
-    { label: "뷰티", value: "beauty" },
-  ],
-  subCategories: {
-    fashion: [
-      { label: "아우터", value: "outer" },
-      { label: "상의", value: "top" },
-    ],
-    beauty: [
-      { label: "스킨케어", value: "skincare" },
-      { label: "메이크업", value: "makeup" },
-    ],
-  },
-  detailCategories: {
-    outer: [
-      { label: "코트", value: "coat" },
-      { label: "자켓", value: "jacket" },
-    ],
-    top: [
-      { label: "티셔츠", value: "tshirt" },
-      { label: "셔츠", value: "shirt" },
-    ],
-    skincare: [
-      { label: "토너", value: "toner" },
-      { label: "세럼", value: "serum" },
-    ],
-    makeup: [
-      { label: "파운데이션", value: "foundation" },
-      { label: "립스틱", value: "lipstick" },
-    ],
-  },
+  description: string
+  productNotice: ProductNotice
 }
 
 export default function RegisterProductPage() {
+  const { categoryMap } = useGetCategory()
+
   const { control, handleSubmit, setValue, getValues } =
     useForm<ProductFormData>({
       defaultValues: {
-        displayStatus: "DISPLAY",
+        isDisplay: true,
+        isOutOfStockForced: false,
+        categoryId: 236,
         productName: "",
-        category: {
-          main: "",
-          sub: "",
-          detail: "",
-        },
+        sellerProductCode: "",
+        purchasePrice: 0,
+        isDiscount: false,
+        regularPrice: 0,
+        discountRate: 0,
         optionGroups: [
           {
             id: crypto.randomUUID(),
@@ -98,7 +71,20 @@ export default function RegisterProductPage() {
           },
         ],
         optionCombinations: [],
-        representativeOption: "",
+        titleImage: "",
+        coverImages: [],
+        description: "",
+        productNotice: {
+          origin: "제품 상세 참고",
+          material: "제품 상세 참고",
+          color: "제품 상세 참고",
+          size: "제품 상세 참고",
+          manufacturer: "제품 상세 참고",
+          washingMethod: "제품 상세 참고",
+          manufactureDate: "제품 상세 참고",
+          asInfo: "제품 상세 참고",
+          qualityAssurance: "제품 상세 참고",
+        },
       },
     })
 
@@ -107,9 +93,9 @@ export default function RegisterProductPage() {
     name: "optionGroups",
   })
 
-  const salePrice = useWatch({
+  const regularPrice = useWatch({
     control,
-    name: "salePrice",
+    name: "regularPrice",
     defaultValue: 0,
   })
 
@@ -122,7 +108,7 @@ export default function RegisterProductPage() {
   const isDiscount = useWatch({
     control,
     name: "isDiscount",
-    defaultValue: "false",
+    defaultValue: false,
   })
 
   const handleAddOptionGroup = () => {
@@ -172,7 +158,7 @@ export default function RegisterProductPage() {
 
     const combinations = cartesianProduct(validItems)
 
-    const newCombinations = combinations.map(combo => ({
+    const newCombinations = combinations.map((combo, index) => ({
       id: crypto.randomUUID(),
       combination: combo.map(item => item.name),
       price: combo
@@ -180,43 +166,74 @@ export default function RegisterProductPage() {
         .toString(),
       stock: "0",
       isDisplayed: true,
+      isRepresentative: index === 0,
     }))
 
-    const currentCombinations = getValues("optionCombinations") || []
-    setValue("optionCombinations", [...currentCombinations, ...newCombinations])
-
-    // 옵션 설정 초기화
-    setValue("optionGroups", [
-      {
-        id: crypto.randomUUID(),
-        name: "",
-        items: [{ id: crypto.randomUUID(), name: "", price: "" }],
-      },
-    ])
+    // const currentCombinations = getValues("optionCombinations") || []
+    setValue("optionCombinations", newCombinations)
   }
 
   const getDiscountedPrice = () => {
-    const salePriceNum = Number(salePrice)
+    const regularPriceNum = Number(regularPrice)
     const discountRateNum = Number(discountRate)
-    if (isDiscount === "true") {
-      return Math.max(salePriceNum - discountRateNum, 0).toLocaleString()
+    if (isDiscount) {
+      return Math.max(regularPriceNum - discountRateNum, 0).toLocaleString()
     }
 
-    return salePriceNum.toLocaleString()
+    return regularPriceNum.toLocaleString()
   }
 
-  const onSubmit = (data: ProductFormData) => {
-    // eslint-disable-next-line no-console
-    console.log("Form data:", data)
-  }
+  const onSubmit = useCallback(async (data: ProductFormData) => {
+    const regularPriceNum = Number(data.regularPrice)
+    const discountRateNum = Number(data.discountRate)
+    const finalSalePrice = data.isDiscount
+      ? Math.max(regularPriceNum - discountRateNum, 0)
+      : regularPriceNum
+
+    const apiData = {
+      isDisplay: data.isDisplay,
+      isOutOfStockForced: data.isOutOfStockForced,
+      categoryId: data.categoryId,
+      name: data.productName,
+      sellerProductCode: data.sellerProductCode,
+      purchasePrice: Number(data.purchasePrice),
+      regularPrice: regularPriceNum,
+      salePrice: finalSalePrice,
+      isDiscount: data.isDiscount,
+      representativeImageUrl: data.titleImage,
+      coverImageUrls: data.coverImages,
+      description: data.description,
+      productNotice: data.productNotice,
+      optionGroups: data.optionGroups.map(group => ({
+        name: group.name,
+        options: group.items.map(item => item.name),
+      })),
+      variants: data.optionCombinations.map(combo => ({
+        optionNames: combo.combination,
+        salePrice: Number(combo.price),
+        stock: Number(combo.stock),
+        isDisplay: combo.isDisplayed,
+        isRepresentative: combo.isRepresentative,
+      })),
+    }
+
+    await productService.addProduct(apiData)
+    toast.success("상품 등록 완료")
+  }, [])
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      onKeyDown={e => {
+        if (e.key === "Enter") {
+          e.preventDefault()
+        }
+      }}
+    >
       <Section title="표시 여부">
         <Controller
-          name="displayStatus"
+          name="isDisplay"
           control={control}
-          rules={{ required: "진열상태를 선택해주세요" }}
           render={({ field, fieldState }) => (
             <FormItem
               label="진열상태"
@@ -225,8 +242,8 @@ export default function RegisterProductPage() {
             >
               <FormRadioGroup
                 options={[
-                  { label: "진열", value: "DISPLAY" },
-                  { label: "미진열", value: "HIDDEN" },
+                  { label: "진열", value: true },
+                  { label: "미진열", value: false },
                 ]}
                 value={field.value}
                 onChange={field.onChange}
@@ -235,7 +252,7 @@ export default function RegisterProductPage() {
           )}
         />
         <Controller
-          name="forceSoldOut"
+          name="isOutOfStockForced"
           control={control}
           render={({ field, fieldState }) => (
             <FormItem
@@ -257,7 +274,7 @@ export default function RegisterProductPage() {
 
       <Section title="카테고리(한 개만 지정 가능)">
         <Controller
-          name="category"
+          name="categoryId"
           control={control}
           rules={{ required: "카테고리를 선택해주세요" }}
           render={({ field, fieldState }) => (
@@ -267,7 +284,7 @@ export default function RegisterProductPage() {
               error={fieldState.error?.message}
             >
               <FormCategorySelector
-                categoryData={categoryData}
+                categoryMap={categoryMap}
                 value={field.value}
                 onChange={field.onChange}
               />
@@ -303,11 +320,15 @@ export default function RegisterProductPage() {
           <FormDisplay value="자동입력됩니다." />
         </FormItem>
         <Controller
-          name="sellerProductNumber"
+          name="sellerProductCode"
           control={control}
           render={({ field }) => (
             <FormItem label="판매자상품코드">
-              <FormInput onChange={field.onChange} onBlur={field.onBlur} />
+              <FormInput
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+              />
             </FormItem>
           )}
         />
@@ -320,6 +341,7 @@ export default function RegisterProductPage() {
             <FormItem label="매입가">
               <FormInput
                 type="number"
+                value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
               />
@@ -327,12 +349,13 @@ export default function RegisterProductPage() {
           )}
         />
         <Controller
-          name="salePrice"
+          name="regularPrice"
           control={control}
           render={({ field }) => (
             <FormItem label="판매가">
               <FormInput
                 type="number"
+                value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
               />
@@ -346,8 +369,8 @@ export default function RegisterProductPage() {
             <FormItem label="할인">
               <FormRadioGroup
                 options={[
-                  { label: "설정", value: "true" },
-                  { label: "설정 안함", value: "false" },
+                  { label: "설정", value: true },
+                  { label: "설정 안함", value: false },
                 ]}
                 value={field.value}
                 onChange={field.onChange}
@@ -361,8 +384,9 @@ export default function RegisterProductPage() {
           render={({ field }) => (
             <FormItem label="">
               <FormInput
-                disabled={isDiscount === "false"}
+                disabled={!isDiscount}
                 type="number"
+                value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
               />
@@ -440,18 +464,10 @@ export default function RegisterProductPage() {
         <Controller
           name="optionCombinations"
           control={control}
-          render={({ field: combinationsField }) => (
-            <Controller
-              name="representativeOption"
-              control={control}
-              render={({ field: representativeField }) => (
-                <FormOptionCombinationTable
-                  combinations={combinationsField.value}
-                  onChange={combinationsField.onChange}
-                  representativeOption={representativeField.value}
-                  onRepresentativeChange={representativeField.onChange}
-                />
-              )}
+          render={({ field }) => (
+            <FormOptionCombinationTable
+              combinations={field.value}
+              onChange={field.onChange}
             />
           )}
         />
@@ -487,12 +503,149 @@ export default function RegisterProductPage() {
                 maxLength={4}
                 maxStorage={1024}
                 recommendSize={{ width: 640, height: 640 }}
-                requiredSquare
               />
             </FormItem>
           )}
         />
       </Section>
+
+      <Section title="상품정보고시">
+        <Controller
+          name="productNotice.origin"
+          control={control}
+          render={({ field }) => (
+            <FormItem label="제조국">
+              <FormInput
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+              />
+            </FormItem>
+          )}
+        />
+        <Controller
+          name="productNotice.material"
+          control={control}
+          render={({ field }) => (
+            <FormItem label="소재">
+              <FormInput
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+              />
+            </FormItem>
+          )}
+        />
+        <Controller
+          name="productNotice.color"
+          control={control}
+          render={({ field }) => (
+            <FormItem label="색상">
+              <FormInput
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+              />
+            </FormItem>
+          )}
+        />
+        <Controller
+          name="productNotice.size"
+          control={control}
+          render={({ field }) => (
+            <FormItem label="치수">
+              <FormInput
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+              />
+            </FormItem>
+          )}
+        />
+        <Controller
+          name="productNotice.manufacturer"
+          control={control}
+          render={({ field }) => (
+            <FormItem label="제조자">
+              <FormInput
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+              />
+            </FormItem>
+          )}
+        />
+        <Controller
+          name="productNotice.washingMethod"
+          control={control}
+          render={({ field }) => (
+            <FormItem label="세탁 방법">
+              <FormInput
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+              />
+            </FormItem>
+          )}
+        />
+        <Controller
+          name="productNotice.manufactureDate"
+          control={control}
+          render={({ field }) => (
+            <FormItem label="제조년월">
+              <FormInput
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+              />
+            </FormItem>
+          )}
+        />
+        <Controller
+          name="productNotice.asInfo"
+          control={control}
+          render={({ field }) => (
+            <FormItem label="A/S안내 및 연락처">
+              <FormInput
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+              />
+            </FormItem>
+          )}
+        />
+        <Controller
+          name="productNotice.qualityAssurance"
+          control={control}
+          render={({ field }) => (
+            <FormItem label="품질 보증 기준">
+              <FormInput
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+              />
+            </FormItem>
+          )}
+        />
+      </Section>
+
+      <Section title="에디터">
+        <Controller
+          name="description"
+          control={control}
+          render={({ field }) => (
+            <FormItem label="상세설명">
+              <FormEditor
+                value={field.value}
+                onChange={field.onChange}
+                imageUploadType="PRODUCT"
+                placeholder="상품 상세설명을 입력하세요..."
+              />
+            </FormItem>
+          )}
+        />
+      </Section>
+
       <div className="flex gap-3 justify-end mt-6">
         <button
           type="button"
