@@ -1,14 +1,15 @@
-import { forwardRef } from 'react'
-import { Input } from '@/components/ui/input'
+import { forwardRef } from "react"
+import { Input } from "@/components/ui/input"
 
 interface FormInputProps {
   placeholder?: string
   maxLength?: number
   disabled?: boolean
+  value?: string | number
   onChange?: (value: string) => void
   onBlur?: () => void
   id?: string
-  type?: 'text' | 'number'
+  type?: "text" | "number"
 }
 
 const FormInput = forwardRef<HTMLInputElement, FormInputProps>((props, ref) => {
@@ -16,10 +17,11 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>((props, ref) => {
     placeholder,
     maxLength,
     disabled = false,
+    value,
     onChange,
     onBlur,
     id,
-    type = 'text',
+    type = "text",
   } = props
 
   return (
@@ -30,12 +32,13 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>((props, ref) => {
       placeholder={placeholder}
       maxLength={maxLength}
       disabled={disabled}
+      value={value}
       onChange={e => onChange?.(e.target.value)}
       onBlur={onBlur}
     />
   )
 })
 
-FormInput.displayName = 'FormInput'
+FormInput.displayName = "FormInput"
 
 export default FormInput
