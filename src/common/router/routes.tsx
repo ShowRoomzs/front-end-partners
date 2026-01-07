@@ -1,27 +1,28 @@
-import type { RouteObject } from 'react-router-dom'
-import { MainLayout } from '@/common/components'
-import RegisterProductPage from '@/features/productManagement/pages/RegisterProductPage'
-import LoginPage from '@/features/auth/pages/LoginPage'
-import RegisterPage from '@/features/auth/pages/RegisterPage'
+import type { RouteObject } from "react-router-dom"
+import { MainLayout } from "@/common/components"
+import RegisterProductPage from "@/features/productManagement/pages/RegisterProductPage"
+import LoginPage from "@/features/auth/pages/LoginPage"
+import RegisterPage from "@/features/auth/pages/RegisterPage"
+import ProductListPage from "@/features/productManagement/pages/ProductListPage"
 
 export const authRoutes: Array<RouteObject> = [
   {
-    path: '/login',
+    path: "/login",
     element: <LoginPage />,
   },
   {
-    path: '/register',
+    path: "/register",
     element: <RegisterPage />,
   },
   {
-    path: '*',
+    path: "*",
     element: <LoginPage />,
   },
 ]
 
 export const mainRoutes: Array<RouteObject> = [
   {
-    path: '/',
+    path: "/",
     element: <MainLayout />,
     children: [
       {
@@ -30,137 +31,137 @@ export const mainRoutes: Array<RouteObject> = [
       },
       // Seller routes
       {
-        path: 'store/basic',
+        path: "store/basic",
         element: <div>aasdf</div>,
       },
       {
-        path: 'product/register',
+        path: "product/register",
         element: <RegisterProductPage />,
       },
       {
-        path: 'product/list',
-        element: <div>aasdf</div>,
+        path: "product/list",
+        element: <ProductListPage />,
       },
       {
-        path: 'product/notice',
+        path: "product/notice",
         element: <div>aasdf</div>,
       },
       // Creator routes
       {
-        path: 'showroom/basic',
+        path: "showroom/basic",
         element: <div>aasdf</div>,
       },
       {
-        path: 'showroom/product',
+        path: "showroom/product",
         element: <div>aasdf</div>,
       },
       {
-        path: 'showroom/post',
+        path: "showroom/post",
         element: <div>aasdf</div>,
       },
       {
-        path: 'showroom/coupon',
+        path: "showroom/coupon",
         element: <div>aasdf</div>,
       },
       {
-        path: 'showroom/lottery',
+        path: "showroom/lottery",
         element: <div>aasdf</div>,
       },
       {
-        path: 'goods/store',
+        path: "goods/store",
         element: <div>aasdf</div>,
       },
       {
-        path: 'goods/register',
+        path: "goods/register",
         element: <div>aasdf</div>,
       },
       {
-        path: 'goods/list',
+        path: "goods/list",
         element: <div>aasdf</div>,
       },
       {
-        path: 'goods/notice',
+        path: "goods/notice",
         element: <div>aasdf</div>,
       },
       // Common routes
       {
-        path: 'sales/orders',
+        path: "sales/orders",
         element: <div>aasdf</div>,
       },
       {
-        path: 'sales/purchase-orders',
+        path: "sales/purchase-orders",
         element: <div>aasdf</div>,
       },
       {
-        path: 'sales/shipping-out',
+        path: "sales/shipping-out",
         element: <div>aasdf</div>,
       },
       {
-        path: 'sales/delivery',
+        path: "sales/delivery",
         element: <div>aasdf</div>,
       },
       {
-        path: 'sales/confirmed',
+        path: "sales/confirmed",
         element: <div>aasdf</div>,
       },
       {
-        path: 'sales/cancel',
+        path: "sales/cancel",
         element: <div>aasdf</div>,
       },
       {
-        path: 'sales/return',
+        path: "sales/return",
         element: <div>aasdf</div>,
       },
       {
-        path: 'sales/exchange',
+        path: "sales/exchange",
         element: <div>aasdf</div>,
       },
       {
-        path: 'coupon/list',
+        path: "coupon/list",
         element: <div>aasdf</div>,
       },
       {
-        path: 'coupon/register',
+        path: "coupon/register",
         element: <div>aasdf</div>,
       },
       {
-        path: 'settlement/history',
+        path: "settlement/history",
         element: <div>aasdf</div>,
       },
       {
-        path: 'settlement/by-product',
+        path: "settlement/by-product",
         element: <div>aasdf</div>,
       },
       {
-        path: 'settlement/vat',
+        path: "settlement/vat",
         element: <div>aasdf</div>,
       },
       {
-        path: 'review/list',
+        path: "review/list",
         element: <div>aasdf</div>,
       },
       {
-        path: 'inquiry/respond',
+        path: "inquiry/respond",
         element: <div>aasdf</div>,
       },
       {
-        path: 'inquiry/product',
+        path: "inquiry/product",
         element: <div>aasdf</div>,
       },
       {
-        path: 'inquiry/order',
+        path: "inquiry/order",
         element: <div>aasdf</div>,
       },
       {
-        path: 'inquiry/template',
+        path: "inquiry/template",
         element: <div>aasdf</div>,
       },
       {
-        path: 'support/bug',
+        path: "support/bug",
         element: <div>aasdf</div>,
       },
       {
-        path: 'support/feature',
+        path: "support/feature",
         element: <div>aasdf</div>,
       },
     ],

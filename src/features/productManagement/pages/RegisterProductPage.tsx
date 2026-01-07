@@ -652,18 +652,8 @@ export default function RegisterProductPage() {
       </Section>
 
       <div className="flex gap-3 justify-end mt-6">
-        <button
-          type="button"
-          className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-        >
-          취소
-        </button>
-        <button
-          type="submit"
-          className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          등록하기
-        </button>
+        <Button variant={"outline"}>취소</Button>
+        <Button type="submit">등록하기</Button>
       </div>
     </form>
   )
