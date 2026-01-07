@@ -25,6 +25,7 @@ export const PRODUCT_LIST_COLUMNS: Columns<unknown> = [
     label: "ID",
     width: 100,
     align: "center",
+    fixed: "left",
   },
   {
     key: "display",
