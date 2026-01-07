@@ -51,7 +51,7 @@ export interface MarketInfo {
 export const authService = {
   register: async (data: RegisterData) => {
     const { data: response } = await authInstance.post<RegisterResponse>(
-      "/admin/signup",
+      "/seller/auth/signup",
       data
     )
 
@@ -59,7 +59,7 @@ export const authService = {
   },
   login: async (data: LoginData) => {
     const { data: response } = await authInstance.post<RegisterResponse>(
-      "admin/login",
+      "/seller/auth/login",
       data
     )
 
@@ -67,7 +67,7 @@ export const authService = {
   },
   refresh: async (refreshToken: string) => {
     const { data: response } = await authInstance.post<RegisterResponse>(
-      "admin/refresh",
+      "/seller/auth/refresh",
       {
         refreshToken,
       }
@@ -76,7 +76,7 @@ export const authService = {
   },
   checkEmailDuplicate: async (email: string) => {
     const { data: response } = await authInstance.get<CheckDuplicateResponse>(
-      "admin/check-email",
+      "/seller/auth/check-email",
       {
         params: {
           email,
@@ -88,7 +88,7 @@ export const authService = {
   },
   checkMarketNameDuplicate: async (marketName: string) => {
     const { data: response } = await authInstance.get<CheckDuplicateResponse>(
-      "markets/check-name",
+      "/seller/markets/check-name",
       {
         params: {
           marketName,
@@ -99,7 +99,8 @@ export const authService = {
     return response
   },
   getMarketInfo: async () => {
-    const { data: response } = await apiInstance.get<MarketInfo>("markets/me")
+    const { data: response } =
+      await apiInstance.get<MarketInfo>("/seller/markets/me")
 
     return response
   },

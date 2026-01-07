@@ -1,55 +1,55 @@
-import { useState } from 'react'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { authService } from '@/features/auth/services/authService'
-import { useCookie } from '@/common/hooks/useCookie'
-import { COOKIE_NAME } from '@/common/constants'
-import toast from 'react-hot-toast'
-import { useNavigate } from 'react-router-dom'
+import { useState } from "react"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { authService } from "@/features/auth/services/authService"
+import { useCookie } from "@/common/hooks/useCookie"
+import { COOKIE_NAME } from "@/common/constants"
+import toast from "react-hot-toast"
+import { useNavigate } from "react-router-dom"
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const [, setAccessToken] = useCookie<string>(COOKIE_NAME.ACCESS_TOKEN)
   const [, setRefreshToken] = useCookie<string>(COOKIE_NAME.REFRESH_TOKEN)
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   })
   const [errors, setErrors] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   })
 
   const validateEmail = (email: string) => {
     if (!email) {
-      return 'ID를 입력해주세요'
+      return "ID를 입력해주세요"
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
-      return '올바른 이메일 형식이 아닙니다'
+      return "올바른 이메일 형식이 아닙니다"
     }
-    return ''
+    return ""
   }
 
   const validatePassword = (password: string) => {
     if (!password) {
-      return 'PASSWORD를 입력해주세요'
+      return "PASSWORD를 입력해주세요"
     }
-    return ''
+    return ""
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const emailError = validateEmail(formData.email)
+    // const emailError = validateEmail(formData.email)
     const passwordError = validatePassword(formData.password)
 
     setErrors({
-      email: emailError,
+      email: "",
       password: passwordError,
     })
 
-    if (!emailError && !passwordError) {
+    if (!passwordError) {
       const res = await authService.login({
         email: formData.email,
         password: formData.password,
@@ -57,21 +57,21 @@ export default function LoginPage() {
       const { accessToken, refreshToken } = res
       setAccessToken(accessToken)
       setRefreshToken(refreshToken)
-      toast.success('로그인 성공')
-      navigate('/')
+      toast.success("로그인 성공")
+      navigate("/")
     }
   }
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const email = e.target.value
     setFormData(prev => ({ ...prev, email }))
-    setErrors(prev => ({ ...prev, email: '' }))
+    setErrors(prev => ({ ...prev, email: "" }))
   }
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const password = e.target.value
     setFormData(prev => ({ ...prev, password }))
-    setErrors(prev => ({ ...prev, password: '' }))
+    setErrors(prev => ({ ...prev, password: "" }))
   }
 
   const handleEmailBlur = () => {
@@ -113,12 +113,12 @@ export default function LoginPage() {
             </label>
             <Input
               id="email"
-              type="email"
+              // type="email"
               placeholder="이메일"
               value={formData.email}
               onChange={handleEmailChange}
               onBlur={handleEmailBlur}
-              className={errors.email ? 'border-red-500' : ''}
+              className={errors.email ? "border-red-500" : ""}
             />
             {errors.email && (
               <p className="mt-1 text-sm text-red-500">{errors.email}</p>
@@ -139,7 +139,7 @@ export default function LoginPage() {
               value={formData.password}
               onChange={handlePasswordChange}
               onBlur={handlePasswordBlur}
-              className={errors.password ? 'border-red-500' : ''}
+              className={errors.password ? "border-red-500" : ""}
             />
             {errors.password && (
               <p className="mt-1 text-sm text-red-500">{errors.password}</p>
