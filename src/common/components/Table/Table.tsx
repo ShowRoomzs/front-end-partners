@@ -275,7 +275,7 @@ export default function Table<T, K extends keyof T = keyof T>(
       <colgroup>
         {columns.map(col => (
           <col
-            key={`${col.key.toString()}-${col.label}`}
+            key={`${col.key.toString()}`}
             style={{ width: colWidths[col.key.toString()] }}
           />
         ))}

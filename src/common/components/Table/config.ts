@@ -1,5 +1,9 @@
 import type { Column } from "@/common/components/Table/types"
 
+export function getColumnKey<T>(column: Column<T>, isHeader: boolean) {
+  return `${column.key.toString()}-${column.label}-${isHeader ? "header" : "body"}`
+}
+
 // fixed 컬럼들의 위치를 계산하는 함수
 export const calculateFixedPositions = <T>(
   columns: Column<T>[],
@@ -15,10 +19,7 @@ export const calculateFixedPositions = <T>(
   columns.forEach(column => {
     if (column.fixed === "left") {
       leftFixed[column.key.toString()] = `${leftOffset}px`
-      const targetNode = document.getElementById(
-        `${column.key.toString()}-${column.label}${isHeader ? "-header" : "-body"}`
-      )
-
+      const targetNode = document.getElementById(getColumnKey(column, isHeader))
       const width = targetNode?.getBoundingClientRect().width as number
 
       leftOffset += width
@@ -31,9 +32,7 @@ export const calculateFixedPositions = <T>(
     .reverse()
   rightFixedColumns.forEach(column => {
     rightFixed[column.key.toString()] = `${rightOffset}px`
-    const targetNode = document.getElementById(
-      `${column.key.toString()}${isHeader ? "-header" : "-body"}`
-    )
+    const targetNode = document.getElementById(getColumnKey(column, isHeader))
     const width = targetNode?.getBoundingClientRect().width as number
     rightOffset += width
   })
@@ -69,14 +68,13 @@ export const getFixedStyle = <T>(
       baseStyle.boxShadow = "-4px 0 10px rgba(0, 0, 0, 0.06)"
     }
   }
-
   return baseStyle
 }
 
 export const getAbsoluteWidths = <T>(columns: Column<T>[]) => {
   const absolutePositions: { [key: string]: string } = columns.reduce(
     (acc, col) => {
-      const targetNode = document.getElementById(`${col.key.toString()}-body`)
+      const targetNode = document.getElementById(getColumnKey(col, false))
       const width = targetNode?.getBoundingClientRect().width as number
       acc[col.key.toString()] = `${width}px`
       return acc

@@ -1,12 +1,4 @@
 import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react"
-
-import {
   calculateFixedPositions,
   getAbsoluteWidths,
   getFixedStyle,
@@ -16,6 +8,13 @@ import type {
   Columns,
   TableFixed,
 } from "@/common/components/Table/types"
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react"
 
 interface Cell {
   targetKey: string
@@ -50,7 +49,6 @@ export default function useTableFixed<T>(
 
     setAbsoluteWidths(absoluteWidths)
   }, [columns, isHeader])
-
   const processFixedGroup = useCallback(
     (
       columns: Array<Column<T>>,
@@ -175,7 +173,7 @@ export default function useTableFixed<T>(
     }
     window.addEventListener("resize", onResize)
 
-    const key = `${columns[0]?.key as string}-${columns[0].label}` as string
+    const key = `${columns[0]?.key as string}` as string
     const cell = key
       ? document.getElementById(
           `${key.toString()}${isHeader ? "-header" : "-body"}`

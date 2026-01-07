@@ -3,6 +3,7 @@ import SortButton from "../SortButton/SortButton"
 import type { SortOrder } from "@/common/types/page"
 import useTableFixed from "@/common/hooks/useTableFixed"
 import { cn } from "@/lib/utils"
+import { getColumnKey } from "@/common/components/Table/config"
 
 interface TableHeaderProps<T> {
   columns: Columns<T>
@@ -73,11 +74,11 @@ export default function TableHeader<T>(props: TableHeaderProps<T>) {
                 return ""
             }
           }
-          const key = `${col.key.toString()}-${col.label}` as string
+          const key = getColumnKey(col, true)
           return (
             <th
               key={key}
-              id={`${key}-header`}
+              id={key}
               className={cn(
                 "px-4 py-3",
                 index === 0 && "rounded-tl-[0px]",

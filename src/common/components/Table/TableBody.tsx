@@ -1,3 +1,4 @@
+import { getColumnKey } from "@/common/components/Table/config"
 import type { Column, Columns } from "@/common/components/Table/types"
 import useTableFixed from "@/common/hooks/useTableFixed"
 import { cn } from "@/lib/utils"
@@ -55,7 +56,7 @@ export default function TableBody<T>(props: TableBodyProps<T>) {
                   ? "justify-end"
                   : "justify-start"
 
-            const key = `${col.key.toString()}-${col.label}` as string
+            const key = getColumnKey(col, false)
             const tableBodyClassName = cn(
               `flex text-[#00000099] text-[12px]`,
               alignClass,
@@ -64,7 +65,7 @@ export default function TableBody<T>(props: TableBodyProps<T>) {
             return (
               <td
                 key={key}
-                id={`${key}-body`}
+                id={key}
                 ref={el => {
                   if (el) {
                     cellRef.current[`${col.key.toString()}-${index}`] = el
