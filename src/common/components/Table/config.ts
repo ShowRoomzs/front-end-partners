@@ -16,8 +16,9 @@ export const calculateFixedPositions = <T>(
     if (column.fixed === "left") {
       leftFixed[column.key.toString()] = `${leftOffset}px`
       const targetNode = document.getElementById(
-        `${column.key.toString()}${isHeader ? "-header" : "-body"}`
+        `${column.key.toString()}-${column.label}${isHeader ? "-header" : "-body"}`
       )
+
       const width = targetNode?.getBoundingClientRect().width as number
 
       leftOffset += width
@@ -54,7 +55,6 @@ export const getFixedStyle = <T>(
   }
   baseStyle.position = "sticky"
   baseStyle.zIndex = isHeader ? 10 : 5
-
   if (column.fixed === "left") {
     baseStyle.left = leftFixed[column.key.toString()]
     if (isCurrentFixed) {

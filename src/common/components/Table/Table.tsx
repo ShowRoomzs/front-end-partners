@@ -197,73 +197,73 @@ export default function Table<T, K extends keyof T = keyof T>(
     [columns]
   )
 
-  useEffect(() => {
-    const handleMeasureWidths = () => {
-      if (
-        !headerTableRef.current ||
-        !bodyTableRef.current ||
-        Object.values(colWidths).length > 0
-      ) {
-        return
-      }
-      const headerWidths = getRowWidths(headerTableRef.current, true)
-      setColWidths(headerWidths)
+  const handleMeasureWidths = useCallback(() => {
+    if (
+      !headerTableRef.current ||
+      !bodyTableRef.current ||
+      Object.values(colWidths).length > 0
+    ) {
+      return
+    }
+    const headerWidths = getRowWidths(headerTableRef.current, true)
+    setColWidths(headerWidths)
 
-      const bodyWidths = getRowWidths(bodyTableRef.current, false)
-      const measuredWidths: Record<string, number> = {}
+    const bodyWidths = getRowWidths(bodyTableRef.current, false)
+    const measuredWidths: Record<string, number> = {}
 
-      columns.forEach(col => {
-        const colKey = col.key.toString()
-        const headerWidth = headerWidths[colKey]
-        const bodyWidth = bodyWidths[colKey]
+    columns.forEach(col => {
+      const colKey = col.key.toString()
+      const headerWidth = headerWidths[colKey]
+      const bodyWidth = bodyWidths[colKey]
 
-        // 우선순위
-        // 1. columns 상수에서 지정한 col.width
-        // 2. bodyWidth와 headerWidth 중 큰 값
-        const maxWidth = Math.max(bodyWidth, headerWidth)
-        measuredWidths[colKey] = col.width ?? maxWidth
-      })
+      // 우선순위
+      // 1. columns 상수에서 지정한 col.width
+      // 2. bodyWidth와 headerWidth 중 큰 값
+      const maxWidth = Math.max(bodyWidth, headerWidth)
+      measuredWidths[colKey] = col.width ?? maxWidth
+    })
 
-      // 너비 조정되기 전 초기 전체 width
-      const totalWidth = Object.values(measuredWidths).reduce(
-        (sum, w) => sum + w,
-        0
-      )
+    // 너비 조정되기 전 초기 전체 width
+    const totalWidth = Object.values(measuredWidths).reduce(
+      (sum, w) => sum + w,
+      0
+    )
 
-      // col.width가 있는 컬럼 너비의 합
-      const absoluteWidths = columns.reduce(
-        (abs, col) => (col.width ? abs + col.width : abs),
-        0
-      )
+    // col.width가 있는 컬럼 너비의 합
+    const absoluteWidths = columns.reduce(
+      (abs, col) => (col.width ? abs + col.width : abs),
+      0
+    )
 
-      // 전부 width가 있는 경우 뒷부분 채워주는 가상 컬럼 너비 계산
-      if (totalWidth === absoluteWidths) {
-        const virtualColWidth = MAX_TABLE_WIDTH - absoluteWidths
-        setColWidths(prev => ({ ...prev, virtual: virtualColWidth }))
-        return
-      }
-
-      if (totalWidth < MAX_TABLE_WIDTH) {
-        columns.forEach(col => {
-          if (col.width) {
-            return
-          }
-          const colKey = col.key.toString()
-          // 비율 = 현재 컬럼 너비 / 조정되어야하는 전체 width(절대값을 갖는 컬럼 제외한 나머지 컬럼의 너비)
-          const ratio = measuredWidths[colKey] / (totalWidth - absoluteWidths)
-
-          // 조정된 컬럼 너비 = 비율 * 분배되어야할 전체 width(절대값을 갖는 컬럼 제외한 나머지 컬럼의 너비)
-          measuredWidths[colKey] = ratio * (MAX_TABLE_WIDTH - absoluteWidths)
-        })
-      }
-      setColWidths(measuredWidths)
+    // 전부 width가 있는 경우 뒷부분 채워주는 가상 컬럼 너비 계산
+    if (totalWidth === absoluteWidths) {
+      const virtualColWidth = MAX_TABLE_WIDTH - absoluteWidths
+      setColWidths(prev => ({ ...prev, virtual: virtualColWidth }))
+      return
     }
 
+    if (totalWidth < MAX_TABLE_WIDTH) {
+      columns.forEach(col => {
+        if (col.width) {
+          return
+        }
+        const colKey = col.key.toString()
+        // 비율 = 현재 컬럼 너비 / 조정되어야하는 전체 width(절대값을 갖는 컬럼 제외한 나머지 컬럼의 너비)
+        const ratio = measuredWidths[colKey] / (totalWidth - absoluteWidths)
+
+        // 조정된 컬럼 너비 = 비율 * 분배되어야할 전체 width(절대값을 갖는 컬럼 제외한 나머지 컬럼의 너비)
+        measuredWidths[colKey] = ratio * (MAX_TABLE_WIDTH - absoluteWidths)
+      })
+    }
+    setColWidths(measuredWidths)
+  }, [colWidths, columns, getRowWidths])
+
+  useEffect(() => {
     handleMeasureWidths()
     if (!isMounted) {
       setIsMounted(true)
     }
-  }, [colWidths, columns, getRowWidths, isMounted])
+  }, [handleMeasureWidths, isMounted])
 
   const totalTableWidth = useMemo(() => {
     const total = Object.values(colWidths).reduce((sum, w) => sum + w, 0)
@@ -327,7 +327,7 @@ export default function Table<T, K extends keyof T = keyof T>(
 
   return (
     <div
-      className="font-noto flex flex-col h-full bg-white transition-opacity duration-200"
+      className="font-noto flex flex-col h-full bg-white transition-opacity duration-200 rounded-lg overflow-hidden"
       style={{ opacity: isMounted ? 1 : 0 }}
     >
       <div
@@ -357,7 +357,7 @@ export default function Table<T, K extends keyof T = keyof T>(
           </table>
         </div>
       </div>
-      <div className="flex flex-row flex-1 overflow-hidden relative">
+      <div className="flex flex-row flex-1 overflow-hidden relative max-h-[460px]">
         <div
           ref={bodyScrollRef}
           className="flex-1 overflow-auto scrollbar-hidden"

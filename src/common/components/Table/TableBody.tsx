@@ -61,7 +61,6 @@ export default function TableBody<T>(props: TableBodyProps<T>) {
               alignClass,
               bodyClassName
             )
-
             return (
               <td
                 key={key}
