@@ -286,13 +286,10 @@ export default function RegisterProductPage() {
               <FormCategorySelector
                 categoryMap={categoryMap}
                 value={field.value}
-                onChange={categoryId => {
-                  // 3뎁스(detail)인지 확인: 자식이 없는 카테고리만 저장
-                  if (
-                    categoryMap &&
-                    !categoryMap.byParentId.has(categoryId)
-                  ) {
-                    field.onChange(categoryId)
+                onChange={({ detail }) => {
+                  // detail만 저장
+                  if (detail) {
+                    field.onChange(detail)
                   }
                 }}
               />

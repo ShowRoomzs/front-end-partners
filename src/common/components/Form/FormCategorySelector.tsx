@@ -10,7 +10,11 @@ import type { CategoryMap } from "@/common/hooks/useGetCategory"
 
 interface FormCategorySelectorProps {
   categoryMap: CategoryMap | null
-  onChange?: (categoryId: number) => void
+  onChange?: (data: {
+    main: number | null
+    sub: number | null
+    detail: number | null
+  }) => void
   value?: number
 }
 
@@ -74,20 +78,20 @@ const FormCategorySelector = forwardRef<
     setSelectedMain(main)
     setSelectedSub(null)
     setSelectedDetail(null)
-    onChange?.(main)
+    onChange?.({ main, sub: null, detail: null })
   }
 
   const handleSubChange = (subStr: string) => {
     const sub = Number(subStr)
     setSelectedSub(sub)
     setSelectedDetail(null)
-    onChange?.(sub)
+    onChange?.({ main: selectedMain, sub, detail: null })
   }
 
   const handleDetailChange = (detailStr: string) => {
     const detail = Number(detailStr)
     setSelectedDetail(detail)
-    onChange?.(detail)
+    onChange?.({ main: selectedMain, sub: selectedSub, detail })
   }
   if (!categoryMap) {
     return (
