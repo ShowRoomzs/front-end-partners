@@ -1,0 +1,213 @@
+import type { PageResponse } from "@/common/types/params"
+import { cn } from "@/lib/utils"
+import { useCallback, useEffect, useMemo, useState } from "react"
+
+// 페이지네이션 설정
+const INITIAL_DISPLAY_COUNT = 3 // 초기에 표시할 페이지 수 (1, 2, 3)
+const MIDDLE_DISPLAY_COUNT = 3 // 중간에 표시할 페이지 수 (이전, 현재, 다음)
+
+export interface PaginationProps extends Omit<
+  PageResponse<unknown>,
+  "content"
+> {
+  onPageChange?: (page: number) => void
+}
+
+export default function Pagination(props: PaginationProps) {
+  const { page = 0, totalPages = 50, onPageChange } = props
+
+  // 내부 상태로 현재 페이지를 관리하여 즉각 반응
+  const [displayPage, setDisplayPage] = useState(page)
+
+  // props.page 변경 시 동기화
+  useEffect(() => {
+    setDisplayPage(page)
+  }, [page])
+
+  // 페이지 변경 핸들러
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      setDisplayPage(newPage) // 즉시 UI 업데이트
+      onPageChange?.(newPage)
+    },
+    [onPageChange]
+  )
+
+  // page는 0부터 시작, 표시는 1부터 시작
+  const currentDisplayPage = displayPage + 1
+
+  const pageButtons = useMemo(() => {
+    const renderPageButton = (
+      displayPage: number,
+      pageIndex: number,
+      isActive = false
+    ) => {
+      return (
+        <button
+          key={`page-${pageIndex}`}
+          className={cn(
+            "min-w-[30px] min-h-[30px] rounded-[4px] text-[14px] px-[5px] font-medium transition-colors",
+            isActive
+              ? "bg-[#5468CD] text-white"
+              : "bg-white text-[#666666] hover:bg-gray-50 border border-[#E0E0E0]"
+          )}
+          onClick={() => handlePageChange(pageIndex)}
+        >
+          {displayPage}
+        </button>
+      )
+    }
+
+    const buttons = []
+
+    // 초기 페이지 범위일 때: 1 2 3 ... totalPages
+    if (currentDisplayPage <= INITIAL_DISPLAY_COUNT) {
+      for (let i = 1; i <= INITIAL_DISPLAY_COUNT && i <= totalPages; i++) {
+        buttons.push(renderPageButton(i, i - 1, displayPage === i - 1))
+      }
+
+      // totalPages가 INITIAL_DISPLAY_COUNT보다 클 때만 ... totalPages 표시
+      if (totalPages > INITIAL_DISPLAY_COUNT) {
+        buttons.push(
+          <span key="ellipsis" className="text-[#999999] px-2">
+            ...
+          </span>
+        )
+        buttons.push(
+          renderPageButton(
+            totalPages,
+            totalPages - 1,
+            displayPage === totalPages - 1
+          )
+        )
+      }
+    }
+    // 중간 페이지일 때: 1 ... (이전) 현재 (다음) ... totalPages
+    else {
+      const sideCount = Math.floor((MIDDLE_DISPLAY_COUNT - 1) / 2) // 현재 페이지 양옆에 표시할 개수
+      const rightmostPage = Math.min(currentDisplayPage + sideCount, totalPages) // 실제로 표시될 가장 오른쪽 페이지
+
+      buttons.push(renderPageButton(1, 0, displayPage === 0))
+
+      // 1과 첫 번째 중간 페이지 사이에 페이지가 있을 때만 ... 표시
+      if (currentDisplayPage - sideCount > 2) {
+        buttons.push(
+          <span key="ellipsis-start" className="text-[#999999] px-2">
+            ...
+          </span>
+        )
+      }
+
+      // 중간 페이지 표시 (현재 페이지 기준 양옆)
+      for (let i = -sideCount; i <= sideCount; i++) {
+        const pageNum = currentDisplayPage + i
+        const pageIndex = displayPage + i
+
+        if (pageNum > 1 && pageNum <= totalPages) {
+          buttons.push(renderPageButton(pageNum, pageIndex, i === 0))
+        }
+      }
+
+      // 가장 오른쪽 페이지가 totalPages가 아니고, 그 사이에 페이지가 있을 때만 ... totalPages 표시
+      if (rightmostPage < totalPages) {
+        // ... 표시 (rightmostPage와 totalPages 사이에 페이지가 있을 때)
+        if (rightmostPage < totalPages - 1) {
+          buttons.push(
+            <span key="ellipsis-end" className="text-[#999999] px-2">
+              ...
+            </span>
+          )
+        }
+
+        // totalPages 버튼 표시
+        buttons.push(
+          renderPageButton(
+            totalPages,
+            totalPages - 1,
+            displayPage === totalPages - 1
+          )
+        )
+      }
+    }
+
+    return buttons
+  }, [currentDisplayPage, displayPage, totalPages, handlePageChange])
+
+  const isPreviousDisabled = displayPage <= 0
+  const isNextDisabled = displayPage >= totalPages - 1
+
+  const handleClickPrevious = useCallback(() => {
+    if (!isPreviousDisabled) {
+      handlePageChange(displayPage - 1)
+    }
+  }, [isPreviousDisabled, handlePageChange, displayPage])
+
+  const handleClickNext = useCallback(() => {
+    if (!isNextDisabled) {
+      handlePageChange(displayPage + 1)
+    }
+  }, [isNextDisabled, handlePageChange, displayPage])
+
+  // 데이터가 없거나 totalPages가 0이면 아무것도 표시하지 않음
+  if (!totalPages || totalPages === 0) {
+    return null
+  }
+
+  return (
+    <div className="flex flex-row items-center gap-[8px]">
+      {/* 이전 버튼 */}
+      <button
+        className={cn(
+          "w-[30px] h-[30px] rounded-[4px] bg-white border border-[#E0E0E0] flex items-center justify-center transition-colors",
+          isPreviousDisabled
+            ? "opacity-50 cursor-not-allowed"
+            : "hover:bg-gray-50"
+        )}
+        onClick={handleClickPrevious}
+        disabled={isPreviousDisabled}
+      >
+        <svg
+          width="8"
+          height="12"
+          viewBox="0 0 8 12"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M6 10L2 6L6 2"
+            stroke="#666666"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
+      </button>
+
+      {pageButtons}
+
+      {/* 다음 버튼 */}
+      <button
+        className={cn(
+          "w-[30px] h-[30px] rounded-[4px] bg-white border border-[#E0E0E0] flex items-center justify-center transition-colors",
+          isNextDisabled ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"
+        )}
+        onClick={handleClickNext}
+        disabled={isNextDisabled}
+      >
+        <svg
+          width="8"
+          height="12"
+          viewBox="0 0 8 12"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M2 2L6 6L2 10"
+            stroke="#666666"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
+      </button>
+    </div>
+  )
+}

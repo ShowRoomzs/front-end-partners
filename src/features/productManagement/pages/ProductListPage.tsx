@@ -2,10 +2,11 @@ import { useState } from "react"
 import Section from "@/common/components/Section/Section"
 import FormCategorySelector from "@/common/components/Form/FormCategorySelector"
 import FormField from "@/common/components/Form/FormField"
-import { useGetCategory } from "@/common/hooks/useGetCategory"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
+import Table from "@/common/components/Table/Table"
+import { PRODUCT_LIST_COLUMNS } from "@/features/productManagement/constants/columns"
 
 export default function ProductListPage() {
   const [displayStatus, setDisplayStatus] = useState<string>("all")
@@ -90,6 +91,99 @@ export default function ProductListPage() {
           </div>
         </div>
       </Section>
+      <Table
+        columns={PRODUCT_LIST_COLUMNS}
+        data={[
+          {
+            id: "1",
+            name: "Product 1",
+            price: 10000,
+            stock: 100,
+            display: true,
+            stockStatus: "in-stock",
+            displayStatus: "display",
+            category: "Category 1",
+            createdAt: "2021-01-01",
+          },
+          {
+            id: "1",
+            name: "Product 1",
+            price: 10000,
+            stock: 100,
+            display: true,
+            stockStatus: "in-stock",
+            displayStatus: "display",
+            category: "Category 1",
+            createdAt: "2021-01-01",
+          },
+          {
+            id: "1",
+            name: "Product 1",
+            price: 10000,
+            stock: 100,
+            display: true,
+            stockStatus: "in-stock",
+            displayStatus: "display",
+            category: "Category 1",
+            createdAt: "2021-01-01",
+          },
+          {
+            id: "1",
+            name: "Product 1",
+            price: 10000,
+            stock: 100,
+            display: true,
+            stockStatus: "in-stock",
+            displayStatus: "display",
+            category: "Category 1",
+            createdAt: "2021-01-01",
+          },
+          {
+            id: "1",
+            name: "Product 1",
+            price: 10000,
+            stock: 100,
+            display: true,
+            stockStatus: "in-stock",
+            displayStatus: "display",
+            category: "Category 1",
+            createdAt: "2021-01-01",
+          },
+          {
+            id: "1",
+            name: "Product 1",
+            price: 10000,
+            stock: 100,
+            display: true,
+            stockStatus: "in-stock",
+            displayStatus: "display",
+            category: "Category 1",
+            createdAt: "2021-01-01",
+          },
+          {
+            id: "1",
+            name: "Product 1",
+            price: 10000,
+            stock: 100,
+            display: true,
+            stockStatus: "in-stock",
+            displayStatus: "display",
+            category: "Category 1",
+            createdAt: "2021-01-01",
+          },
+          {
+            id: "1",
+            name: "Product 1",
+            price: 10000,
+            stock: 100,
+            display: true,
+            stockStatus: "in-stock",
+            displayStatus: "display",
+            category: "Category 1",
+            createdAt: "2021-01-01",
+          },
+        ]}
+      />
     </div>
   )
 }
