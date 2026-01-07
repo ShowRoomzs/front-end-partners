@@ -9,7 +9,7 @@ export const fileService = {
   upload: async (file: File, type: FileType) => {
     const formData = new FormData()
     formData.append("file", file)
-    const { data } = await apiInstance.post("/admin/images", formData, {
+    const { data } = await apiInstance.post("/seller/images", formData, {
       params: { type },
     })
     return data
