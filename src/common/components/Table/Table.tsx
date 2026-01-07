@@ -144,10 +144,12 @@ export default function Table<T, K extends keyof T = keyof T>(
             <Checkbox
               checked={checkedKeys.length === data.length && data.length > 0}
               onCheckedChange={handleChangeAllCheckbox}
+              className="flex items-center justify-center"
             />
           ),
           render: (_value, record: T) => (
             <Checkbox
+              className="flex items-center justify-center"
               checked={
                 rowKey ? checkedKeys.includes(record[rowKey] as T[K]) : false
               }
@@ -327,7 +329,7 @@ export default function Table<T, K extends keyof T = keyof T>(
 
   return (
     <div
-      className="font-noto flex flex-col h-full bg-white transition-opacity duration-200 rounded-lg overflow-hidden"
+      className="font-noto flex flex-col flex-1 min-h-0 bg-white transition-opacity duration-200 rounded-lg overflow-hidden"
       style={{ opacity: isMounted ? 1 : 0 }}
     >
       <div
@@ -357,7 +359,7 @@ export default function Table<T, K extends keyof T = keyof T>(
           </table>
         </div>
       </div>
-      <div className="flex flex-row flex-1 overflow-hidden relative max-h-[460px]">
+      <div className="flex flex-row flex-1 overflow-hidden relative">
         <div
           ref={bodyScrollRef}
           className="flex-1 overflow-auto scrollbar-hidden"
