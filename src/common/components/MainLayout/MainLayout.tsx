@@ -62,11 +62,11 @@ export default function MainLayout() {
         <Sidebar menus={menus} isOpen={isSidebarOpen} />
 
         <main
-          className="flex-1 overflow-y-auto px-[20px] pt-[20px] bg-[#f7f8fa] transition-[margin] duration-300"
+          className="flex-1 overflow-hidden p-[20px] bg-[#f7f8fa] transition-[margin] duration-300 flex flex-col"
           style={{ marginLeft: isSidebarOpen ? 0 : `-${SIDEBAR_WIDTH}px` }}
         >
-          <h1 className="text-[20px] font-bold mb-4">{title}</h1>
-          <div className="w-full">
+          <h1 className="text-[20px] font-bold mb-4 shrink-0">{title}</h1>
+          <div className="flex-1 min-h-0">
             <Outlet />
           </div>
         </main>

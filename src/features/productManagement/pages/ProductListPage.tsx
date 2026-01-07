@@ -7,15 +7,16 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import Table from "@/common/components/Table/Table"
 import { PRODUCT_LIST_COLUMNS } from "@/features/productManagement/constants/columns"
+import ListViewWrapper from "@/common/components/ListViewWrapper/ListViewWrapper"
 
 export default function ProductListPage() {
   const [displayStatus, setDisplayStatus] = useState<string>("all")
   const [stockStatus, setStockStatus] = useState<string>("all")
 
   return (
-    <div>
-      <Section>
-        <div className="space-y-6">
+    <ListViewWrapper>
+      <Section className="shrink-0">
+        <div className="space-y-4">
           {/* 카테고리 선택 */}
           <FormField label="카테고리">
             <FormCategorySelector
@@ -80,15 +81,14 @@ export default function ProductListPage() {
               </div>
             </RadioGroup>
           </FormField>
-
-          <div className="flex flex-row gap-4 justify-start">
-            <Button variant="default" size="default" className="px-8">
-              검색하기
-            </Button>
-            <Button variant="outline" size="default" className="px-8">
-              초기화
-            </Button>
-          </div>
+        </div>
+        <div className="absolute right-4 top-4 flex flex-row gap-4">
+          <Button variant="default" size="default" className="px-8">
+            검색하기
+          </Button>
+          <Button variant="outline" size="default" className="px-8">
+            초기화
+          </Button>
         </div>
       </Section>
       <Table
@@ -102,29 +102,8 @@ export default function ProductListPage() {
           },
         }}
         columns={PRODUCT_LIST_COLUMNS}
+        showCheckbox
         data={[
-          {
-            id: "1",
-            name: "Product 1",
-            price: 10000,
-            stock: 100,
-            display: true,
-            stockStatus: "in-stock",
-            displayStatus: "display",
-            category: "Category 1",
-            createdAt: "2021-01-01",
-          },
-          {
-            id: "1",
-            name: "Product 1",
-            price: 10000,
-            stock: 100,
-            display: true,
-            stockStatus: "in-stock",
-            displayStatus: "display",
-            category: "Category 1",
-            createdAt: "2021-01-01",
-          },
           {
             id: "1",
             name: "Product 1",
@@ -369,6 +348,6 @@ export default function ProductListPage() {
           },
         ]}
       />
-    </div>
+    </ListViewWrapper>
   )
 }
