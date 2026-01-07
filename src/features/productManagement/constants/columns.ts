@@ -12,6 +12,7 @@ export const PRODUCT_LIST_COLUMNS: Columns<unknown> = [
     label: "NAME",
     width: 100,
     align: "center",
+    fixed: "left",
   },
   {
     key: "price",
