@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef } from "react"
 import {
   Table,
   TableBody,
@@ -6,27 +6,26 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Switch } from '@/components/ui/switch'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Label } from '@/components/ui/label'
-import { Trash2 } from 'lucide-react'
+} from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Label } from "@/components/ui/label"
+import { Trash2 } from "lucide-react"
 
-interface OptionCombination {
+export interface OptionCombination {
   id: string
   combination: Array<string>
   price: string
   stock: string
   isDisplayed: boolean
+  isRepresentative: boolean
 }
 
 interface FormOptionCombinationTableProps {
   combinations: Array<OptionCombination>
   onChange?: (combinations: Array<OptionCombination>) => void
-  representativeOption?: string
-  onRepresentativeChange?: (id: string) => void
   disabled?: boolean
 }
 
@@ -34,13 +33,7 @@ const FormOptionCombinationTable = forwardRef<
   HTMLDivElement,
   FormOptionCombinationTableProps
 >((props, ref) => {
-  const {
-    combinations,
-    onChange,
-    representativeOption,
-    onRepresentativeChange,
-    disabled = false,
-  } = props
+  const { combinations, onChange, disabled = false } = props
 
   const optionHeaders =
     combinations.length > 0
@@ -114,7 +107,7 @@ const FormOptionCombinationTable = forwardRef<
                       onChange={e =>
                         handleCombinationChange(
                           combination.id,
-                          'price',
+                          "price",
                           e.target.value
                         )
                       }
@@ -128,7 +121,7 @@ const FormOptionCombinationTable = forwardRef<
                     onChange={e =>
                       handleCombinationChange(
                         combination.id,
-                        'stock',
+                        "stock",
                         e.target.value
                       )
                     }
@@ -144,7 +137,7 @@ const FormOptionCombinationTable = forwardRef<
                       onCheckedChange={checked =>
                         handleCombinationChange(
                           combination.id,
-                          'isDisplayed',
+                          "isDisplayed",
                           checked
                         )
                       }
@@ -154,8 +147,14 @@ const FormOptionCombinationTable = forwardRef<
                 </TableCell>
                 <TableCell className="text-center border-r">
                   <RadioGroup
-                    value={representativeOption}
-                    onValueChange={onRepresentativeChange}
+                    value={combinations.find(c => c.isRepresentative)?.id ?? ""}
+                    onValueChange={newRepId => {
+                      const updated = combinations.map(c => ({
+                        ...c,
+                        isRepresentative: c.id === newRepId,
+                      }))
+                      onChange?.(updated)
+                    }}
                     disabled={disabled}
                   >
                     <div className="flex items-center justify-center space-x-2">
@@ -192,7 +191,6 @@ const FormOptionCombinationTable = forwardRef<
   )
 })
 
-FormOptionCombinationTable.displayName = 'FormOptionCombinationTable'
+FormOptionCombinationTable.displayName = "FormOptionCombinationTable"
 
 export default FormOptionCombinationTable
-export type { OptionCombination }
