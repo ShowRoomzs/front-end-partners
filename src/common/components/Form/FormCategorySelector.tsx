@@ -74,12 +74,14 @@ const FormCategorySelector = forwardRef<
     setSelectedMain(main)
     setSelectedSub(null)
     setSelectedDetail(null)
+    onChange?.(main)
   }
 
   const handleSubChange = (subStr: string) => {
     const sub = Number(subStr)
     setSelectedSub(sub)
     setSelectedDetail(null)
+    onChange?.(sub)
   }
 
   const handleDetailChange = (detailStr: string) => {
