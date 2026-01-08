@@ -1,17 +1,18 @@
-import type { ReactNode } from 'react'
-import { Label } from '@/components/ui/label'
+import type { ReactNode } from "react"
+import { Label } from "@/components/ui/label"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { Info } from 'lucide-react'
+} from "@/components/ui/tooltip"
+import { Info } from "lucide-react"
 
 interface FormItemProps {
   label: string
   required?: boolean
   error?: string
+  success?: string
   children: ReactNode
   htmlFor?: string
   tooltipInfo?: string
@@ -22,6 +23,7 @@ export default function FormItem(props: FormItemProps) {
     label,
     required = false,
     error,
+    success,
     children,
     htmlFor,
     tooltipInfo,
@@ -54,6 +56,12 @@ export default function FormItem(props: FormItemProps) {
         <div className="flex gap-4">
           <div className="w-32 shrink-0" />
           <p className="text-sm font-medium text-destructive flex-1">{error}</p>
+        </div>
+      )}
+      {success && (
+        <div className="flex gap-4">
+          <div className="w-32 shrink-0" />
+          <p className="text-sm font-medium text-green-600 flex-1">{success}</p>
         </div>
       )}
     </div>
