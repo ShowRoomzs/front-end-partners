@@ -1,4 +1,3 @@
-import { apiInstance } from "@/common/lib/apiInstance"
 import { authInstance } from "@/common/lib/authInstance"
 
 export interface RegisterData {
@@ -40,16 +39,16 @@ export interface SnsLink {
 }
 
 export interface MarketInfo {
-  marketId: number
-  marketName: string
   csNumber: string
-  marketImageUrl: string
-  marketImageStatus: MarketImageStatus
-  marketDescription: string
-  marketUrl: string
-  mainCategory: string
-  snsLinks: Array<SnsLink>
   followerCount: number
+  mainCategory: number | null
+  marketDescription: string
+  marketId: number
+  marketImageStatus: MarketImageStatus
+  marketImageUrl: string
+  marketName: string
+  marketUrl: string
+  snsLinks: Array<SnsLink>
 }
 export const authService = {
   register: async (data: RegisterData) => {
@@ -98,12 +97,6 @@ export const authService = {
         },
       }
     )
-
-    return response
-  },
-  getMarketInfo: async () => {
-    const { data: response } =
-      await apiInstance.get<MarketInfo>("/seller/markets/me")
 
     return response
   },
