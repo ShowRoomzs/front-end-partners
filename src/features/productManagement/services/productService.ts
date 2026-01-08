@@ -1,4 +1,10 @@
 import { apiInstance } from "@/common/lib/apiInstance"
+import type { BaseParams } from "@/common/types/page"
+import type {
+  PRODUCT_LIST_IS_DISPLAY_TYPE,
+  PRODUCT_LIST_IS_OUT_OF_STOCK_TYPE,
+  PRODUCT_LIST_KEYWORD_TYPE,
+} from "@/features/productManagement/constants/params"
 
 interface ProductNotice {
   origin: string
@@ -49,6 +55,20 @@ interface AddProductRequest {
   deliveryFreeThreshold?: number
   deliveryEstimatedDays?: number
 }
+
+// null은 전체 조회
+type ProductListIsDisplayType = keyof typeof PRODUCT_LIST_IS_DISPLAY_TYPE
+type ProductListIsOutOfStockType =
+  keyof typeof PRODUCT_LIST_IS_OUT_OF_STOCK_TYPE
+type ProductListKeywordType = keyof typeof PRODUCT_LIST_KEYWORD_TYPE
+export interface ProductListParams extends BaseParams {
+  categoryId: number | null
+  isDisplay: ProductListIsDisplayType
+  isOutOfStock: ProductListIsOutOfStockType
+  keyword: string
+  keywordType: ProductListKeywordType
+}
+
 export type { AddProductRequest, ProductNotice, OptionGroupItem, VariantItem }
 
 export const productService = {
@@ -57,4 +77,5 @@ export const productService = {
 
     return response
   },
+  getProductList: async (params: ProductListParams) => {},
 }
