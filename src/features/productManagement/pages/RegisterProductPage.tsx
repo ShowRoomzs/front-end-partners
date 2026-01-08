@@ -20,11 +20,13 @@ import FormImageUploader from "@/common/components/Form/FormImageUploader"
 import FormEditor from "@/common/components/Form/FormEditor"
 import {
   productService,
+  type AddProductRequest,
   type ProductNotice,
 } from "@/features/productManagement/services/productService"
 import { PRODUCT_VALIDATION_RULES } from "@/features/productManagement/constants/validationRules"
-import { useCallback } from "react"
+import { useCallback, useState } from "react"
 import toast from "react-hot-toast"
+import type { AxiosError } from "axios"
 
 interface OptionGroup {
   id: string
@@ -51,6 +53,7 @@ interface ProductFormData {
 }
 
 export default function RegisterProductPage() {
+  const [isLoading, setIsLoading] = useState(false)
   const { control, handleSubmit, setValue, getValues } =
     useForm<ProductFormData>({
       defaultValues: {
@@ -192,42 +195,48 @@ export default function RegisterProductPage() {
       toast.error("카테고리를 선택해 주세요")
       return
     }
+    try {
+      setIsLoading(true)
+      const regularPriceNum = Number(data.regularPrice)
+      const discountRateNum = Number(data.discountRate)
+      const finalSalePrice = data.isDiscount
+        ? Math.max(regularPriceNum - discountRateNum, 0)
+        : regularPriceNum
 
-    const regularPriceNum = Number(data.regularPrice)
-    const discountRateNum = Number(data.discountRate)
-    const finalSalePrice = data.isDiscount
-      ? Math.max(regularPriceNum - discountRateNum, 0)
-      : regularPriceNum
+      const apiData: AddProductRequest = {
+        isDisplay: data.isDisplay,
+        isOutOfStockForced: data.isOutOfStockForced,
+        categoryId: data.category.detail,
+        name: data.productName,
+        sellerProductCode: data.sellerProductCode,
+        purchasePrice: Number(data.purchasePrice),
+        regularPrice: regularPriceNum,
+        salePrice: finalSalePrice,
+        isDiscount: data.isDiscount,
+        representativeImageUrl: data.titleImage[0],
+        coverImageUrls: data.coverImages,
+        description: data.description,
+        productNotice: data.productNotice,
+        optionGroups: data.optionGroups.map(group => ({
+          name: group.name,
+          options: group.items.map(item => item.name),
+        })),
+        variants: data.optionCombinations.map(combo => ({
+          optionNames: combo.combination,
+          salePrice: Number(combo.price),
+          stock: Number(combo.stock),
+          isDisplay: combo.isDisplayed,
+          isRepresentative: combo.isRepresentative,
+        })),
+      }
 
-    const apiData = {
-      isDisplay: data.isDisplay,
-      isOutOfStockForced: data.isOutOfStockForced,
-      categoryId: data.category.detail,
-      name: data.productName,
-      sellerProductCode: data.sellerProductCode,
-      purchasePrice: Number(data.purchasePrice),
-      regularPrice: regularPriceNum,
-      salePrice: finalSalePrice,
-      isDiscount: data.isDiscount,
-      representativeImageUrl: data.titleImage,
-      coverImageUrls: data.coverImages,
-      description: data.description,
-      productNotice: data.productNotice,
-      optionGroups: data.optionGroups.map(group => ({
-        name: group.name,
-        options: group.items.map(item => item.name),
-      })),
-      variants: data.optionCombinations.map(combo => ({
-        optionNames: combo.combination,
-        salePrice: Number(combo.price),
-        stock: Number(combo.stock),
-        isDisplay: combo.isDisplayed,
-        isRepresentative: combo.isRepresentative,
-      })),
+      await productService.addProduct(apiData)
+      toast.success("상품 등록 완료")
+    } catch (error) {
+      throw error as AxiosError
+    } finally {
+      setIsLoading(false)
     }
-
-    await productService.addProduct(apiData)
-    toast.success("상품 등록 완료")
   }, [])
 
   return (
@@ -346,6 +355,7 @@ export default function RegisterProductPage() {
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
+                min={0}
               />
             </FormItem>
           )}
@@ -393,6 +403,7 @@ export default function RegisterProductPage() {
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
+                min={0}
               />
             </FormItem>
           )}
@@ -712,7 +723,9 @@ export default function RegisterProductPage() {
 
       <div className="flex gap-3 justify-end mt-6">
         <Button variant={"outline"}>취소</Button>
-        <Button type="submit">등록하기</Button>
+        <Button isLoading={isLoading} type="submit">
+          등록하기
+        </Button>
       </div>
     </form>
   )
