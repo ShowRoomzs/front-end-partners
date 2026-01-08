@@ -212,19 +212,20 @@ export default function BasicManagement() {
         />
 
         <FormItem label="SNS 링크(최대 3개)">
-          <div className="space-y-3">
-            {fields.length < 3 && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() =>
-                  append({ snsType: "INSTAGRAM" as SnsType, snsUrl: "" })
-                }
-              >
-                SNS 링크 추가
-                <PlusIcon />
-              </Button>
-            )}
+          <Button
+            disabled={fields.length >= 3}
+            type="button"
+            variant="outline"
+            onClick={() =>
+              append({ snsType: "INSTAGRAM" as SnsType, snsUrl: "" })
+            }
+          >
+            SNS 링크 추가
+            <PlusIcon />
+          </Button>
+        </FormItem>
+        <FormItem label="">
+          <div className="space-y-4">
             {fields.map((field, index) => (
               <div key={field.id} className="flex gap-2 items-start">
                 <Controller
