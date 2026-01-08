@@ -2,7 +2,9 @@ import { useForm, Controller, useFieldArray, useWatch } from "react-hook-form"
 import Section from "@/common/components/Section/Section"
 import FormItem from "@/common/components/Form/FormItem"
 import FormInput from "@/common/components/Form/FormInput"
-import FormCategorySelector from "@/common/components/Form/FormCategorySelector"
+import FormCategorySelector, {
+  type CategoryValue,
+} from "@/common/components/Form/FormCategorySelector"
 import FormDisplay from "@/common/components/Form/FormDisplay"
 import FormRadioGroup from "@/common/components/Form/FormRadioGroup"
 import FormOptionTable, {
@@ -16,11 +18,11 @@ import { Trash2, ArrowDown } from "lucide-react"
 import FormCheckbox from "@/common/components/Form/FormCheckbox"
 import FormImageUploader from "@/common/components/Form/FormImageUploader"
 import FormEditor from "@/common/components/Form/FormEditor"
-import { useGetCategory } from "@/common/hooks/useGetCategory"
 import {
   productService,
   type ProductNotice,
 } from "@/features/productManagement/services/productService"
+import { PRODUCT_VALIDATION_RULES } from "@/features/productManagement/constants/validationRules"
 import { useCallback } from "react"
 import toast from "react-hot-toast"
 
@@ -33,7 +35,7 @@ interface OptionGroup {
 interface ProductFormData {
   isDisplay: boolean
   isOutOfStockForced: boolean
-  categoryId: number
+  category: CategoryValue
   productName: string
   sellerProductCode: string
   purchasePrice: number
@@ -49,14 +51,16 @@ interface ProductFormData {
 }
 
 export default function RegisterProductPage() {
-  const { categoryMap } = useGetCategory()
-
   const { control, handleSubmit, setValue, getValues } =
     useForm<ProductFormData>({
       defaultValues: {
         isDisplay: true,
         isOutOfStockForced: false,
-        categoryId: 236,
+        category: {
+          main: null,
+          sub: null,
+          detail: null,
+        },
         productName: "",
         sellerProductCode: "",
         purchasePrice: 0,
@@ -184,6 +188,11 @@ export default function RegisterProductPage() {
   }
 
   const onSubmit = useCallback(async (data: ProductFormData) => {
+    if (!data.category.detail) {
+      toast.error("카테고리를 선택해 주세요")
+      return
+    }
+
     const regularPriceNum = Number(data.regularPrice)
     const discountRateNum = Number(data.discountRate)
     const finalSalePrice = data.isDiscount
@@ -193,7 +202,7 @@ export default function RegisterProductPage() {
     const apiData = {
       isDisplay: data.isDisplay,
       isOutOfStockForced: data.isOutOfStockForced,
-      categoryId: data.categoryId,
+      categoryId: data.category.detail,
       name: data.productName,
       sellerProductCode: data.sellerProductCode,
       purchasePrice: Number(data.purchasePrice),
@@ -240,7 +249,7 @@ export default function RegisterProductPage() {
               required
               error={fieldState.error?.message}
             >
-              <FormRadioGroup
+              <FormRadioGroup<boolean>
                 options={[
                   { label: "진열", value: true },
                   { label: "미진열", value: false },
@@ -274,9 +283,9 @@ export default function RegisterProductPage() {
 
       <Section title="카테고리(한 개만 지정 가능)">
         <Controller
-          name="categoryId"
+          name="category"
           control={control}
-          rules={{ required: "카테고리를 선택해주세요" }}
+          rules={PRODUCT_VALIDATION_RULES.category}
           render={({ field, fieldState }) => (
             <FormItem
               label="카테고리"
@@ -284,14 +293,8 @@ export default function RegisterProductPage() {
               error={fieldState.error?.message}
             >
               <FormCategorySelector
-                categoryMap={categoryMap}
                 value={field.value}
-                onChange={({ detail }) => {
-                  // detail만 저장
-                  if (detail) {
-                    field.onChange(detail)
-                  }
-                }}
+                onChange={field.onChange}
               />
             </FormItem>
           )}
@@ -302,13 +305,7 @@ export default function RegisterProductPage() {
         <Controller
           name="productName"
           control={control}
-          rules={{
-            required: "상품명을 입력해 주세요",
-            maxLength: {
-              value: 100,
-              message: "상품명은 최대 100자까지 입력 가능합니다",
-            },
-          }}
+          rules={PRODUCT_VALIDATION_RULES.productName}
           render={({ field, fieldState }) => (
             <FormItem label="상품명" required error={fieldState.error?.message}>
               <FormInput
@@ -356,13 +353,15 @@ export default function RegisterProductPage() {
         <Controller
           name="regularPrice"
           control={control}
-          render={({ field }) => (
-            <FormItem label="판매가">
+          rules={PRODUCT_VALIDATION_RULES.regularPrice}
+          render={({ field, fieldState }) => (
+            <FormItem required label="판매가" error={fieldState.error?.message}>
               <FormInput
                 type="number"
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
+                min={0}
               />
             </FormItem>
           )}
@@ -372,7 +371,7 @@ export default function RegisterProductPage() {
           control={control}
           render={({ field }) => (
             <FormItem label="할인">
-              <FormRadioGroup
+              <FormRadioGroup<boolean>
                 options={[
                   { label: "설정", value: true },
                   { label: "설정 안함", value: false },
@@ -402,7 +401,7 @@ export default function RegisterProductPage() {
           <FormDisplay value={getDiscountedPrice()} />
         </FormItem>
       </Section>
-      <Section title="옵션 설정">
+      <Section required title="옵션 설정">
         <div className="space-y-6">
           {fields.map((field, index) => (
             <div key={field.id} className="relative">
@@ -465,7 +464,7 @@ export default function RegisterProductPage() {
         </div>
       </Section>
 
-      <Section title="옵션 조합">
+      <Section required title="옵션 조합">
         <Controller
           name="optionCombinations"
           control={control}
@@ -481,8 +480,13 @@ export default function RegisterProductPage() {
         <Controller
           name="titleImage"
           control={control}
-          render={({ field: titleImageField }) => (
-            <FormItem label="대표 이미지">
+          rules={PRODUCT_VALIDATION_RULES.titleImage}
+          render={({ field: titleImageField, formState }) => (
+            <FormItem
+              required
+              label="대표 이미지"
+              error={formState.errors.titleImage?.message}
+            >
               <FormImageUploader
                 value={titleImageField.value}
                 onImagesChange={titleImageField.onChange}
@@ -498,8 +502,13 @@ export default function RegisterProductPage() {
         <Controller
           name="coverImages"
           control={control}
-          render={({ field: coverImageField }) => (
-            <FormItem label="커버 이미지">
+          rules={PRODUCT_VALIDATION_RULES.coverImages}
+          render={({ field: coverImageField, formState }) => (
+            <FormItem
+              required
+              label="커버 이미지"
+              error={formState.errors.coverImages?.message}
+            >
               <FormImageUploader
                 value={coverImageField.value}
                 onImagesChange={coverImageField.onChange}
@@ -518,8 +527,13 @@ export default function RegisterProductPage() {
         <Controller
           name="productNotice.origin"
           control={control}
-          render={({ field }) => (
-            <FormItem label="제조국">
+          rules={PRODUCT_VALIDATION_RULES.productNotice.origin}
+          render={({ field, formState }) => (
+            <FormItem
+              required
+              label="제조국"
+              error={formState.errors.productNotice?.origin?.message}
+            >
               <FormInput
                 value={field.value}
                 onChange={field.onChange}
@@ -531,8 +545,13 @@ export default function RegisterProductPage() {
         <Controller
           name="productNotice.material"
           control={control}
-          render={({ field }) => (
-            <FormItem label="소재">
+          rules={PRODUCT_VALIDATION_RULES.productNotice.material}
+          render={({ field, formState }) => (
+            <FormItem
+              required
+              label="소재"
+              error={formState.errors.productNotice?.material?.message}
+            >
               <FormInput
                 value={field.value}
                 onChange={field.onChange}
@@ -544,8 +563,13 @@ export default function RegisterProductPage() {
         <Controller
           name="productNotice.color"
           control={control}
-          render={({ field }) => (
-            <FormItem label="색상">
+          rules={PRODUCT_VALIDATION_RULES.productNotice.color}
+          render={({ field, formState }) => (
+            <FormItem
+              required
+              label="색상"
+              error={formState.errors.productNotice?.color?.message}
+            >
               <FormInput
                 value={field.value}
                 onChange={field.onChange}
@@ -557,8 +581,13 @@ export default function RegisterProductPage() {
         <Controller
           name="productNotice.size"
           control={control}
-          render={({ field }) => (
-            <FormItem label="치수">
+          rules={PRODUCT_VALIDATION_RULES.productNotice.size}
+          render={({ field, formState }) => (
+            <FormItem
+              required
+              label="치수"
+              error={formState.errors.productNotice?.size?.message}
+            >
               <FormInput
                 value={field.value}
                 onChange={field.onChange}
@@ -570,8 +599,13 @@ export default function RegisterProductPage() {
         <Controller
           name="productNotice.manufacturer"
           control={control}
-          render={({ field }) => (
-            <FormItem label="제조자">
+          rules={PRODUCT_VALIDATION_RULES.productNotice.manufacturer}
+          render={({ field, formState }) => (
+            <FormItem
+              required
+              label="제조자"
+              error={formState.errors.productNotice?.manufacturer?.message}
+            >
               <FormInput
                 value={field.value}
                 onChange={field.onChange}
@@ -583,8 +617,13 @@ export default function RegisterProductPage() {
         <Controller
           name="productNotice.washingMethod"
           control={control}
-          render={({ field }) => (
-            <FormItem label="세탁 방법">
+          rules={PRODUCT_VALIDATION_RULES.productNotice.washingMethod}
+          render={({ field, formState }) => (
+            <FormItem
+              required
+              label="세탁 방법"
+              error={formState.errors.productNotice?.washingMethod?.message}
+            >
               <FormInput
                 value={field.value}
                 onChange={field.onChange}
@@ -596,8 +635,13 @@ export default function RegisterProductPage() {
         <Controller
           name="productNotice.manufactureDate"
           control={control}
-          render={({ field }) => (
-            <FormItem label="제조년월">
+          rules={PRODUCT_VALIDATION_RULES.productNotice.manufactureDate}
+          render={({ field, formState }) => (
+            <FormItem
+              required
+              label="제조년월"
+              error={formState.errors.productNotice?.manufactureDate?.message}
+            >
               <FormInput
                 value={field.value}
                 onChange={field.onChange}
@@ -609,8 +653,13 @@ export default function RegisterProductPage() {
         <Controller
           name="productNotice.asInfo"
           control={control}
-          render={({ field }) => (
-            <FormItem label="A/S안내 및 연락처">
+          rules={PRODUCT_VALIDATION_RULES.productNotice.asInfo}
+          render={({ field, formState }) => (
+            <FormItem
+              required
+              label="A/S안내 및 연락처"
+              error={formState.errors.productNotice?.asInfo?.message}
+            >
               <FormInput
                 value={field.value}
                 onChange={field.onChange}
@@ -622,8 +671,13 @@ export default function RegisterProductPage() {
         <Controller
           name="productNotice.qualityAssurance"
           control={control}
-          render={({ field }) => (
-            <FormItem label="품질 보증 기준">
+          rules={PRODUCT_VALIDATION_RULES.productNotice.qualityAssurance}
+          render={({ field, formState }) => (
+            <FormItem
+              required
+              label="품질 보증 기준"
+              error={formState.errors.productNotice?.qualityAssurance?.message}
+            >
               <FormInput
                 value={field.value}
                 onChange={field.onChange}
@@ -638,8 +692,13 @@ export default function RegisterProductPage() {
         <Controller
           name="description"
           control={control}
-          render={({ field }) => (
-            <FormItem label="상세설명">
+          rules={PRODUCT_VALIDATION_RULES.description}
+          render={({ field, formState }) => (
+            <FormItem
+              required
+              label="상세설명"
+              error={formState.errors.description?.message}
+            >
               <FormEditor
                 value={field.value}
                 onChange={field.onChange}
