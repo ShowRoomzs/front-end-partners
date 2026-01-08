@@ -1,4 +1,4 @@
-import type { PageResponse } from "@/common/types/params"
+import type { PageInfo } from "@/common/types/page"
 import { cn } from "@/lib/utils"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
@@ -6,23 +6,20 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 const INITIAL_DISPLAY_COUNT = 3 // 초기에 표시할 페이지 수 (1, 2, 3)
 const MIDDLE_DISPLAY_COUNT = 3 // 중간에 표시할 페이지 수 (이전, 현재, 다음)
 
-export interface PaginationProps extends Omit<
-  PageResponse<unknown>,
-  "content"
-> {
+export interface PaginationProps extends Omit<PageInfo, "content"> {
   onPageChange?: (page: number) => void
 }
 
 export default function Pagination(props: PaginationProps) {
-  const { page = 0, totalPages = 50, onPageChange } = props
+  const { currentPage, totalPages, onPageChange } = props
 
   // 내부 상태로 현재 페이지를 관리하여 즉각 반응
-  const [displayPage, setDisplayPage] = useState(page)
+  const [displayPage, setDisplayPage] = useState(currentPage)
 
-  // props.page 변경 시 동기화
+  // props.currentPage 변경 시 동기화
   useEffect(() => {
-    setDisplayPage(page)
-  }, [page])
+    setDisplayPage(currentPage)
+  }, [currentPage])
 
   // 페이지 변경 핸들러
   const handlePageChange = useCallback(

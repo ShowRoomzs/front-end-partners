@@ -2,19 +2,22 @@ export interface PageParams {
   page: number
   size: number
 }
-
+export interface PageInfo {
+  currentPage: number
+  totalPages: number
+  totalResults: number
+  limit: number
+  hasNext: boolean
+}
 export interface PageResponse<T> {
   content: Array<T>
-  page: number
-  size: number
-  totalElements: number
-  totalPages: number
+  pageInfo: PageInfo
 }
 
 export type SortOrder = "asc" | "desc"
-export interface SortParams {
-  sortBy: string
-  sortOrder: SortOrder
-}
+// export interface SortParams {
+//   sortBy: string
+//   sortOrder: SortOrder
+// }
 
-export type BaseParams = PageParams & SortParams
+export type BaseParams = PageParams

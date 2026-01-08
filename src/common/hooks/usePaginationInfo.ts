@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react"
 import type { PaginationProps } from "@/common/components/Pagination/Pagination"
-import type { PageResponse } from "@/common/types/page"
+import type { PageInfo } from "@/common/types/page"
 
 interface UsePaginationInfoOptions {
-  data?: PageResponse<unknown> | null
+  data?: PageInfo
   onPageChange?: (page: number) => void
 }
 
@@ -19,29 +19,32 @@ export function usePaginationInfo(
   const [cachedPageInfo, setCachedPageInfo] = useState<
     Omit<PaginationProps, "onPageChange">
   >({
-    page: 0,
-    totalElements: 0,
+    currentPage: 0,
+    totalResults: 0,
     totalPages: 0,
-    size: 20,
+    limit: 20,
+    hasNext: false,
   })
 
   useEffect(() => {
     if (!data) return
 
     setCachedPageInfo({
-      page: data.page,
-      totalElements: data.totalElements,
+      currentPage: data.currentPage,
+      totalResults: data.totalResults,
       totalPages: data.totalPages,
-      size: data.size,
+      limit: data.limit,
+      hasNext: data.hasNext,
     })
   }, [data])
 
   const pageInfo = useMemo<PaginationProps>(() => {
     return {
-      page: data?.page ?? cachedPageInfo.page,
-      totalElements: data?.totalElements ?? cachedPageInfo.totalElements,
+      currentPage: data?.currentPage ?? cachedPageInfo.currentPage,
+      totalResults: data?.totalResults ?? cachedPageInfo.totalResults,
       totalPages: data?.totalPages ?? cachedPageInfo.totalPages,
-      size: data?.size ?? cachedPageInfo.size,
+      limit: data?.limit ?? cachedPageInfo.limit,
+      hasNext: data?.hasNext ?? cachedPageInfo.hasNext,
       onPageChange,
     }
   }, [data, cachedPageInfo, onPageChange])

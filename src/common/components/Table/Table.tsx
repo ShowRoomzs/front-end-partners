@@ -25,7 +25,6 @@ export default function Table<T, K extends keyof T = keyof T>(
     onRowClick,
     pageInfo,
     rowKey,
-    showNumber,
     isLoading = false,
     sortOption,
     bodyClassName = "",
@@ -116,26 +115,6 @@ export default function Table<T, K extends keyof T = keyof T>(
       ]
     }
 
-    if (showNumber) {
-      columns = [
-        {
-          key: "number" as TableKey,
-          label: "No.",
-          align: "center" as const,
-          width: 55,
-          preventRowClick: true,
-          render: (_value, _record: T, index: number) => {
-            return (
-              <span className="text-[12px] text-[#00000099]">
-                {pageInfo.totalElements - pageInfo.page * pageInfo.size - index}
-              </span>
-            )
-          },
-        },
-        ...columns,
-      ]
-    }
-
     if (showCheckbox) {
       columns = [
         {
@@ -174,10 +153,8 @@ export default function Table<T, K extends keyof T = keyof T>(
     handleChangeAllCheckbox,
     handleChangeCheckbox,
     originColumns,
-    pageInfo,
     rowKey,
     showCheckbox,
-    showNumber,
   ])
 
   const getRowWidths = useCallback(
@@ -290,7 +267,12 @@ export default function Table<T, K extends keyof T = keyof T>(
       // 데이터 없음 and 로딩 중 : Spinner
       if (isLoading) {
         return (
-          <div className="w-full h-full flex items-center justify-center">
+          <div
+            className="w-full h-full flex items-center justify-center"
+            style={{
+              animation: "spin 1s linear infinite",
+            }}
+          >
             <Loader2Icon />
           </div>
         )

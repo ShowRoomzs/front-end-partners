@@ -34,7 +34,6 @@ export interface TableProps<T, K extends keyof T = keyof T> {
   pageInfo: PaginationProps
   isLoading?: boolean
   showCheckbox?: boolean
-  showNumber?: boolean
   rowKey?: K
   renderFooter?: ReactNode
   onRowClick?: (record: T) => void

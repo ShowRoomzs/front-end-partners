@@ -25,6 +25,7 @@ function FilterItemComponent<T>(props: FilterItemProps<T>) {
 
   switch (type) {
     case "radio": {
+      console.log(value, options)
       return (
         <RadioGroup
           value={value as string}
