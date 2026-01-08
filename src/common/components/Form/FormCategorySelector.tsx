@@ -1,4 +1,4 @@
-import { forwardRef, useMemo, useState, useEffect } from "react"
+import { forwardRef, useMemo, useState, useEffect, useCallback } from "react"
 import {
   Select,
   SelectContent,
@@ -6,62 +6,114 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import type { CategoryMap } from "@/common/hooks/useGetCategory"
+import { useGetCategory } from "@/common/hooks/useGetCategory"
+
+export interface CategoryValue {
+  main: number | null
+  sub: number | null
+  detail: number | null
+}
 
 interface FormCategorySelectorProps {
-  categoryMap: CategoryMap | null
-  onChange?: (data: {
-    main: number | null
-    sub: number | null
-    detail: number | null
-  }) => void
-  value?: number
+  onChange?: (data: CategoryValue) => void
+  value?: CategoryValue | number // 단일 카테고리 값 전달 가능
 }
 
 const FormCategorySelector = forwardRef<
   HTMLButtonElement,
   FormCategorySelectorProps
 >((props, ref) => {
-  const { categoryMap, onChange, value } = props
+  const { onChange, value } = props
 
-  const initialState = useMemo(() => {
-    if (!value || !categoryMap) {
-      return { main: null, sub: null, detail: null }
-    }
+  const { categoryMap } = useGetCategory()
 
-    const detail = categoryMap.byId.get(value)
-    if (!detail) return { main: null, sub: null, detail: null }
+  const getCategoryHierarchy = useCallback(
+    (
+      categoryId: number
+    ): { main: number | null; sub: number | null; detail: number | null } => {
+      if (!categoryMap) {
+        return { main: null, sub: null, detail: null }
+      }
 
-    const sub = detail.parentId ? categoryMap.byId.get(detail.parentId) : null
-    const main = sub?.parentId ? categoryMap.byId.get(sub.parentId) : null
+      const category = categoryMap.byId.get(categoryId)
+      if (!category) {
+        return { main: null, sub: null, detail: null }
+      }
 
-    return {
-      main: main?.categoryId ?? null,
-      sub: sub?.categoryId ?? null,
-      detail: detail.categoryId,
-    }
-  }, [value, categoryMap])
+      if (!category.parentId) {
+        return { main: categoryId, sub: null, detail: null }
+      }
 
-  const [selectedMain, setSelectedMain] = useState<number | null>(
-    initialState.main
+      const parent = categoryMap.byId.get(category.parentId)
+      if (!parent) {
+        return { main: null, sub: null, detail: null }
+      }
+
+      if (!parent.parentId) {
+        return { main: parent.categoryId, sub: categoryId, detail: null }
+      }
+
+      const grandParent = categoryMap.byId.get(parent.parentId)
+      if (!grandParent) {
+        return { main: null, sub: null, detail: null }
+      }
+
+      return {
+        main: grandParent.categoryId,
+        sub: parent.categoryId,
+        detail: categoryId,
+      }
+    },
+    [categoryMap]
   )
-  const [selectedSub, setSelectedSub] = useState<number | null>(
-    initialState.sub
-  )
-  const [selectedDetail, setSelectedDetail] = useState<number | null>(
-    initialState.detail
-  )
-  const [prevValue, setPrevValue] = useState<number | undefined>(value)
 
-  // value prop이 외부에서 변경되었을 때만 내부 상태 동기화
+  const [selectedMain, setSelectedMain] = useState<number | null>(null)
+  const [selectedSub, setSelectedSub] = useState<number | null>(null)
+  const [selectedDetail, setSelectedDetail] = useState<number | null>(null)
+  const [isInitialized, setIsInitialized] = useState(false)
+
   useEffect(() => {
-    if (value !== prevValue) {
-      setPrevValue(value)
-      setSelectedMain(initialState.main)
-      setSelectedSub(initialState.sub)
-      setSelectedDetail(initialState.detail)
+    if (!categoryMap || isInitialized) return
+
+    if (!value) {
+      setIsInitialized(true)
+      return
     }
-  }, [value, prevValue, initialState])
+
+    const hierarchy =
+      typeof value === "number" ? getCategoryHierarchy(value) : value
+
+    setSelectedMain(hierarchy.main)
+    setSelectedSub(hierarchy.sub)
+    setSelectedDetail(hierarchy.detail)
+    setIsInitialized(true)
+  }, [categoryMap, value, getCategoryHierarchy, isInitialized])
+
+  useEffect(() => {
+    if (!isInitialized || !categoryMap) return
+
+    const newValue =
+      typeof value === "number" ? getCategoryHierarchy(value) : value
+
+    const isChanged =
+      newValue?.main !== selectedMain ||
+      newValue?.sub !== selectedSub ||
+      newValue?.detail !== selectedDetail
+
+    if (isChanged) {
+      setSelectedMain(newValue?.main ?? null)
+      setSelectedSub(newValue?.sub ?? null)
+      setSelectedDetail(newValue?.detail ?? null)
+    }
+  }, [
+    value,
+    selectedMain,
+    selectedSub,
+    selectedDetail,
+    getCategoryHierarchy,
+    isInitialized,
+    categoryMap,
+  ])
 
   const subCategories = useMemo(() => {
     if (!selectedMain || !categoryMap) return []
