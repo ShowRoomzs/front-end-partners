@@ -131,6 +131,7 @@ export default function BasicManagement() {
                   type="button"
                   onClick={handleClickCheckDuplicate}
                   variant="outline"
+                  disabled={marketInfo?.marketName === field.value}
                 >
                   중복확인
                 </Button>
