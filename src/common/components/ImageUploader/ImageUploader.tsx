@@ -1,4 +1,4 @@
-import { useCallback, useId, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { X } from "lucide-react"
 import { formatFileSizeFromKB } from "@/common/utils/formatFileSizeFromKB"
 import { fileService, type FileType } from "@/common/services/fileService"
@@ -21,6 +21,7 @@ export interface ImageUploaderProps {
   recommendSize?: Size // 권장 이미지 크기(추가 검증 로직은 x)
   additionalInfoText?: string // 추가 정보 텍스트
   type: FileType
+  isRounded?: boolean
 }
 
 export interface ImageFile {
@@ -50,6 +51,15 @@ export default function ImageUploader(props: ImageUploaderProps) {
   const previews = useMemo(() => {
     return localImages.map(img => img.imageUrl)
   }, [localImages])
+
+  useEffect(() => {
+    if (value) {
+      const urls = Array.isArray(value) ? value : [value]
+      setLocalImages(urls.map(url => ({ imageUrl: url })))
+    } else {
+      setLocalImages([])
+    }
+  }, [value])
 
   const handleFiles = async (list: FileList | null) => {
     if (!list || list.length < 1) return
@@ -85,13 +95,13 @@ export default function ImageUploader(props: ImageUploaderProps) {
         })
       )
 
-      const newImageUrls = uploadResults.map(result => result.imageUrl)
       const newImages = uploadResults.map(result => ({
         imageUrl: result.imageUrl,
       }))
 
-      setLocalImages(prev => [...prev, ...newImages])
-      onImagesChange?.([...value, ...newImageUrls])
+      const updatedImages = [...localImages, ...newImages]
+      setLocalImages(updatedImages)
+      onImagesChange?.(updatedImages.map(img => img.imageUrl))
     } catch (error) {
       console.error("이미지 업로드 실패:", error)
       alert("이미지 업로드에 실패했습니다.")
@@ -100,12 +110,13 @@ export default function ImageUploader(props: ImageUploaderProps) {
 
   const removeAt = useCallback(
     (idx: number) => {
-      setLocalImages(prev => prev.filter((_, i) => i !== idx))
-      onImagesChange?.(
-        Array.isArray(value) ? value.filter((_, i) => i !== idx) : []
-      )
+      setLocalImages(prev => {
+        const updated = prev.filter((_, i) => i !== idx)
+        onImagesChange?.(updated.map(img => img.imageUrl))
+        return updated
+      })
     },
-    [onImagesChange, value]
+    [onImagesChange]
   )
 
   const handleImageClick = useCallback(
@@ -179,18 +190,9 @@ export default function ImageUploader(props: ImageUploaderProps) {
     if (requiredSquare) {
       text.push("정방형 이미지만 업로드 가능")
     }
-    if (additionalInfoText) {
-      text.push(additionalInfoText)
-    }
+
     return text.join(" / ")
-  }, [
-    accept,
-    additionalInfoText,
-    maxLength,
-    maxStorage,
-    recommendSize,
-    requiredSquare,
-  ])
+  }, [accept, maxLength, maxStorage, recommendSize, requiredSquare])
 
   return (
     <>
@@ -270,7 +272,15 @@ export default function ImageUploader(props: ImageUploaderProps) {
                 <span>선택됨: {localImages.length}개 이미지</span>
               </div>
             )}
-            {<span className="text-xs text-gray-400">{infoText}</span>}
+            <span className="text-xs text-gray-400">{infoText}</span>
+            {additionalInfoText && (
+              <>
+                <br />
+                <span className="text-xs text-gray-400 whitespace-pre-line">
+                  {additionalInfoText}
+                </span>
+              </>
+            )}
           </div>
         </div>
       </div>
