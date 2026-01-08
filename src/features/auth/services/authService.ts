@@ -11,6 +11,9 @@ export interface RegisterData {
   csNumber: string
 }
 export interface RegisterResponse {
+  message: string
+}
+export interface LoginResponse {
   accessToken: string
   refreshToken: string
   accessTokenExpiresIn: number
@@ -58,7 +61,7 @@ export const authService = {
     return response
   },
   login: async (data: LoginData) => {
-    const { data: response } = await authInstance.post<RegisterResponse>(
+    const { data: response } = await authInstance.post<LoginResponse>(
       "/seller/auth/login",
       data
     )
@@ -66,7 +69,7 @@ export const authService = {
     return response
   },
   refresh: async (refreshToken: string) => {
-    const { data: response } = await authInstance.post<RegisterResponse>(
+    const { data: response } = await authInstance.post<LoginResponse>(
       "/seller/auth/refresh",
       {
         refreshToken,

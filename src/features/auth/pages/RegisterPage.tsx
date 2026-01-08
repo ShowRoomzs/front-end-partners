@@ -11,15 +11,12 @@ import {
   type RegisterData,
 } from "@/features/auth/services/authService"
 import { formatPhoneNumber } from "@/features/auth/utils/formatPhoneNumber"
-import { useCookie } from "@/common/hooks/useCookie"
-import { COOKIE_NAME } from "@/common/constants"
+import toast from "react-hot-toast"
 
 export default function RegisterPage() {
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
-  const [, setAccessToken] = useCookie<string>(COOKIE_NAME.ACCESS_TOKEN)
-  const [, setRefreshToken] = useCookie<string>(COOKIE_NAME.REFRESH_TOKEN)
 
   const {
     register,
@@ -39,12 +36,8 @@ export default function RegisterPage() {
       csNumber: formatPhoneNumber(formData.csNumber),
     }
     const res = await authService.register(body)
-    const { accessToken, refreshToken } = res
-    if (accessToken && refreshToken) {
-      setAccessToken(accessToken)
-      setRefreshToken(refreshToken)
-      navigate("/")
-    }
+    toast.success(res.message)
+    navigate("/")
   }
 
   const renderStepIndicator = () => (

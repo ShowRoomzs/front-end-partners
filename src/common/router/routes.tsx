@@ -4,6 +4,7 @@ import RegisterProductPage from "@/features/productManagement/pages/RegisterProd
 import LoginPage from "@/features/auth/pages/LoginPage"
 import RegisterPage from "@/features/auth/pages/RegisterPage"
 import ProductListPage from "@/features/productManagement/pages/ProductListPage"
+import BasicManagement from "@/features/storeManagement/pages/BasicManagement"
 
 export const authRoutes: Array<RouteObject> = [
   {
@@ -32,7 +33,7 @@ export const mainRoutes: Array<RouteObject> = [
       // Seller routes
       {
         path: "store/basic",
-        element: <div>aasdf</div>,
+        element: <BasicManagement />,
       },
       {
         path: "product/register",
