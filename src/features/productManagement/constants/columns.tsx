@@ -22,7 +22,6 @@ export const PRODUCT_LIST_COLUMNS: Columns<ProductItem> = [
   {
     key: "name",
     label: "상품명",
-    fixed: "left",
   },
   {
     key: "price",
