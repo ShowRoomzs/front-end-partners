@@ -476,7 +476,7 @@ export default function RegisterProductPage() {
           )}
         />
       </Section>
-      <Section title="이미지 설정">
+      <Section title="상품 이미지">
         <Controller
           name="titleImage"
           control={control}
