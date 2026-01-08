@@ -84,3 +84,6 @@ export const getAbsoluteWidths = <T>(columns: Column<T>[]) => {
 
   return absolutePositions
 }
+export function getColumnKeyWithLabel<T>(column: Column<T>) {
+  return `${column.key.toString()}-${column.label}`
+}

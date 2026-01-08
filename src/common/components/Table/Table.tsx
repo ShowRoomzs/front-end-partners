@@ -9,8 +9,9 @@ import ScrollBar from "../ScrollBar/ScrollBar"
 import type { TableKey, TableProps } from "@/common/components/Table/types"
 import { Loader2Icon } from "lucide-react"
 import { useSyncHorizontalScroll } from "@/common/hooks/useSyncHorizontalScroll"
+import { getColumnKeyWithLabel } from "@/common/components/Table/config"
 
-const MAX_TABLE_WIDTH = 1880 // 최대 테이블 너비
+const MAX_TABLE_WIDTH = 1600 // 최대 테이블 너비
 
 export default function Table<T, K extends keyof T = keyof T>(
   props: TableProps<T, K>
@@ -158,14 +159,22 @@ export default function Table<T, K extends keyof T = keyof T>(
   ])
 
   const getRowWidths = useCallback(
-    (row: Element, isHeader: boolean = false): Record<string, number> => {
+    (table: Element, isHeader: boolean = false): Record<string, number> => {
       const targetTag = isHeader ? "th" : "td"
+      const row = isHeader
+        ? table.querySelector("thead tr")
+        : table.querySelector("tbody tr")
+
+      if (!row) {
+        return {}
+      }
+
       const cells = row.querySelectorAll(targetTag)
 
       const widths = columns.reduce(
         (acc, col, colIndex) => {
-          const width = cells[colIndex].getBoundingClientRect().width
-          acc[col.key.toString()] = width
+          const width = cells[colIndex]?.getBoundingClientRect().width || 0
+          acc[getColumnKeyWithLabel(col)] = width
           return acc
         },
         {} as Record<string, number>
@@ -191,7 +200,7 @@ export default function Table<T, K extends keyof T = keyof T>(
     const measuredWidths: Record<string, number> = {}
 
     columns.forEach(col => {
-      const colKey = col.key.toString()
+      const colKey = getColumnKeyWithLabel(col)
       const headerWidth = headerWidths[colKey]
       const bodyWidth = bodyWidths[colKey]
 
@@ -226,7 +235,7 @@ export default function Table<T, K extends keyof T = keyof T>(
         if (col.width) {
           return
         }
-        const colKey = col.key.toString()
+        const colKey = getColumnKeyWithLabel(col)
         // 비율 = 현재 컬럼 너비 / 조정되어야하는 전체 width(절대값을 갖는 컬럼 제외한 나머지 컬럼의 너비)
         const ratio = measuredWidths[colKey] / (totalWidth - absoluteWidths)
 
@@ -254,8 +263,8 @@ export default function Table<T, K extends keyof T = keyof T>(
       <colgroup>
         {columns.map(col => (
           <col
-            key={`${col.key.toString()}`}
-            style={{ width: colWidths[col.key.toString()] }}
+            key={getColumnKeyWithLabel(col)}
+            style={{ width: colWidths[getColumnKeyWithLabel(col)] }}
           />
         ))}
       </colgroup>
