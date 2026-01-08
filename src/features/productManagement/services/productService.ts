@@ -1,12 +1,12 @@
 import { apiInstance } from "@/common/lib/apiInstance"
-import type { BaseParams } from "@/common/types/page"
+import type { BaseParams, PageResponse } from "@/common/types/page"
 import type {
   PRODUCT_LIST_IS_DISPLAY_TYPE,
   PRODUCT_LIST_IS_OUT_OF_STOCK_TYPE,
   PRODUCT_LIST_KEYWORD_TYPE,
 } from "@/features/productManagement/constants/params"
 
-interface ProductNotice {
+export interface ProductNotice {
   origin: string
   material: string
   color: string
@@ -19,12 +19,12 @@ interface ProductNotice {
 }
 type OptionName = string
 
-interface OptionGroupItem {
+export interface OptionGroupItem {
   name: OptionName
   options: Array<string>
 }
 
-interface VariantItem {
+export interface VariantItem {
   optionNames: Array<OptionName>
   salePrice: number
   stock: number
@@ -32,7 +32,7 @@ interface VariantItem {
   isRepresentative: boolean
 }
 
-interface AddProductRequest {
+export interface AddProductRequest {
   isDisplay: boolean // 진열 여부
   isOutOfStockForced: boolean // 강제 품절 처리
   categoryId: number // 카테고리 id
@@ -62,14 +62,31 @@ type ProductListIsOutOfStockType =
   keyof typeof PRODUCT_LIST_IS_OUT_OF_STOCK_TYPE
 type ProductListKeywordType = keyof typeof PRODUCT_LIST_KEYWORD_TYPE
 export interface ProductListParams extends BaseParams {
-  categoryId: number | null
-  isDisplay: ProductListIsDisplayType
-  isOutOfStock: ProductListIsOutOfStockType
+  categoryId?: number
+  displayStatus: ProductListIsDisplayType
+  stockStatus: ProductListIsOutOfStockType
   keyword: string
   keywordType: ProductListKeywordType
 }
 
-export type { AddProductRequest, ProductNotice, OptionGroupItem, VariantItem }
+export interface ProductItem {
+  productId: number
+  productNumber: string
+  sellerProductCode: string
+  thumbnailUrl: string
+  name: string
+  price: {
+    purchasePrice: number
+    regularPrice: number
+    salePrice: number
+  }
+  createdAt: string
+  displayStatus: ProductListIsDisplayType
+  stockStatus: ProductListIsOutOfStockType
+  isOutOfStockForced: boolean
+}
+
+export type ProductListResponse = PageResponse<ProductItem>
 
 export const productService = {
   addProduct: async (data: AddProductRequest) => {
@@ -77,5 +94,14 @@ export const productService = {
 
     return response
   },
-  getProductList: async (params: ProductListParams) => {},
+  getProductList: async (params: ProductListParams) => {
+    const { data: response } = await apiInstance.get<ProductListResponse>(
+      "/seller/products",
+      {
+        params,
+      }
+    )
+
+    return response
+  },
 }

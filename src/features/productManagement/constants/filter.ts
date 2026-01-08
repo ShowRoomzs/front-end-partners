@@ -18,14 +18,14 @@ export const PRODUCT_LIST_FILTER_OPTIONS: FilterOptionGroup<ProductListParams> =
     "진열 여부": [
       {
         type: "radio",
-        key: "isDisplay",
+        key: "displayStatus",
         options: parseMapToOptions(PRODUCT_LIST_IS_DISPLAY_TYPE),
       },
     ],
     "품절 여부": [
       {
         type: "radio",
-        key: "isOutOfStock",
+        key: "stockStatus",
         options: parseMapToOptions(PRODUCT_LIST_IS_OUT_OF_STOCK_TYPE),
       },
     ],
