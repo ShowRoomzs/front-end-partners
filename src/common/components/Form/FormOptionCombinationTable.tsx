@@ -53,7 +53,6 @@ const FormOptionCombinationTable = forwardRef<
   }
 
   const handleRemoveCombination = (id: string) => {
-    if (combinations.length <= 1) return
     onChange?.(combinations.filter(comb => comb.id !== id))
   }
 
@@ -177,7 +176,6 @@ const FormOptionCombinationTable = forwardRef<
                     variant="ghost"
                     size="icon"
                     onClick={() => handleRemoveCombination(combination.id)}
-                    disabled={disabled || combinations.length <= 1}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

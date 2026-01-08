@@ -10,6 +10,8 @@ interface FormInputProps {
   onBlur?: () => void
   id?: string
   type?: "text" | "number"
+  min?: number
+  max?: number
 }
 
 const FormInput = forwardRef<HTMLInputElement, FormInputProps>((props, ref) => {
@@ -22,6 +24,8 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>((props, ref) => {
     onBlur,
     id,
     type = "text",
+    min,
+    max,
   } = props
 
   return (
@@ -35,6 +39,8 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>((props, ref) => {
       value={value}
       onChange={e => onChange?.(e.target.value)}
       onBlur={onBlur}
+      min={min}
+      max={max}
     />
   )
 })

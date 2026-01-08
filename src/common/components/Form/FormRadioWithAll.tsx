@@ -1,7 +1,7 @@
-import { forwardRef } from 'react'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Label } from '@/components/ui/label'
-import type { RadioOption } from './FormRadioGroup'
+import { forwardRef } from "react"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Label } from "@/components/ui/label"
+import type { RadioOption } from "./FormRadioGroup"
 
 interface FormRadioWithAllProps {
   options: Array<RadioOption>
@@ -19,8 +19,8 @@ const FormRadioWithAll = forwardRef<HTMLDivElement, FormRadioWithAllProps>(
       disabled = false,
       onChange,
       value,
-      allLabel = '전체',
-      allValue = 'ALL',
+      allLabel = "전체",
+      allValue = "ALL",
     } = props
 
     const allOptions = [{ label: allLabel, value: allValue }, ...options]
@@ -46,6 +46,6 @@ const FormRadioWithAll = forwardRef<HTMLDivElement, FormRadioWithAllProps>(
   }
 )
 
-FormRadioWithAll.displayName = 'FormRadioWithAll'
+FormRadioWithAll.displayName = "FormRadioWithAll"
 
 export default FormRadioWithAll
