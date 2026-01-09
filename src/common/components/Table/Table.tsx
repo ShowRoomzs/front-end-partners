@@ -53,7 +53,6 @@ export default function Table<T, K extends keyof T = keyof T>(
   useEffect(() => {
     setCheckedKeys(prev => {
       const prevSet = new Set(prev)
-
       if (
         originCheckedKeys.length === prev.length &&
         originCheckedKeys.every(key => prevSet.has(key))
@@ -89,7 +88,10 @@ export default function Table<T, K extends keyof T = keyof T>(
           }
           const value = record[rowKey] as Draft<T[K]>
           if (newChecked) {
-            draft.push(value)
+            const index = draft.indexOf(value)
+            if (index === -1) {
+              draft.push(value)
+            }
           } else {
             const index = draft.indexOf(value)
             if (index > -1) {
