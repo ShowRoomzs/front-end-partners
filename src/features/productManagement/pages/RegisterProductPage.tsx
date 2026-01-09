@@ -1,4 +1,9 @@
-import { useForm, Controller, useFieldArray, useWatch } from "react-hook-form"
+import {
+  useForm,
+  useFieldArray,
+  useWatch,
+  type FieldErrors,
+} from "react-hook-form"
 import Section from "@/common/components/Section/Section"
 import FormItem from "@/common/components/Form/FormItem"
 import FormInput from "@/common/components/Form/FormInput"
@@ -29,6 +34,9 @@ import toast from "react-hot-toast"
 import type { AxiosError } from "axios"
 import { useNavigate } from "react-router-dom"
 import { confirm } from "@/common/components/ConfirmModal"
+import FormController, {
+  CONTROLLER_ID_PREFIX,
+} from "@/common/components/Form/FormController"
 
 interface OptionGroup {
   id: string
@@ -265,9 +273,22 @@ export default function RegisterProductPage() {
     }
   }, [formState.isDirty, navigate])
 
+  const onInvalid = useCallback((errors: FieldErrors<ProductFormData>) => {
+    const firstErrorKey = Object.keys(errors)[0]
+    const firstErrorField = errors[firstErrorKey as keyof ProductFormData]
+    const targetController = document.getElementById(
+      `${CONTROLLER_ID_PREFIX}${firstErrorKey}`
+    )
+
+    toast.error(firstErrorField?.message as string)
+    if (targetController) {
+      targetController.scrollIntoView({ behavior: "smooth", block: "center" })
+    }
+  }, [])
+
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onSubmit, onInvalid)}
       onKeyDown={e => {
         if (e.key === "Enter") {
           e.preventDefault()
@@ -275,7 +296,7 @@ export default function RegisterProductPage() {
       }}
     >
       <Section title="표시 여부">
-        <Controller
+        <FormController
           name="isDisplay"
           control={control}
           render={({ field, fieldState }) => (
@@ -295,7 +316,7 @@ export default function RegisterProductPage() {
             </FormItem>
           )}
         />
-        <Controller
+        <FormController
           name="isOutOfStockForced"
           control={control}
           render={({ field, fieldState }) => (
@@ -317,7 +338,7 @@ export default function RegisterProductPage() {
       </Section>
 
       <Section title="카테고리(한 개만 지정 가능)">
-        <Controller
+        <FormController
           name="category"
           control={control}
           rules={PRODUCT_VALIDATION_RULES.category}
@@ -337,7 +358,7 @@ export default function RegisterProductPage() {
       </Section>
 
       <Section title="기본 정보">
-        <Controller
+        <FormController
           name="productName"
           control={control}
           rules={PRODUCT_VALIDATION_RULES.productName}
@@ -356,7 +377,7 @@ export default function RegisterProductPage() {
         <FormItem label="상품번호">
           <FormDisplay value="자동입력됩니다." />
         </FormItem>
-        <Controller
+        <FormController
           name="sellerProductCode"
           control={control}
           render={({ field }) => (
@@ -371,7 +392,7 @@ export default function RegisterProductPage() {
         />
       </Section>
       <Section title="가격 설정">
-        <Controller
+        <FormController
           name="purchasePrice"
           control={control}
           render={({ field }) => (
@@ -386,7 +407,7 @@ export default function RegisterProductPage() {
             </FormItem>
           )}
         />
-        <Controller
+        <FormController
           name="regularPrice"
           control={control}
           rules={PRODUCT_VALIDATION_RULES.regularPrice}
@@ -402,7 +423,7 @@ export default function RegisterProductPage() {
             </FormItem>
           )}
         />
-        <Controller
+        <FormController
           name="isDiscount"
           control={control}
           render={({ field }) => (
@@ -418,7 +439,7 @@ export default function RegisterProductPage() {
             </FormItem>
           )}
         />
-        <Controller
+        <FormController
           name="discountRate"
           control={control}
           render={({ field }) => (
@@ -458,11 +479,11 @@ export default function RegisterProductPage() {
                   </Button>
                 )}
               </div>
-              <Controller
+              <FormController
                 name={`optionGroups.${index}.name`}
                 control={control}
                 render={({ field: nameField }) => (
-                  <Controller
+                  <FormController
                     name={`optionGroups.${index}.items`}
                     control={control}
                     render={({ field: itemsField }) => (
@@ -502,7 +523,7 @@ export default function RegisterProductPage() {
       </Section>
 
       <Section required title="옵션 조합">
-        <Controller
+        <FormController
           name="optionCombinations"
           control={control}
           render={({ field }) => (
@@ -514,7 +535,7 @@ export default function RegisterProductPage() {
         />
       </Section>
       <Section title="상품 이미지">
-        <Controller
+        <FormController
           name="titleImage"
           control={control}
           rules={PRODUCT_VALIDATION_RULES.titleImage}
@@ -536,7 +557,7 @@ export default function RegisterProductPage() {
             </FormItem>
           )}
         />
-        <Controller
+        <FormController
           name="coverImages"
           control={control}
           rules={PRODUCT_VALIDATION_RULES.coverImages}
@@ -561,7 +582,7 @@ export default function RegisterProductPage() {
       </Section>
 
       <Section title="상품정보고시">
-        <Controller
+        <FormController
           name="productNotice.origin"
           control={control}
           rules={PRODUCT_VALIDATION_RULES.productNotice.origin}
@@ -579,7 +600,7 @@ export default function RegisterProductPage() {
             </FormItem>
           )}
         />
-        <Controller
+        <FormController
           name="productNotice.material"
           control={control}
           rules={PRODUCT_VALIDATION_RULES.productNotice.material}
@@ -597,7 +618,7 @@ export default function RegisterProductPage() {
             </FormItem>
           )}
         />
-        <Controller
+        <FormController
           name="productNotice.color"
           control={control}
           rules={PRODUCT_VALIDATION_RULES.productNotice.color}
@@ -615,7 +636,7 @@ export default function RegisterProductPage() {
             </FormItem>
           )}
         />
-        <Controller
+        <FormController
           name="productNotice.size"
           control={control}
           rules={PRODUCT_VALIDATION_RULES.productNotice.size}
@@ -633,7 +654,7 @@ export default function RegisterProductPage() {
             </FormItem>
           )}
         />
-        <Controller
+        <FormController
           name="productNotice.manufacturer"
           control={control}
           rules={PRODUCT_VALIDATION_RULES.productNotice.manufacturer}
@@ -651,7 +672,7 @@ export default function RegisterProductPage() {
             </FormItem>
           )}
         />
-        <Controller
+        <FormController
           name="productNotice.washingMethod"
           control={control}
           rules={PRODUCT_VALIDATION_RULES.productNotice.washingMethod}
@@ -669,7 +690,7 @@ export default function RegisterProductPage() {
             </FormItem>
           )}
         />
-        <Controller
+        <FormController
           name="productNotice.manufactureDate"
           control={control}
           rules={PRODUCT_VALIDATION_RULES.productNotice.manufactureDate}
@@ -687,7 +708,7 @@ export default function RegisterProductPage() {
             </FormItem>
           )}
         />
-        <Controller
+        <FormController
           name="productNotice.asInfo"
           control={control}
           rules={PRODUCT_VALIDATION_RULES.productNotice.asInfo}
@@ -705,7 +726,7 @@ export default function RegisterProductPage() {
             </FormItem>
           )}
         />
-        <Controller
+        <FormController
           name="productNotice.qualityAssurance"
           control={control}
           rules={PRODUCT_VALIDATION_RULES.productNotice.qualityAssurance}
@@ -726,7 +747,7 @@ export default function RegisterProductPage() {
       </Section>
 
       <Section title="에디터">
-        <Controller
+        <FormController
           name="description"
           control={control}
           rules={PRODUCT_VALIDATION_RULES.description}
