@@ -27,6 +27,7 @@ import { PRODUCT_VALIDATION_RULES } from "@/features/productManagement/constants
 import { useCallback, useState } from "react"
 import toast from "react-hot-toast"
 import type { AxiosError } from "axios"
+import { useNavigate } from "react-router-dom"
 
 interface OptionGroup {
   id: string
@@ -54,6 +55,7 @@ interface ProductFormData {
 
 export default function RegisterProductPage() {
   const [isLoading, setIsLoading] = useState(false)
+  const navigate = useNavigate()
   const { control, handleSubmit, setValue, getValues } =
     useForm<ProductFormData>({
       defaultValues: {
@@ -190,54 +192,63 @@ export default function RegisterProductPage() {
     return regularPriceNum.toLocaleString()
   }
 
-  const onSubmit = useCallback(async (data: ProductFormData) => {
-    if (!data.category.detail) {
-      toast.error("카테고리를 선택해 주세요")
-      return
-    }
-    try {
-      setIsLoading(true)
-      const regularPriceNum = Number(data.regularPrice)
-      const discountRateNum = Number(data.discountRate)
-      const finalSalePrice = data.isDiscount
-        ? Math.max(regularPriceNum - discountRateNum, 0)
-        : regularPriceNum
-
-      const apiData: AddProductRequest = {
-        isDisplay: data.isDisplay,
-        isOutOfStockForced: data.isOutOfStockForced,
-        categoryId: data.category.detail,
-        name: data.productName,
-        sellerProductCode: data.sellerProductCode,
-        purchasePrice: Number(data.purchasePrice),
-        regularPrice: regularPriceNum,
-        salePrice: finalSalePrice,
-        isDiscount: data.isDiscount,
-        representativeImageUrl: data.titleImage[0],
-        coverImageUrls: data.coverImages,
-        description: data.description,
-        productNotice: data.productNotice,
-        optionGroups: data.optionGroups.map(group => ({
-          name: group.name,
-          options: group.items.map(item => item.name),
-        })),
-        variants: data.optionCombinations.map(combo => ({
-          optionNames: combo.combination,
-          salePrice: Number(combo.price),
-          stock: Number(combo.stock),
-          isDisplay: combo.isDisplayed,
-          isRepresentative: combo.isRepresentative,
-        })),
+  const onSubmit = useCallback(
+    async (data: ProductFormData) => {
+      if (!data.category.detail) {
+        toast.error("카테고리를 선택해 주세요")
+        return
       }
+      try {
+        setIsLoading(true)
+        const regularPriceNum = Number(data.regularPrice)
+        const discountRateNum = Number(data.discountRate)
+        const finalSalePrice = data.isDiscount
+          ? Math.max(regularPriceNum - discountRateNum, 0)
+          : regularPriceNum
 
-      await productService.addProduct(apiData)
-      toast.success("상품 등록 완료")
-    } catch (error) {
-      throw error as AxiosError
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+        const apiData: AddProductRequest = {
+          isDisplay: data.isDisplay,
+          isOutOfStockForced: data.isOutOfStockForced,
+          categoryId: data.category.detail,
+          name: data.productName,
+          sellerProductCode: data.sellerProductCode,
+          purchasePrice: Number(data.purchasePrice),
+          regularPrice: regularPriceNum,
+          salePrice: finalSalePrice,
+          isDiscount: data.isDiscount,
+          representativeImageUrl: data.titleImage[0],
+          coverImageUrls: data.coverImages,
+          description: data.description,
+          productNotice: data.productNotice,
+          optionGroups: data.optionGroups.map(group => ({
+            name: group.name,
+            options: group.items.map(item => item.name),
+          })),
+          variants: data.optionCombinations.map(combo => ({
+            optionNames: combo.combination,
+            salePrice: Number(combo.price),
+            stock: Number(combo.stock),
+            isDisplay: combo.isDisplayed,
+            isRepresentative: combo.isRepresentative,
+          })),
+        }
+
+        await productService.addProduct(apiData)
+        toast.success("상품 등록 완료")
+        navigate("/product/list") // TODO : path 상수로 관리
+      } catch (error) {
+        throw error as AxiosError
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [navigate]
+  )
+
+  const handleClickCancel = useCallback(() => {
+    // TODO : 팝업 띄운 후 뒤로가기
+    navigate(-1)
+  }, [navigate])
 
   return (
     <form
@@ -722,7 +733,9 @@ export default function RegisterProductPage() {
       </Section>
 
       <div className="flex gap-3 justify-end mt-6">
-        <Button variant={"outline"}>취소</Button>
+        <Button type="button" variant={"outline"} onClick={handleClickCancel}>
+          취소
+        </Button>
         <Button isLoading={isLoading} type="submit">
           등록하기
         </Button>
