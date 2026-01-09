@@ -1,9 +1,4 @@
-import {
-  useForm,
-  useFieldArray,
-  useWatch,
-  type FieldErrors,
-} from "react-hook-form"
+import { useForm, useFieldArray, useWatch } from "react-hook-form"
 import Section from "@/common/components/Section/Section"
 import FormItem from "@/common/components/Form/FormItem"
 import FormInput from "@/common/components/Form/FormInput"
@@ -34,9 +29,8 @@ import toast from "react-hot-toast"
 import type { AxiosError } from "axios"
 import { useNavigate } from "react-router-dom"
 import { confirm } from "@/common/components/ConfirmModal"
-import FormController, {
-  CONTROLLER_ID_PREFIX,
-} from "@/common/components/Form/FormController"
+import FormController from "@/common/components/Form/FormController"
+import Form from "@/common/components/Form/Form"
 
 interface OptionGroup {
   id: string
@@ -273,22 +267,10 @@ export default function RegisterProductPage() {
     }
   }, [formState.isDirty, navigate])
 
-  const onInvalid = useCallback((errors: FieldErrors<ProductFormData>) => {
-    const firstErrorKey = Object.keys(errors)[0]
-    const firstErrorField = errors[firstErrorKey as keyof ProductFormData]
-    const targetController = document.getElementById(
-      `${CONTROLLER_ID_PREFIX}${firstErrorKey}`
-    )
-
-    toast.error(firstErrorField?.message as string)
-    if (targetController) {
-      targetController.scrollIntoView({ behavior: "smooth", block: "center" })
-    }
-  }, [])
-
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit, onInvalid)}
+    <Form
+      handleSubmit={handleSubmit}
+      onSubmit={onSubmit}
       onKeyDown={e => {
         if (e.key === "Enter") {
           e.preventDefault()
@@ -776,6 +758,6 @@ export default function RegisterProductPage() {
           등록하기
         </Button>
       </div>
-    </form>
+    </Form>
   )
 }
