@@ -1,10 +1,10 @@
 import { forwardRef } from "react"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-import type { RadioOption } from "./FormRadioGroup"
+import type { Option } from "@/common/types/option"
 
 interface FormRadioWithAllProps {
-  options: Array<RadioOption>
+  options: Array<Option<string | null>>
   disabled?: boolean
   onChange?: (value: string) => void
   value?: string
@@ -35,8 +35,11 @@ const FormRadioWithAll = forwardRef<HTMLDivElement, FormRadioWithAllProps>(
       >
         {allOptions.map(option => (
           <div key={option.value} className="flex items-center space-x-2">
-            <RadioGroupItem value={option.value} id={option.value} />
-            <Label htmlFor={option.value} className="font-normal">
+            <RadioGroupItem
+              value={option.value as string}
+              id={option.value as string}
+            />
+            <Label htmlFor={option.value as string} className="font-normal">
               {option.label}
             </Label>
           </div>

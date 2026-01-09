@@ -16,7 +16,7 @@ interface FilterItemProps<T> {
   fieldKey: string
   value: T
   onChange: (value: T) => void
-  options?: Array<Option>
+  options?: Array<Option<string | null>>
   placeholder?: string
   onSubmit?: () => void
 }
@@ -38,7 +38,10 @@ function FilterItemComponent<T>(props: FilterItemProps<T>) {
               key={`${fieldKey}-${o.value}`}
               className="flex items-center gap-2"
             >
-              <RadioGroupItem value={o.value} id={`${fieldKey}-${o.value}`} />
+              <RadioGroupItem
+                value={o.value as string}
+                id={`${fieldKey}-${o.value}`}
+              />
               <Label
                 htmlFor={`${fieldKey}-${o.value}`}
                 className="cursor-pointer"

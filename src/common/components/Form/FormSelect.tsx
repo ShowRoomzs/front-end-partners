@@ -6,14 +6,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-
-export interface SelectOption {
-  label: string
-  value: string
-}
+import type { Option } from "@/common/types/option"
 
 interface FormSelectProps {
-  options: Array<SelectOption>
+  options: Array<Option<string | null>>
   placeholder?: string
   disabled?: boolean
   onChange?: (value: string) => void
@@ -39,7 +35,7 @@ const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
         </SelectTrigger>
         <SelectContent position="popper" sideOffset={2}>
           {options.map(option => (
-            <SelectItem key={option.value} value={option.value}>
+            <SelectItem key={option.value} value={option.value as string}>
               {option.label}
             </SelectItem>
           ))}

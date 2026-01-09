@@ -85,7 +85,9 @@ export default function TableBody<T>(props: TableBodyProps<T>) {
                 <div className={tableBodyClassName}>
                   {col?.render
                     ? col.render(row[col.key as keyof T], row, index)
-                    : (row[col.key as keyof T] as string)}
+                    : row[col.key as keyof T]
+                      ? (row[col.key as keyof T] as string)
+                      : "-"}
                 </div>
               </td>
             )
