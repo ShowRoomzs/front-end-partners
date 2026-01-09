@@ -28,6 +28,7 @@ import { useCallback, useState } from "react"
 import toast from "react-hot-toast"
 import type { AxiosError } from "axios"
 import { useNavigate } from "react-router-dom"
+import { confirm } from "@/common/components/ConfirmModal"
 
 interface OptionGroup {
   id: string
@@ -245,9 +246,16 @@ export default function RegisterProductPage() {
     [navigate]
   )
 
-  const handleClickCancel = useCallback(() => {
-    // TODO : 팝업 띄운 후 뒤로가기
-    navigate(-1)
+  const handleClickCancel = useCallback(async () => {
+    const result = await confirm({
+      type: "warn",
+      title: "상품 등록 취소",
+      content: "작성 중인 내용이 저장되지 않습니다.\n취소하시겠습니까?",
+    })
+
+    if (result) {
+      navigate(-1)
+    }
   }, [navigate])
 
   return (

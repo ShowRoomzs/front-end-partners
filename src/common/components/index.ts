@@ -6,3 +6,4 @@ export { default as FormProfileImageUploader } from "./Form/FormProfileImageUplo
 export { default as FormEditor } from "./Form/FormEditor"
 export { default as FormField } from "./Form/FormField"
 export { default as ProfileImageUploader } from "./ImageUploader/ProfileImageUploader"
+export { confirm, ConfirmProvider } from "./ConfirmModal"
