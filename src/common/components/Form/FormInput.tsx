@@ -12,6 +12,7 @@ interface FormInputProps {
   type?: "text" | "number"
   min?: number
   max?: number
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
 }
 
 const FormInput = forwardRef<HTMLInputElement, FormInputProps>((props, ref) => {
@@ -26,6 +27,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>((props, ref) => {
     type = "text",
     min,
     max,
+    onKeyDown,
   } = props
 
   return (
@@ -41,6 +43,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>((props, ref) => {
       onBlur={onBlur}
       min={min}
       max={max}
+      onKeyDown={onKeyDown}
     />
   )
 })

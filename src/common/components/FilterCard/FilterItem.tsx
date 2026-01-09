@@ -18,14 +18,15 @@ interface FilterItemProps<T> {
   onChange: (value: T) => void
   options?: Array<Option>
   placeholder?: string
+  onSubmit?: () => void
 }
 
 function FilterItemComponent<T>(props: FilterItemProps<T>) {
-  const { type, fieldKey, value, onChange, options, placeholder } = props
+  const { type, fieldKey, value, onChange, options, placeholder, onSubmit } =
+    props
 
   switch (type) {
     case "radio": {
-      console.log(value, options)
       return (
         <RadioGroup
           value={value as string}
@@ -62,6 +63,7 @@ function FilterItemComponent<T>(props: FilterItemProps<T>) {
           value={value as string}
           onChange={onChange as (value: string) => void}
           placeholder={placeholder}
+          onKeyDown={e => e.key === "Enter" && onSubmit?.()}
         />
       )
     case "select":

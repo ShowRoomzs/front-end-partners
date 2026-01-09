@@ -14,7 +14,7 @@ export type FilterOption<P> = {
     key: K // 파라미터 키값
     subFilterOption?: FilterOption<P> //
 
-    options?: Array<Option> // radio, checkbox, select 옵션
+    options?: Array<Option<string | null>> // radio, checkbox, select 옵션
     placeholder?: string // input placeholder
   }
 }[keyof P]
@@ -55,7 +55,7 @@ export default function FilterCard<P extends BaseParams>(
       })
     return map
   }, [onChange, options])
-  console.log(params)
+
   const renderContent = useCallback(
     (option: FilterOption<P>) => {
       const handleChange = handleChangeMap.get(option.key)
@@ -70,10 +70,11 @@ export default function FilterCard<P extends BaseParams>(
           onChange={handleChange}
           options={option.options}
           placeholder={option.placeholder}
+          onSubmit={onSubmit}
         />
       )
     },
-    [params, handleChangeMap]
+    [params, handleChangeMap, onSubmit]
   )
 
   const renderField = useCallback(
