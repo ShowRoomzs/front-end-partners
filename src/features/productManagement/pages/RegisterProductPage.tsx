@@ -57,7 +57,7 @@ interface ProductFormData {
 export default function RegisterProductPage() {
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
-  const { control, handleSubmit, setValue, getValues } =
+  const { control, handleSubmit, setValue, getValues, formState } =
     useForm<ProductFormData>({
       defaultValues: {
         isDisplay: true,
@@ -247,16 +247,23 @@ export default function RegisterProductPage() {
   )
 
   const handleClickCancel = useCallback(async () => {
+    if (!formState.isDirty) {
+      navigate("/product/list")
+      return
+    }
+
     const result = await confirm({
       type: "warn",
       title: "상품 등록 취소",
       content: "작성 중인 내용이 저장되지 않습니다.\n취소하시겠습니까?",
+      cancelText: "돌아가기",
+      confirmText: "취소",
     })
 
     if (result) {
-      navigate(-1)
+      navigate("/product/list")
     }
-  }, [navigate])
+  }, [formState.isDirty, navigate])
 
   return (
     <form
