@@ -22,13 +22,26 @@ const INITIAL_PARAMS: ProductListParams = {
   keyword: "",
 }
 export default function ProductListPage() {
-  const { localParams, updateLocalParam, params, update, reset } =
-    useParams<ProductListParams>(INITIAL_PARAMS)
-  const { data: productList, isLoading } = useGetProductList(params)
-  const pageInfo = usePaginationInfo({ data: productList?.pageInfo })
   const [checkedKeys, setCheckedKeys] = useState<
     Array<ProductItem["productId"]>
   >([])
+
+  const { localParams, updateLocalParam, params, update, reset, updateParam } =
+    useParams<ProductListParams>(INITIAL_PARAMS)
+  const { data: productList, isLoading } = useGetProductList(params)
+
+  const handlePageChange = useCallback(
+    (page: number) => {
+      setCheckedKeys([])
+      updateParam("page", page)
+    },
+    [updateParam]
+  )
+
+  const pageInfo = usePaginationInfo({
+    data: productList?.pageInfo,
+    onPageChange: handlePageChange,
+  })
 
   const handleCheckedKeysChange = useCallback(
     (newCheckedKeys: Array<ProductItem["productId"]>) => {
@@ -37,19 +50,25 @@ export default function ProductListPage() {
     []
   )
 
+  const handleSubmit = useCallback(() => {
+    update()
+    setCheckedKeys([])
+  }, [update])
+
   return (
     <ListViewWrapper>
       <FilterCard
         options={PRODUCT_LIST_FILTER_OPTIONS}
         params={localParams}
         onChange={updateLocalParam}
-        onSubmit={update}
+        onSubmit={handleSubmit}
         onReset={reset}
       />
       <Table<ProductItem, "productId">
         onCheckedKeysChange={handleCheckedKeysChange}
         checkedKeys={checkedKeys}
         pageInfo={pageInfo}
+        rowKey="productId"
         columns={PRODUCT_LIST_COLUMNS}
         showCheckbox
         data={productList?.content ?? []}
