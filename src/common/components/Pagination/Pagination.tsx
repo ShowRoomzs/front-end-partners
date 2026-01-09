@@ -12,8 +12,7 @@ export interface PaginationProps extends Omit<PageInfo, "content"> {
 
 export default function Pagination(props: PaginationProps) {
   const { currentPage, totalPages, onPageChange } = props
-
-  // 내부 상태로 현재 페이지를 관리하여 즉각 반응
+  // 내부 상태로 현재 페이지를 관리하여 즉각 반응 (1-based)
   const [displayPage, setDisplayPage] = useState(currentPage)
 
   // props.currentPage 변경 시 동기화
@@ -30,27 +29,21 @@ export default function Pagination(props: PaginationProps) {
     [onPageChange]
   )
 
-  // page는 0부터 시작, 표시는 1부터 시작
-  const currentDisplayPage = displayPage + 1
-
   const pageButtons = useMemo(() => {
-    const renderPageButton = (
-      displayPage: number,
-      pageIndex: number,
-      isActive = false
-    ) => {
+    // page: 실제 페이지 번호 (1-based)
+    const renderPageButton = (page: number, isActive = false) => {
       return (
         <button
-          key={`page-${pageIndex}`}
+          key={`page-${page}`}
           className={cn(
             "min-w-[30px] min-h-[30px] rounded-[4px] text-[14px] px-[5px] font-medium transition-colors",
             isActive
               ? "bg-[#5468CD] text-white"
               : "bg-white text-[#666666] hover:bg-gray-50 border border-[#E0E0E0]"
           )}
-          onClick={() => handlePageChange(pageIndex)}
+          onClick={() => handlePageChange(page)}
         >
-          {displayPage}
+          {page}
         </button>
       )
     }
@@ -58,9 +51,9 @@ export default function Pagination(props: PaginationProps) {
     const buttons = []
 
     // 초기 페이지 범위일 때: 1 2 3 ... totalPages
-    if (currentDisplayPage <= INITIAL_DISPLAY_COUNT) {
+    if (displayPage <= INITIAL_DISPLAY_COUNT) {
       for (let i = 1; i <= INITIAL_DISPLAY_COUNT && i <= totalPages; i++) {
-        buttons.push(renderPageButton(i, i - 1, displayPage === i - 1))
+        buttons.push(renderPageButton(i, displayPage === i))
       }
 
       // totalPages가 INITIAL_DISPLAY_COUNT보다 클 때만 ... totalPages 표시
@@ -70,24 +63,19 @@ export default function Pagination(props: PaginationProps) {
             ...
           </span>
         )
-        buttons.push(
-          renderPageButton(
-            totalPages,
-            totalPages - 1,
-            displayPage === totalPages - 1
-          )
-        )
+        buttons.push(renderPageButton(totalPages, displayPage === totalPages))
       }
     }
     // 중간 페이지일 때: 1 ... (이전) 현재 (다음) ... totalPages
     else {
       const sideCount = Math.floor((MIDDLE_DISPLAY_COUNT - 1) / 2) // 현재 페이지 양옆에 표시할 개수
-      const rightmostPage = Math.min(currentDisplayPage + sideCount, totalPages) // 실제로 표시될 가장 오른쪽 페이지
+      const leftmostPage = Math.max(displayPage - sideCount, 2) // 실제로 표시될 가장 왼쪽 페이지 (1 제외)
+      const rightmostPage = Math.min(displayPage + sideCount, totalPages) // 실제로 표시될 가장 오른쪽 페이지
 
-      buttons.push(renderPageButton(1, 0, displayPage === 0))
+      buttons.push(renderPageButton(1, displayPage === 1))
 
       // 1과 첫 번째 중간 페이지 사이에 페이지가 있을 때만 ... 표시
-      if (currentDisplayPage - sideCount > 2) {
+      if (leftmostPage > 2) {
         buttons.push(
           <span key="ellipsis-start" className="text-[#999999] px-2">
             ...
@@ -96,12 +84,9 @@ export default function Pagination(props: PaginationProps) {
       }
 
       // 중간 페이지 표시 (현재 페이지 기준 양옆)
-      for (let i = -sideCount; i <= sideCount; i++) {
-        const pageNum = currentDisplayPage + i
-        const pageIndex = displayPage + i
-
-        if (pageNum > 1 && pageNum <= totalPages) {
-          buttons.push(renderPageButton(pageNum, pageIndex, i === 0))
+      for (let page = leftmostPage; page <= rightmostPage; page++) {
+        if (page > 1 && page < totalPages) {
+          buttons.push(renderPageButton(page, page === displayPage))
         }
       }
 
@@ -117,21 +102,15 @@ export default function Pagination(props: PaginationProps) {
         }
 
         // totalPages 버튼 표시
-        buttons.push(
-          renderPageButton(
-            totalPages,
-            totalPages - 1,
-            displayPage === totalPages - 1
-          )
-        )
+        buttons.push(renderPageButton(totalPages, displayPage === totalPages))
       }
     }
 
     return buttons
-  }, [currentDisplayPage, displayPage, totalPages, handlePageChange])
+  }, [displayPage, totalPages, handlePageChange])
 
-  const isPreviousDisabled = displayPage <= 0
-  const isNextDisabled = displayPage >= totalPages - 1
+  const isPreviousDisabled = displayPage <= 1
+  const isNextDisabled = displayPage >= totalPages
 
   const handleClickPrevious = useCallback(() => {
     if (!isPreviousDisabled) {
