@@ -12,14 +12,12 @@ export default function FormController<
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
   TTransformedValues = TFieldValues,
 >(props: ControllerProps<TFieldValues, TName, TTransformedValues>) {
-  const { render } = props
-
   return (
     <Controller
       {...props}
       render={renderProps => (
         <div id={`${CONTROLLER_ID_PREFIX}${props.name}`}>
-          {render(renderProps)}
+          {props.render(renderProps)}
         </div>
       )}
     />
