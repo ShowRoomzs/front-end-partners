@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Trash2 } from "lucide-react"
+import { confirm } from "@/common/components/ConfirmModal"
 
 export interface OptionCombination {
   id: string
@@ -52,7 +53,16 @@ const FormOptionCombinationTable = forwardRef<
     )
   }
 
-  const handleRemoveCombination = (id: string) => {
+  const handleRemoveCombination = async (id: string) => {
+    const result = await confirm({
+      title: "해당 옵션 조합 삭제",
+      content: "해당 옵션 조합을 삭제하시겠습니까?",
+      cancelText: "아니요",
+      confirmText: "예",
+    })
+    if (!result) {
+      return
+    }
     onChange?.(combinations.filter(comb => comb.id !== id))
   }
 

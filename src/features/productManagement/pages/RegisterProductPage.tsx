@@ -235,7 +235,7 @@ export default function RegisterProductPage() {
         }
 
         await productService.addProduct(apiData)
-        toast.success("상품 등록 완료")
+        toast.success("상품 정보를 등록했습니다.")
         navigate("/product/list") // TODO : path 상수로 관리
       } catch (error) {
         throw error as AxiosError
