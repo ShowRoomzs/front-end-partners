@@ -60,7 +60,7 @@ export interface AddProductRequest {
 type ProductListIsDisplayType = keyof typeof PRODUCT_LIST_IS_DISPLAY_TYPE
 type ProductListIsOutOfStockType =
   keyof typeof PRODUCT_LIST_IS_OUT_OF_STOCK_TYPE
-type ProductListKeywordType = keyof typeof PRODUCT_LIST_KEYWORD_TYPE
+type ProductListKeywordType = keyof typeof PRODUCT_LIST_KEYWORD_TYPE | null // null은 전체 조회
 export interface ProductListParams extends BaseParams {
   categoryId?: number
   displayStatus: ProductListIsDisplayType

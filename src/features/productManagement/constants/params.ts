@@ -11,7 +11,6 @@ export const PRODUCT_LIST_IS_OUT_OF_STOCK_TYPE = {
 } as const
 
 export const PRODUCT_LIST_KEYWORD_TYPE = {
-  ALL: "전체",
   name: "상품명",
   productNumber: "상품 번호",
   sellerProductCode: "판매자 상품코드",

@@ -16,9 +16,9 @@ const INITIAL_PARAMS: ProductListParams = {
   categoryId: undefined,
   displayStatus: "ALL",
   stockStatus: "ALL",
-  page: 0,
+  page: 1,
   size: 10,
-  keywordType: "ALL",
+  keywordType: null,
   keyword: "",
 }
 export default function ProductListPage() {
@@ -52,26 +52,7 @@ export default function ProductListPage() {
         pageInfo={pageInfo}
         columns={PRODUCT_LIST_COLUMNS}
         showCheckbox
-        data={
-          productList?.content ?? [
-            {
-              productId: 1,
-              productNumber: "1234567890",
-              sellerProductCode: "1234567890",
-              thumbnailUrl: "https://placehold.co/600x600",
-              name: "상품명",
-              price: {
-                regularPrice: 10000,
-                salePrice: 9000,
-                purchasePrice: 8000,
-              },
-              createdAt: "2021-01-01",
-              displayStatus: "DISPLAY",
-              stockStatus: "IN_STOCK",
-              isOutOfStockForced: false,
-            },
-          ]
-        }
+        data={productList?.content ?? []}
         isLoading={isLoading}
       />
     </ListViewWrapper>

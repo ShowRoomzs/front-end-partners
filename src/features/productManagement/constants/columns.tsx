@@ -1,4 +1,5 @@
 import type { Columns } from "@/common/components/Table/types"
+import { formatDate } from "@/common/utils/formatDate"
 import type { ProductItem } from "@/features/productManagement/services/productService"
 
 export const PRODUCT_LIST_COLUMNS: Columns<ProductItem> = [
@@ -13,6 +14,7 @@ export const PRODUCT_LIST_COLUMNS: Columns<ProductItem> = [
   {
     key: "thumbnailUrl",
     label: "대표 이미지",
+    align: "center",
     render: (value, record: ProductItem) => {
       return (
         <img src={value as string} alt={record.name} className="w-10 h-10" />
@@ -27,26 +29,37 @@ export const PRODUCT_LIST_COLUMNS: Columns<ProductItem> = [
     key: "price",
     label: "판매가",
     render: value => {
-      return <span>{(value as ProductItem["price"]).regularPrice}</span>
+      return (
+        <span>
+          {(value as ProductItem["price"]).regularPrice.toLocaleString()}원
+        </span>
+      )
     },
   },
   {
     key: "price",
     label: "할인 판매가",
     render: value => {
-      return <span>{(value as ProductItem["price"]).salePrice}</span>
+      return (
+        <span>
+          {(value as ProductItem["price"]).salePrice.toLocaleString()}원
+        </span>
+      )
     },
   },
   {
     key: "createdAt",
     label: "등록일",
+    render: value => formatDate(new Date(value as string)),
   },
   {
     key: "isOutOfStockForced",
     label: "품절상태",
+    align: "center",
   },
   {
     key: "displayStatus",
     label: "판매상태",
+    align: "center",
   },
 ]

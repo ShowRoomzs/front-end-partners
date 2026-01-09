@@ -33,7 +33,7 @@ export const PRODUCT_LIST_FILTER_OPTIONS: FilterOptionGroup<ProductListParams> =
       {
         type: "select",
         key: "keywordType",
-        options: parseMapToOptions(PRODUCT_LIST_KEYWORD_TYPE),
+        options: parseMapToOptions(PRODUCT_LIST_KEYWORD_TYPE, true),
       },
       {
         type: "input",
