@@ -1,7 +1,6 @@
-import type { SortOption } from "@/common/components/Table/types"
 import type { BaseParams, SortOrder } from "@/common/types/page"
 import { paramsToSearchParams } from "@/common/utils/paramsToSearchParams"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 
 interface UseParams<P extends BaseParams> {
@@ -12,7 +11,6 @@ interface UseParams<P extends BaseParams> {
   update: () => void
   reset: () => void
   handleSortChange: (sortKey: string, sortOrder: SortOrder) => void
-  sortOption: SortOption | undefined
 }
 
 export function useParams<P extends BaseParams>(
@@ -115,7 +113,7 @@ export function useParams<P extends BaseParams>(
   const update = useCallback(() => {
     const paramsWithResetPage = {
       ...localParams,
-      page: 0,
+      page: 1,
     }
     const newSearchParams = paramsToSearchParams(paramsWithResetPage)
     setSearchParams(newSearchParams)
@@ -142,13 +140,13 @@ export function useParams<P extends BaseParams>(
     [updateParams, params]
   )
 
-  const sortOption = useMemo(() => {
-    if (!params.sortBy || !params.sortOrder) return undefined
-    return {
-      sortKey: params.sortBy,
-      sortOrder: params.sortOrder,
-    }
-  }, [params.sortBy, params.sortOrder])
+  // const sortOption = useMemo(() => {
+  //   if (!params.sortBy || !params.sortOrder) return undefined
+  //   return {
+  //     sortKey: params.sortBy,
+  //     sortOrder: params.sortOrder,
+  //   }
+  // }, [params.sortBy, params.sortOrder])
 
   return {
     localParams,
@@ -158,6 +156,6 @@ export function useParams<P extends BaseParams>(
     update,
     reset,
     handleSortChange,
-    sortOption,
+    // sortOption,
   }
 }
