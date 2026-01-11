@@ -1,8 +1,8 @@
 import { useEffect, useRef, type RefObject } from "react"
 
 export function useSyncHorizontalScroll(): [
-  RefObject<HTMLDivElement>,
-  RefObject<HTMLDivElement>,
+  RefObject<HTMLDivElement | null>,
+  RefObject<HTMLDivElement | null>,
 ] {
   const refA = useRef<HTMLDivElement>(null)
   const refB = useRef<HTMLDivElement>(null)
