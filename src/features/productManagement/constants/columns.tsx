@@ -1,5 +1,9 @@
 import type { Columns } from "@/common/components/Table/types"
 import { formatDate } from "@/common/utils/formatDate"
+import {
+  PRODUCT_LIST_IS_DISPLAY_TYPE,
+  PRODUCT_LIST_IS_OUT_OF_STOCK_TYPE,
+} from "@/features/productManagement/constants/params"
 import type { ProductItem } from "@/features/productManagement/services/productService"
 
 export const PRODUCT_LIST_COLUMNS: Columns<ProductItem> = [
@@ -53,13 +57,21 @@ export const PRODUCT_LIST_COLUMNS: Columns<ProductItem> = [
     render: value => formatDate(new Date(value as string)),
   },
   {
-    key: "isOutOfStockForced",
+    key: "stockStatus",
     label: "품절상태",
     align: "center",
+    render: value =>
+      PRODUCT_LIST_IS_OUT_OF_STOCK_TYPE[
+        value as keyof typeof PRODUCT_LIST_IS_OUT_OF_STOCK_TYPE
+      ],
   },
   {
     key: "displayStatus",
     label: "판매상태",
     align: "center",
+    render: value =>
+      PRODUCT_LIST_IS_DISPLAY_TYPE[
+        value as keyof typeof PRODUCT_LIST_IS_DISPLAY_TYPE
+      ],
   },
 ]

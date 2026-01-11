@@ -104,4 +104,41 @@ export const productService = {
 
     return response
   },
+  deleteProducts: async (productIds: Array<ProductItem["productId"]>) => {
+    const { data: response } = await apiInstance.delete("/seller/products", {
+      data: {
+        productIds,
+      },
+    })
+
+    return response
+  },
+  updateProductDisplayStatus: async (
+    productIds: Array<ProductItem["productId"]>,
+    isDisplayed: boolean
+  ) => {
+    const { data: response } = await apiInstance.post(
+      "/seller/products/batch/display-status",
+      {
+        productIds,
+        isDisplayed,
+      }
+    )
+
+    return response
+  },
+  updateProductStockStatus: async (
+    productIds: Array<ProductItem["productId"]>,
+    isOutOfStocked: boolean
+  ) => {
+    const { data: response } = await apiInstance.post(
+      "/seller/products/batch/stock-status",
+      {
+        productIds,
+        isOutOfStocked,
+      }
+    )
+
+    return response
+  },
 }

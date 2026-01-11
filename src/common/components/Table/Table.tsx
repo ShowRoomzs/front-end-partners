@@ -11,7 +11,7 @@ import { Loader2Icon } from "lucide-react"
 import { useSyncHorizontalScroll } from "@/common/hooks/useSyncHorizontalScroll"
 import { getColumnKeyWithLabel } from "@/common/components/Table/config"
 
-const MAX_TABLE_WIDTH = 1600 // 최대 테이블 너비
+const MAX_TABLE_WIDTH = 1760 // 최대 테이블 너비
 
 export default function Table<T, K extends keyof T = keyof T>(
   props: TableProps<T, K>
