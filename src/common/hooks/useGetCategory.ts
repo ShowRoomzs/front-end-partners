@@ -2,6 +2,7 @@ import {
   categoryService,
   type Category,
 } from "@/common/services/categoryService"
+import { QUERY_KEYS } from "@/common/constants/queryKeys"
 import { useQuery } from "@tanstack/react-query"
 import { useMemo } from "react"
 
@@ -13,7 +14,7 @@ export interface CategoryMap {
 
 export function useGetCategory() {
   const query = useQuery({
-    queryKey: ["categories"], // TODO : 쿼리키 분리 핊요
+    queryKey: [QUERY_KEYS.CATEGORIES],
     queryFn: categoryService.getCategories,
   })
   const categoryMap = useMemo<CategoryMap | null>(() => {

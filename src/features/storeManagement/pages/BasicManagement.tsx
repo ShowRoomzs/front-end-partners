@@ -15,6 +15,7 @@ import { PlusIcon, X } from "lucide-react"
 import toast from "react-hot-toast"
 import equal from "fast-deep-equal"
 import { queryClient } from "@/common/lib/queryClient"
+import { QUERY_KEYS } from "@/common/constants/queryKeys"
 
 const SNS_TYPE_OPTIONS = [
   { label: "인스타그램", value: "INSTAGRAM" },
@@ -54,7 +55,7 @@ export default function BasicManagement() {
 
   const onSubmit = useCallback(async (data: MarketInfo) => {
     await marketService.updateMarketInfo(data)
-    queryClient.invalidateQueries({ queryKey: ["marketInfo"] })
+    queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.MARKET_INFO] })
     setSuccessMessage(undefined)
     toast.success("마켓 정보가 수정되었습니다.")
   }, [])
