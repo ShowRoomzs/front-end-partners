@@ -153,7 +153,7 @@ export default function ProductListPage() {
               disabled={!hasCheckedKeys}
               variant="outline"
             >
-              삭제
+              상품 삭제
             </Button>
             <ButtonGroup>
               <Button
