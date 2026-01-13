@@ -36,11 +36,6 @@ const FormOptionCombinationTable = forwardRef<
 >((props, ref) => {
   const { combinations, onChange, disabled = false } = props
 
-  const optionHeaders =
-    combinations.length > 0
-      ? combinations[0].combination.map((_, index) => `옵션 ${index + 1}`)
-      : []
-
   const handleCombinationChange = (
     id: string,
     field: keyof OptionCombination,
@@ -86,11 +81,7 @@ const FormOptionCombinationTable = forwardRef<
         <Table>
           <TableHeader>
             <TableRow>
-              {optionHeaders.map((header, index) => (
-                <TableHead key={index} className="text-center border-r">
-                  {header}
-                </TableHead>
-              ))}
+              <TableHead className="text-center border-r">옵션 항목</TableHead>
               <TableHead className="text-center border-r">옵션가</TableHead>
               <TableHead className="text-center border-r">재고 수량</TableHead>
               <TableHead className="text-center border-r">진열 여부</TableHead>
@@ -103,11 +94,19 @@ const FormOptionCombinationTable = forwardRef<
           <TableBody>
             {combinations.map(combination => (
               <TableRow key={combination.id}>
-                {combination.combination.map((item, index) => (
-                  <TableCell key={index} className="text-center border-r">
-                    <span className="text-sm">{item}</span>
-                  </TableCell>
-                ))}
+                <TableCell className="text-center border-r">
+                  <div className="flex justify-center items-center gap-1.5">
+                    {combination.combination.map(item => (
+                      <div
+                        className="inline-flex items-center justify-center bg-slate-50 border border-slate-200 rounded px-2 py-0.5 text-xs text-slate-700"
+                        key={item}
+                      >
+                        <span>{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </TableCell>
+
                 <TableCell className="border-r">
                   <div className="flex items-center gap-2 px-3">
                     <span className="text-muted-foreground">+</span>

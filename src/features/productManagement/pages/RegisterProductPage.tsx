@@ -134,19 +134,42 @@ export default function RegisterProductPage() {
   const handleMoveToCombinations = () => {
     const optionGroups = getValues("optionGroups")
 
-    const validGroups = optionGroups.filter(
-      group =>
-        group.name &&
-        group.items.length > 0 &&
-        group.items.some(item => item.name)
-    )
-
-    if (validGroups.length === 0) {
-      alert("옵션을 입력해주세요.")
+    if (optionGroups.length === 0) {
+      toast.error("옵션을 입력해 주세요.")
       return
     }
 
-    const validItems = validGroups.map(group =>
+    for (const group of optionGroups) {
+      const index = optionGroups.indexOf(group)
+      if (!group.name) {
+        toast.error(`옵션${index + 1} 그룹명을 입력해 주세요.`)
+        return
+      }
+      const hasSameGroupName = optionGroups.some(
+        curGroup => curGroup.name === group.name && curGroup.id !== group.id
+      )
+      if (hasSameGroupName) {
+        toast.error("동일한 옵션명은 사용할 수 없습니다.")
+        return
+      }
+      const filledItems = group.items.filter(item => item.name)
+
+      if (filledItems.length === 0) {
+        toast.error(`"${group.name}" 옵션 항목을 입력해 주세요.`)
+        return
+      }
+      const hasSameItemName = group.items.some(item =>
+        group.items.some(
+          curItem => curItem.name === item.name && curItem.id !== item.id
+        )
+      )
+      if (hasSameItemName) {
+        toast.error("동일한 옵션 항목명은 사용할 수 없습니다.")
+        return
+      }
+    }
+
+    const validItems = optionGroups.map(group =>
       group.items.filter(item => item.name)
     )
 
