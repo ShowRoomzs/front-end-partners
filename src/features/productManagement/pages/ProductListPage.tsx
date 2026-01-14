@@ -18,6 +18,7 @@ import toast from "react-hot-toast"
 import { queryClient } from "@/common/lib/queryClient"
 import { confirm } from "@/common/components"
 import { PRODUCT_QUERY_KEYS } from "@/features/productManagement/constants/queryKeys"
+import { useNavigate } from "react-router-dom"
 
 const INITIAL_PARAMS: ProductListParams = {
   categoryId: undefined,
@@ -36,7 +37,7 @@ export default function ProductListPage() {
   const { localParams, updateLocalParam, params, update, reset, updateParam } =
     useParams<ProductListParams>(INITIAL_PARAMS)
   const { data: productList, isLoading } = useGetProductList(params)
-
+  const navigate = useNavigate()
   const handlePageChange = useCallback(
     (page: number) => {
       setCheckedKeys([])
@@ -128,6 +129,13 @@ export default function ProductListPage() {
     [cleanUp]
   )
 
+  const handleClickRow = useCallback(
+    (record: ProductItem) => {
+      navigate(`/product/edit/${record.productId}`)
+    },
+    [navigate]
+  )
+
   return (
     <ListViewWrapper>
       <FilterCard
@@ -146,6 +154,7 @@ export default function ProductListPage() {
         showCheckbox
         data={productList?.content ?? []}
         isLoading={isLoading}
+        onRowClick={handleClickRow}
         renderFooter={
           <div className="flex flex-row gap-4">
             <Button

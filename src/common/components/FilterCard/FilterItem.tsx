@@ -8,6 +8,8 @@ import type { Option } from "@/common/types/option"
 import { Label } from "@/components/ui/label"
 import { RadioGroupItem } from "@/components/ui/radio-group"
 import { RadioGroup } from "@radix-ui/react-radio-group"
+import { getCategoryHierarchy } from "@/common/utils/getCategoryHierarchy"
+import { useGetCategory, type CategoryMap } from "@/common/hooks/useGetCategory"
 
 type FilterType = "radio" | "category" | "input" | "select"
 
@@ -24,6 +26,7 @@ interface FilterItemProps<T> {
 function FilterItemComponent<T>(props: FilterItemProps<T>) {
   const { type, fieldKey, value, onChange, options, placeholder, onSubmit } =
     props
+  const { categoryMap } = useGetCategory(type === "category")
 
   switch (type) {
     case "radio": {
@@ -56,7 +59,11 @@ function FilterItemComponent<T>(props: FilterItemProps<T>) {
     case "category":
       return (
         <FormCategorySelector
-          value={Number(value)}
+          categoryMap={categoryMap}
+          value={getCategoryHierarchy(
+            Number(value),
+            categoryMap as CategoryMap
+          )}
           onChange={onChange as (value: CategoryValue) => void}
         />
       )
