@@ -12,10 +12,11 @@ export interface CategoryMap {
   mainCategories: Category[]
 }
 
-export function useGetCategory() {
+export function useGetCategory(enabled: boolean = true) {
   const query = useQuery({
     queryKey: [QUERY_KEYS.CATEGORIES],
     queryFn: categoryService.getCategories,
+    enabled,
   })
   const categoryMap = useMemo<CategoryMap | null>(() => {
     if (!query.data) return null
