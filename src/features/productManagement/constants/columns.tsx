@@ -1,3 +1,4 @@
+import Image from "@/common/components/Image/Image"
 import type { Columns } from "@/common/components/Table/types"
 import { formatDate } from "@/common/utils/formatDate"
 import {
@@ -21,7 +22,12 @@ export const PRODUCT_LIST_COLUMNS: Columns<ProductItem> = [
     align: "center",
     render: (value, record: ProductItem) => {
       return (
-        <img src={value as string} alt={record.name} className="w-10 h-10" />
+        <Image
+          src={value as string}
+          alt={record.name}
+          className="w-10 h-10"
+          showPreview
+        />
       )
     },
   },
