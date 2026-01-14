@@ -30,140 +30,201 @@ export const mainRoutes: Array<RouteObject> = [
         index: true,
         element: <div>aasdf</div>,
       },
-      // Seller routes
+      // Seller - 스토어 관리
       {
-        path: "store/basic",
-        element: <BasicManagement />,
+        path: "store",
+        children: [
+          {
+            path: "basic",
+            element: <BasicManagement />,
+          },
+        ],
       },
+      // Seller - 상품 관리
       {
-        path: "product/register",
-        element: <RegisterProductPage />,
+        path: "product",
+        children: [
+          {
+            path: "register",
+            element: <RegisterProductPage />,
+          },
+          {
+            path: "list",
+            element: <ProductListPage />,
+          },
+          {
+            path: "edit/:productId",
+            element: <RegisterProductPage />,
+          },
+          {
+            path: "notice",
+            element: <div>aasdf</div>,
+          },
+        ],
       },
+      // Creator - 쇼룸 관리
       {
-        path: "product/list",
-        element: <ProductListPage />,
+        path: "showroom",
+        children: [
+          {
+            path: "basic",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "product",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "post",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "coupon",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "lottery",
+            element: <div>aasdf</div>,
+          },
+        ],
       },
+      // Creator - 굿즈 관리
       {
-        path: "product/notice",
-        element: <div>aasdf</div>,
+        path: "goods",
+        children: [
+          {
+            path: "store",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "register",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "list",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "notice",
+            element: <div>aasdf</div>,
+          },
+        ],
       },
-      // Creator routes
+      // Common - 판매 관리
       {
-        path: "showroom/basic",
-        element: <div>aasdf</div>,
+        path: "sales",
+        children: [
+          {
+            path: "orders",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "purchase-orders",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "shipping-out",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "delivery",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "confirmed",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "cancel",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "return",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "exchange",
+            element: <div>aasdf</div>,
+          },
+        ],
       },
+      // Common - 쿠폰 관리
       {
-        path: "showroom/product",
-        element: <div>aasdf</div>,
+        path: "coupon",
+        children: [
+          {
+            path: "list",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "register",
+            element: <div>aasdf</div>,
+          },
+        ],
       },
+      // Common - 정산 관리
       {
-        path: "showroom/post",
-        element: <div>aasdf</div>,
+        path: "settlement",
+        children: [
+          {
+            path: "history",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "by-product",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "vat",
+            element: <div>aasdf</div>,
+          },
+        ],
       },
+      // Common - 리뷰 관리
       {
-        path: "showroom/coupon",
-        element: <div>aasdf</div>,
+        path: "review",
+        children: [
+          {
+            path: "list",
+            element: <div>aasdf</div>,
+          },
+        ],
       },
+      // Common - 문의 관리
       {
-        path: "showroom/lottery",
-        element: <div>aasdf</div>,
+        path: "inquiry",
+        children: [
+          {
+            path: "respond",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "product",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "order",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "template",
+            element: <div>aasdf</div>,
+          },
+        ],
       },
+      // Common - 고객지원
       {
-        path: "goods/store",
-        element: <div>aasdf</div>,
-      },
-      {
-        path: "goods/register",
-        element: <div>aasdf</div>,
-      },
-      {
-        path: "goods/list",
-        element: <div>aasdf</div>,
-      },
-      {
-        path: "goods/notice",
-        element: <div>aasdf</div>,
-      },
-      // Common routes
-      {
-        path: "sales/orders",
-        element: <div>aasdf</div>,
-      },
-      {
-        path: "sales/purchase-orders",
-        element: <div>aasdf</div>,
-      },
-      {
-        path: "sales/shipping-out",
-        element: <div>aasdf</div>,
-      },
-      {
-        path: "sales/delivery",
-        element: <div>aasdf</div>,
-      },
-      {
-        path: "sales/confirmed",
-        element: <div>aasdf</div>,
-      },
-      {
-        path: "sales/cancel",
-        element: <div>aasdf</div>,
-      },
-      {
-        path: "sales/return",
-        element: <div>aasdf</div>,
-      },
-      {
-        path: "sales/exchange",
-        element: <div>aasdf</div>,
-      },
-      {
-        path: "coupon/list",
-        element: <div>aasdf</div>,
-      },
-      {
-        path: "coupon/register",
-        element: <div>aasdf</div>,
-      },
-      {
-        path: "settlement/history",
-        element: <div>aasdf</div>,
-      },
-      {
-        path: "settlement/by-product",
-        element: <div>aasdf</div>,
-      },
-      {
-        path: "settlement/vat",
-        element: <div>aasdf</div>,
-      },
-      {
-        path: "review/list",
-        element: <div>aasdf</div>,
-      },
-      {
-        path: "inquiry/respond",
-        element: <div>aasdf</div>,
-      },
-      {
-        path: "inquiry/product",
-        element: <div>aasdf</div>,
-      },
-      {
-        path: "inquiry/order",
-        element: <div>aasdf</div>,
-      },
-      {
-        path: "inquiry/template",
-        element: <div>aasdf</div>,
-      },
-      {
-        path: "support/bug",
-        element: <div>aasdf</div>,
-      },
-      {
-        path: "support/feature",
-        element: <div>aasdf</div>,
+        path: "support",
+        children: [
+          {
+            path: "bug",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "feature",
+            element: <div>aasdf</div>,
+          },
+        ],
       },
     ],
   },

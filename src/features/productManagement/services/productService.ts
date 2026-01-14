@@ -31,7 +31,7 @@ export interface VariantItem {
   isDisplay: boolean
   isRepresentative: boolean
 }
-
+type DeliveryType = string // TODO : 추후 타입 정의 필요
 export interface AddProductRequest {
   isDisplay: boolean // 진열 여부
   isOutOfStockForced: boolean // 강제 품절 처리
@@ -50,12 +50,36 @@ export interface AddProductRequest {
   variants: Array<VariantItem>
 
   tags?: Array<string> // 태그(추후 개발)
-  deliveryType?: string // 배송 유형 (TODO : 추후 타입 정의 필요)
+  deliveryType?: DeliveryType // 배송 유형
   deliveryFee?: number
   deliveryFreeThreshold?: number
   deliveryEstimatedDays?: number
 }
-
+interface ProductDetail {
+  productId: number
+  productNumber: string
+  marketId: number
+  marketName: string
+  categoryId: number
+  categoryName: string
+  name: string
+  sellerProductCode: string
+  thumbnailUrl: string
+  regularPrice: number
+  salePrice: number
+  purchasePrice: number
+  isDisplay: boolean
+  isOutOfStockForced: boolean
+  isRecommended: boolean
+  productNotice: string // json 형태 문자열
+  description: string // html 형태 문자열
+  tags: string // 배열 형태 문자열
+  deliveryType: DeliveryType
+  deliveryFee: number
+  deliveryFreeThreshold: number
+  deliveryEstimatedDays: number
+  createdAt: string
+}
 // null은 전체 조회
 type ProductListIsDisplayType = keyof typeof PRODUCT_LIST_IS_DISPLAY_TYPE
 type ProductListIsOutOfStockType =
@@ -91,6 +115,14 @@ export type ProductListResponse = PageResponse<ProductItem>
 export const productService = {
   addProduct: async (data: AddProductRequest) => {
     const { data: response } = await apiInstance.post("/seller/products", data)
+
+    return response
+  },
+  updateProduct: async (productId: number, data: AddProductRequest) => {
+    const { data: response } = await apiInstance.put(
+      `/seller/products/${productId}`,
+      data
+    )
 
     return response
   },
@@ -137,6 +169,13 @@ export const productService = {
         productIds,
         isOutOfStocked,
       }
+    )
+
+    return response
+  },
+  getProductDetail: async (productId: number) => {
+    const { data: response } = await apiInstance.get<ProductDetail>(
+      `/seller/products/${productId}`
     )
 
     return response

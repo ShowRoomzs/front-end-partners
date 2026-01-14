@@ -24,13 +24,16 @@ import {
   type ProductNotice,
 } from "@/features/productManagement/services/productService"
 import { PRODUCT_VALIDATION_RULES } from "@/features/productManagement/constants/validationRules"
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import toast from "react-hot-toast"
 import type { AxiosError } from "axios"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import { confirm } from "@/common/components/ConfirmModal"
 import FormController from "@/common/components/Form/FormController"
 import Form from "@/common/components/Form/Form"
+import { useGetProductDetail } from "@/features/productManagement/hooks/useGetProductDetail"
+import { useGetCategory } from "@/common/hooks/useGetCategory"
+import { getCategoryHierarchy } from "@/common/utils/getCategoryHierarchy"
 
 interface OptionGroup {
   id: string
@@ -59,8 +62,14 @@ interface ProductFormData {
 export default function RegisterProductPage() {
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
-  const { control, handleSubmit, setValue, getValues, formState } =
+  const { productId } = useParams<{ productId?: string }>()
+  const { data: productDetail } = useGetProductDetail(Number(productId))
+  const { categoryMap } = useGetCategory()
+  const isEdit = !!productId
+
+  const { control, handleSubmit, setValue, getValues, formState, reset } =
     useForm<ProductFormData>({
+      reValidateMode: "onSubmit",
       defaultValues: {
         isDisplay: true,
         isOutOfStockForced: false,
@@ -99,7 +108,31 @@ export default function RegisterProductPage() {
         },
       },
     })
+  useEffect(() => {
+    if (!productDetail || !categoryMap) {
+      return
+    }
 
+    const discountRate = productDetail.regularPrice - productDetail.salePrice
+
+    reset({
+      isDisplay: productDetail.isDisplay,
+      isOutOfStockForced: productDetail.isOutOfStockForced,
+      category: getCategoryHierarchy(productDetail.categoryId, categoryMap),
+      productName: productDetail.name,
+      sellerProductCode: productDetail.sellerProductCode,
+      purchasePrice: productDetail.purchasePrice,
+      regularPrice: productDetail.regularPrice,
+      discountRate: discountRate,
+      isDiscount: discountRate > 0,
+      // optionGroups:
+      // optionCombinations:
+      // titleImage:
+      // coverImages:
+      description: productDetail.description,
+      productNotice: productDetail.productNotice,
+    })
+  }, [categoryMap, productDetail, reset])
   const { fields, append, remove } = useFieldArray({
     control,
     name: "optionGroups",
@@ -220,10 +253,6 @@ export default function RegisterProductPage() {
 
   const onSubmit = useCallback(
     async (data: ProductFormData) => {
-      if (!data.category.detail) {
-        toast.error("카테고리를 선택해 주세요")
-        return
-      }
       try {
         setIsLoading(true)
         const regularPriceNum = Number(data.regularPrice)
@@ -235,7 +264,7 @@ export default function RegisterProductPage() {
         const apiData: AddProductRequest = {
           isDisplay: data.isDisplay,
           isOutOfStockForced: data.isOutOfStockForced,
-          categoryId: data.category.detail,
+          categoryId: data.category.detail as number,
           name: data.productName,
           sellerProductCode: data.sellerProductCode,
           purchasePrice: Number(data.purchasePrice),
@@ -248,7 +277,9 @@ export default function RegisterProductPage() {
           productNotice: data.productNotice,
           optionGroups: data.optionGroups.map(group => ({
             name: group.name,
-            options: group.items.map(item => item.name),
+            options: group.items
+              .filter(item => item.name)
+              .map(item => item.name),
           })),
           variants: data.optionCombinations.map(combo => ({
             optionNames: combo.combination,
@@ -258,9 +289,14 @@ export default function RegisterProductPage() {
             isRepresentative: combo.isRepresentative,
           })),
         }
+        const apiCall = isEdit
+          ? productService.updateProduct(Number(productId), apiData)
+          : productService.addProduct(apiData)
 
-        await productService.addProduct(apiData)
-        toast.success("상품 정보를 등록했습니다.")
+        await apiCall
+        toast.success(
+          isEdit ? "상품 정보를 수정했습니다." : "상품 정보를 등록했습니다."
+        )
         navigate("/product/list") // TODO : path 상수로 관리
       } catch (error) {
         throw error as AxiosError
@@ -268,7 +304,7 @@ export default function RegisterProductPage() {
         setIsLoading(false)
       }
     },
-    [navigate]
+    [isEdit, navigate, productId]
   )
 
   const handleClickCancel = useCallback(async () => {
@@ -280,7 +316,7 @@ export default function RegisterProductPage() {
     const result = await confirm({
       type: "warn",
       title: "상품 등록 취소",
-      content: "작성 중인 내용이 저장되지 않습니다.\n취소하시겠습니까?",
+      content: `${isEdit ? "수정" : "작성"} 중인 내용이 저장되지 않습니다.\n취소하시겠습니까?`,
       cancelText: "돌아가기",
       confirmText: "취소",
     })
@@ -288,7 +324,7 @@ export default function RegisterProductPage() {
     if (result) {
       navigate("/product/list")
     }
-  }, [formState.isDirty, navigate])
+  }, [formState.isDirty, isEdit, navigate])
 
   return (
     <Form
@@ -354,7 +390,12 @@ export default function RegisterProductPage() {
               error={fieldState.error?.message}
             >
               <FormCategorySelector
-                value={field.value}
+                categoryMap={categoryMap}
+                value={{
+                  main: field.value?.main ?? null,
+                  sub: field.value?.sub ?? null,
+                  detail: field.value?.detail ?? null,
+                }}
                 onChange={field.onChange}
               />
             </FormItem>
@@ -370,6 +411,7 @@ export default function RegisterProductPage() {
           render={({ field, fieldState }) => (
             <FormItem label="상품명" required error={fieldState.error?.message}>
               <FormInput
+                value={field.value}
                 placeholder="상품명을 입력해 주세요(특수문자 입력은 피해 주세요)"
                 maxLength={100}
                 onChange={field.onChange}
@@ -487,16 +529,23 @@ export default function RegisterProductPage() {
               <FormController
                 name={`optionGroups.${index}.name`}
                 control={control}
-                render={({ field: nameField }) => (
+                rules={PRODUCT_VALIDATION_RULES.optionGroupName}
+                render={({ field: nameField, fieldState: nameFieldState }) => (
                   <FormController
                     name={`optionGroups.${index}.items`}
                     control={control}
-                    render={({ field: itemsField }) => (
+                    rules={PRODUCT_VALIDATION_RULES.optionGroupItems}
+                    render={({
+                      field: itemsField,
+                      fieldState: itemsFieldState,
+                    }) => (
                       <FormOptionTable
                         optionName={nameField.value}
                         onOptionNameChange={nameField.onChange}
                         options={itemsField.value}
                         onChange={itemsField.onChange}
+                        nameError={nameFieldState.error?.message}
+                        itemsError={itemsFieldState.error?.message}
                       />
                     )}
                   />
@@ -531,6 +580,7 @@ export default function RegisterProductPage() {
         <FormController
           name="optionCombinations"
           control={control}
+          rules={PRODUCT_VALIDATION_RULES.optionCombinations}
           render={({ field }) => (
             <FormOptionCombinationTable
               combinations={field.value}
@@ -778,7 +828,7 @@ export default function RegisterProductPage() {
           취소
         </Button>
         <Button isLoading={isLoading} type="submit">
-          등록하기
+          {isEdit ? "수정하기" : "등록하기"}
         </Button>
       </div>
     </Form>
