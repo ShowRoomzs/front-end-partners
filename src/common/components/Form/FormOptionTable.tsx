@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef } from "react"
 import {
   Table,
   TableBody,
@@ -6,10 +6,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Trash2 } from 'lucide-react'
+} from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Trash2 } from "lucide-react"
 
 export interface OptionItem {
   id: string
@@ -23,23 +23,27 @@ interface FormOptionTableProps {
   options: Array<OptionItem>
   onChange?: (options: Array<OptionItem>) => void
   disabled?: boolean
+  nameError?: string
+  itemsError?: string
 }
 
 const FormOptionTable = forwardRef<HTMLDivElement, FormOptionTableProps>(
   (props, ref) => {
     const {
-      optionName = '',
+      optionName = "",
       onOptionNameChange,
       options = [],
       onChange,
       disabled = false,
+      nameError,
+      itemsError,
     } = props
 
     const handleAddItem = () => {
       const newOption: OptionItem = {
         id: crypto.randomUUID(),
-        name: '',
-        price: '',
+        name: "",
+        price: "",
       }
       onChange?.([...options, newOption])
     }
@@ -64,23 +68,27 @@ const FormOptionTable = forwardRef<HTMLDivElement, FormOptionTableProps>(
         ref={ref}
         className="space-y-4 border border-gray-300 rounded-md p-3"
       >
-        <div className="flex items-center gap-3">
-          <Input
-            value={optionName}
-            onChange={e => onOptionNameChange?.(e.target.value)}
-            placeholder="옵션명 (예: 색상, 사이즈)"
-            disabled={disabled}
-            className="max-w-md"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleAddItem}
-            disabled={disabled}
-          >
-            + 새 옵션 항목 추가하기
-          </Button>
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <Input
+              value={optionName}
+              onChange={e => onOptionNameChange?.(e.target.value)}
+              placeholder="옵션명 (예: 색상, 사이즈)"
+              disabled={disabled}
+              className="max-w-md"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleAddItem}
+              disabled={disabled}
+            >
+              + 새 옵션 항목 추가하기
+            </Button>
+          </div>
+          {nameError && <p className="text-sm text-red-500">{nameError}</p>}
         </div>
+        {itemsError && <p className="text-sm text-red-500">{itemsError}</p>}
 
         <div className="rounded-md border">
           <Table>
@@ -100,7 +108,7 @@ const FormOptionTable = forwardRef<HTMLDivElement, FormOptionTableProps>(
                     <Input
                       value={option.name}
                       onChange={e =>
-                        handleChangeItem(option.id, 'name', e.target.value)
+                        handleChangeItem(option.id, "name", e.target.value)
                       }
                       placeholder="옵션 항목명 (예: 빨강, s)"
                       disabled={disabled}
@@ -112,7 +120,7 @@ const FormOptionTable = forwardRef<HTMLDivElement, FormOptionTableProps>(
                       <Input
                         value={option.price}
                         onChange={e =>
-                          handleChangeItem(option.id, 'price', e.target.value)
+                          handleChangeItem(option.id, "price", e.target.value)
                         }
                         placeholder="0"
                         disabled={disabled}
@@ -141,6 +149,6 @@ const FormOptionTable = forwardRef<HTMLDivElement, FormOptionTableProps>(
   }
 )
 
-FormOptionTable.displayName = 'FormOptionTable'
+FormOptionTable.displayName = "FormOptionTable"
 
 export default FormOptionTable
