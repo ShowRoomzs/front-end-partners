@@ -8,7 +8,7 @@ import { Toaster } from "react-hot-toast"
 import { queryClient } from "@/common/lib/queryClient.ts"
 import { CookiesProvider } from "react-cookie"
 import { TOAST_OPTIONS } from "@/common/constants/toast.ts"
-import { ConfirmProvider } from "@/common/components/ConfirmModal"
+import ConfirmProvider from "@/common/components/ConfirmModal/ConfirmProvider"
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

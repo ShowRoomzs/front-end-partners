@@ -1,4 +1,4 @@
-import { ProfileImageUploader } from "@/common/components"
+import ProfileImageUploader from "@/common/components/ImageUploader/ProfileImageUploader"
 import FormInput from "@/common/components/Form/FormInput"
 import FormItem from "@/common/components/Form/FormItem"
 import FormSelect from "@/common/components/Form/FormSelect"

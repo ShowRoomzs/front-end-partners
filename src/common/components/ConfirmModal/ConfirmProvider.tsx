@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect, type ReactNode } from "react"
-import { ConfirmModal } from "./ConfirmModal"
+import ConfirmModal from "./ConfirmModal"
 import { registerConfirmHandler, type ConfirmState } from "./confirm"
 
-export const ConfirmProvider = (props: { children: ReactNode }) => {
+const ConfirmProvider = (props: { children: ReactNode }) => {
   const { children } = props
 
   const [state, setState] = useState<ConfirmState>({
@@ -49,3 +49,5 @@ export const ConfirmProvider = (props: { children: ReactNode }) => {
     </>
   )
 }
+
+export default ConfirmProvider

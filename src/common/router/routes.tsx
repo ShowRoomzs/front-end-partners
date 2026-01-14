@@ -1,5 +1,5 @@
 import type { RouteObject } from "react-router-dom"
-import { MainLayout } from "@/common/components"
+import MainLayout from "@/common/components/MainLayout/MainLayout"
 import RegisterProductPage from "@/features/productManagement/pages/RegisterProductPage"
 import LoginPage from "@/features/auth/pages/LoginPage"
 import RegisterPage from "@/features/auth/pages/RegisterPage"

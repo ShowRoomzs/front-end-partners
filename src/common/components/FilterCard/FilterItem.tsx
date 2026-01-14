@@ -89,6 +89,6 @@ function FilterItemComponent<T>(props: FilterItemProps<T>) {
   }
 }
 
-export const FilterItem = memo(
-  FilterItemComponent
-) as typeof FilterItemComponent
+const FilterItem = memo(FilterItemComponent) as typeof FilterItemComponent
+
+export default FilterItem

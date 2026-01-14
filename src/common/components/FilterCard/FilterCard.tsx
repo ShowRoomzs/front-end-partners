@@ -4,7 +4,7 @@ import type { Option } from "@/common/types/option"
 import type { BaseParams } from "@/common/types/page"
 import { Button } from "@/components/ui/button"
 import { useCallback, useMemo } from "react"
-import { FilterItem } from "./FilterItem"
+import FilterItem from "./FilterItem"
 
 type FilterType = "radio" | "category" | "input" | "select" // TODO : 추가
 

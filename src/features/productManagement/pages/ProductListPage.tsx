@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button"
 import ButtonGroup from "@/common/components/ButtonGroup/ButtonGroup"
 import toast from "react-hot-toast"
 import { queryClient } from "@/common/lib/queryClient"
-import { confirm } from "@/common/components"
+import { confirm } from "@/common/components/ConfirmModal/confirm"
 import { PRODUCT_QUERY_KEYS } from "@/features/productManagement/constants/queryKeys"
 import { useNavigate } from "react-router-dom"
 

@@ -15,7 +15,7 @@ export interface ConfirmModalProps {
   onConfirm: () => void
 }
 
-export const ConfirmModal = (props: ConfirmModalProps) => {
+const ConfirmModal = (props: ConfirmModalProps) => {
   const {
     isOpen,
     type,
@@ -104,3 +104,5 @@ export const ConfirmModal = (props: ConfirmModalProps) => {
     </div>
   )
 }
+
+export default ConfirmModal
