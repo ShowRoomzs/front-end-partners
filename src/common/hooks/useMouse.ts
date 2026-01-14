@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, type RefObject } from "react"
 
 export default function useMouse<T extends Element>(
   enterDelay: number = 50
-): [RefObject<T>, boolean, boolean] {
+): [RefObject<T | null>, boolean, boolean] {
   const [isHovered, setIsHovered] = useState(false)
   const [isActive, setIsActive] = useState(false)
 
