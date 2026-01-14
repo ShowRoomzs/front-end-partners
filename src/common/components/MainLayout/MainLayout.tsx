@@ -1,6 +1,5 @@
 import { useMemo, useState, useEffect } from "react"
 import { Outlet, useLocation } from "react-router-dom"
-import Sidebar from "../Sidebar"
 import Header from "./Header"
 import {
   SELLER_MENU,
@@ -11,6 +10,7 @@ import {
 import { getMenuTypeByRole, type MenuItem } from "@/common/types"
 import { SIDEBAR_WIDTH } from "../Sidebar/config"
 import { SIDEBAR_STORAGE_KEY } from "./config"
+import Sidebar from "@/common/components/Sidebar/Sidebar"
 
 export default function MainLayout() {
   const getInitialSidebarState = () => {

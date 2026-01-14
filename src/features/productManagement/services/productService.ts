@@ -21,7 +21,7 @@ type OptionName = string
 
 export interface OptionGroupItem {
   name: OptionName
-  options: Array<string>
+  options: Array<{ name: string; price: number }>
 }
 
 export interface VariantItem {
@@ -31,7 +31,7 @@ export interface VariantItem {
   isDisplay: boolean
   isRepresentative: boolean
 }
-type DeliveryType = string // TODO : 추후 타입 정의 필요
+export type DeliveryType = string // TODO : 추후 타입 정의 필요
 export interface AddProductRequest {
   isDisplay: boolean // 진열 여부
   isOutOfStockForced: boolean // 강제 품절 처리
@@ -55,7 +55,24 @@ export interface AddProductRequest {
   deliveryFreeThreshold?: number
   deliveryEstimatedDays?: number
 }
-interface ProductDetail {
+
+export interface OptionGroupResponse {
+  name: string
+  optionGroupId: number
+  options: Array<{ optionId: number; name: string; price: number }>
+}
+export interface VariantResponse {
+  isRepresentative: boolean
+  isDisplay: boolean
+  name: string
+  optionIds: Array<number>
+  regularPrice: number
+  salePrice: number
+  stock: number
+  variantId: number
+}
+
+interface ProductDetailResponse {
   productId: number
   productNumber: string
   marketId: number
@@ -64,21 +81,24 @@ interface ProductDetail {
   categoryName: string
   name: string
   sellerProductCode: string
-  thumbnailUrl: string
+  representativeImageUrl: string
+  coverImageUrls: Array<string>
   regularPrice: number
   salePrice: number
   purchasePrice: number
   isDisplay: boolean
   isOutOfStockForced: boolean
   isRecommended: boolean
-  productNotice: string // json 형태 문자열
-  description: string // html 형태 문자열
-  tags: string // 배열 형태 문자열
+  productNotice: string // json 형태 string
+  description: string // html 형태 string
+  tags: string // array 형태 string
   deliveryType: DeliveryType
   deliveryFee: number
   deliveryFreeThreshold: number
   deliveryEstimatedDays: number
   createdAt: string
+  optionGroups: Array<OptionGroupResponse>
+  variants: Array<VariantResponse>
 }
 // null은 전체 조회
 type ProductListIsDisplayType = keyof typeof PRODUCT_LIST_IS_DISPLAY_TYPE
@@ -174,7 +194,7 @@ export const productService = {
     return response
   },
   getProductDetail: async (productId: number) => {
-    const { data: response } = await apiInstance.get<ProductDetail>(
+    const { data: response } = await apiInstance.get<ProductDetailResponse>(
       `/seller/products/${productId}`
     )
 

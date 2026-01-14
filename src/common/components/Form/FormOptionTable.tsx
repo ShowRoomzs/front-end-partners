@@ -12,9 +12,9 @@ import { Input } from "@/components/ui/input"
 import { Trash2 } from "lucide-react"
 
 export interface OptionItem {
-  id: string
+  id: string | number
   name: string
-  price: string
+  price: number | null
 }
 
 interface FormOptionTableProps {
@@ -43,20 +43,20 @@ const FormOptionTable = forwardRef<HTMLDivElement, FormOptionTableProps>(
       const newOption: OptionItem = {
         id: crypto.randomUUID(),
         name: "",
-        price: "",
+        price: null,
       }
       onChange?.([...options, newOption])
     }
 
-    const handleRemoveItem = (id: string) => {
+    const handleRemoveItem = (id: string | number) => {
       if (options.length <= 1) return
       onChange?.(options.filter(opt => opt.id !== id))
     }
 
     const handleChangeItem = (
-      id: string,
+      id: string | number,
       field: keyof OptionItem,
-      value: string
+      value: string | number
     ) => {
       onChange?.(
         options.map(opt => (opt.id === id ? { ...opt, [field]: value } : opt))
@@ -118,9 +118,13 @@ const FormOptionTable = forwardRef<HTMLDivElement, FormOptionTableProps>(
                     <div className="flex items-center gap-2">
                       <span className="text-muted-foreground">+</span>
                       <Input
-                        value={option.price}
+                        value={option.price?.toString()}
                         onChange={e =>
-                          handleChangeItem(option.id, "price", e.target.value)
+                          handleChangeItem(
+                            option.id,
+                            "price",
+                            Number(e.target.value)
+                          )
                         }
                         placeholder="0"
                         disabled={disabled}

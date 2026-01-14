@@ -36,7 +36,7 @@ import { useGetCategory } from "@/common/hooks/useGetCategory"
 import { getCategoryHierarchy } from "@/common/utils/getCategoryHierarchy"
 
 interface OptionGroup {
-  id: string
+  id: string | number
   name: string
   items: Array<OptionItem>
 }
@@ -88,7 +88,7 @@ export default function RegisterProductPage() {
           {
             id: crypto.randomUUID(),
             name: "",
-            items: [{ id: crypto.randomUUID(), name: "", price: "" }],
+            items: [{ id: crypto.randomUUID(), name: "", price: null }],
           },
         ],
         optionCombinations: [],
@@ -115,6 +115,26 @@ export default function RegisterProductPage() {
 
     const discountRate = productDetail.regularPrice - productDetail.salePrice
 
+    const optionGroups: Array<OptionGroup> = productDetail.optionGroups.map(
+      group => ({
+        id: group.optionGroupId,
+        name: group.name,
+        items: group.options.map(option => ({
+          id: option.optionId,
+          name: option.name,
+          price: option.price || 0,
+        })),
+      })
+    )
+    const optionCombinations: Array<OptionCombination> =
+      productDetail.variants.map(variant => ({
+        id: variant.variantId.toString(),
+        combination: variant.name.split("/").map(v => v.trim()),
+        price: variant.salePrice.toString(),
+        stock: variant.stock.toString(),
+        isDisplayed: variant.isDisplay,
+        isRepresentative: variant.isRepresentative,
+      }))
     reset({
       isDisplay: productDetail.isDisplay,
       isOutOfStockForced: productDetail.isOutOfStockForced,
@@ -125,10 +145,10 @@ export default function RegisterProductPage() {
       regularPrice: productDetail.regularPrice,
       discountRate: discountRate,
       isDiscount: discountRate > 0,
-      // optionGroups:
-      // optionCombinations:
-      // titleImage:
-      // coverImages:
+      optionGroups: optionGroups,
+      optionCombinations: optionCombinations,
+      titleImage: productDetail.representativeImageUrl,
+      coverImages: productDetail.coverImageUrls,
       description: productDetail.description,
       productNotice: productDetail.productNotice,
     })
@@ -160,7 +180,7 @@ export default function RegisterProductPage() {
     append({
       id: crypto.randomUUID(),
       name: "",
-      items: [{ id: crypto.randomUUID(), name: "", price: "" }],
+      items: [{ id: crypto.randomUUID(), name: "", price: null }],
     })
   }
 
@@ -237,7 +257,6 @@ export default function RegisterProductPage() {
       isRepresentative: index === 0,
     }))
 
-    // const currentCombinations = getValues("optionCombinations") || []
     setValue("optionCombinations", newCombinations)
   }
 
@@ -271,7 +290,7 @@ export default function RegisterProductPage() {
           regularPrice: regularPriceNum,
           salePrice: finalSalePrice,
           isDiscount: data.isDiscount,
-          representativeImageUrl: data.titleImage[0],
+          representativeImageUrl: data.titleImage,
           coverImageUrls: data.coverImages,
           description: data.description,
           productNotice: data.productNotice,
@@ -279,7 +298,7 @@ export default function RegisterProductPage() {
             name: group.name,
             options: group.items
               .filter(item => item.name)
-              .map(item => item.name),
+              .map(item => ({ name: item.name, price: Number(item.price) })),
           })),
           variants: data.optionCombinations.map(combo => ({
             optionNames: combo.combination,
@@ -422,7 +441,9 @@ export default function RegisterProductPage() {
         />
 
         <FormItem label="상품번호">
-          <FormDisplay value="자동입력됩니다." />
+          <FormDisplay
+            value={productDetail?.productNumber || "자동입력됩니다."}
+          />
         </FormItem>
         <FormController
           name="sellerProductCode"
@@ -602,7 +623,7 @@ export default function RegisterProductPage() {
             >
               <FormImageUploader
                 value={titleImageField.value}
-                onImagesChange={titleImageField.onChange}
+                onImagesChange={items => titleImageField.onChange(items[0])}
                 accept=".jpg, .jpeg, .png, .gif"
                 type="PRODUCT"
                 maxLength={1}
