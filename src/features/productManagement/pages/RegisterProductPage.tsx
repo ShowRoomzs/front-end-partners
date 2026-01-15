@@ -1,4 +1,4 @@
-import { useForm, useFieldArray, useWatch } from "react-hook-form"
+import { useForm, useFieldArray } from "react-hook-form"
 import Section from "@/common/components/Section/Section"
 import FormItem from "@/common/components/Form/FormItem"
 import FormInput from "@/common/components/Form/FormInput"
@@ -24,7 +24,7 @@ import {
   type ProductNotice,
 } from "@/features/productManagement/services/productService"
 import { PRODUCT_VALIDATION_RULES } from "@/features/productManagement/constants/validationRules"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import toast from "react-hot-toast"
 import type { AxiosError } from "axios"
 import { useNavigate, useParams } from "react-router-dom"
@@ -34,6 +34,9 @@ import Form from "@/common/components/Form/Form"
 import { useGetProductDetail } from "@/features/productManagement/hooks/useGetProductDetail"
 import { useGetCategory } from "@/common/hooks/useGetCategory"
 import { getCategoryHierarchy } from "@/common/utils/getCategoryHierarchy"
+import { useCustomBlocker } from "@/common/hooks/useCustomBlocker"
+import DiscountRate from "@/features/productManagement/components/DiscountRate/DiscountRate"
+import DiscountPrice from "@/features/productManagement/components/DiscountPrice/DiscountPrice"
 
 interface OptionGroup {
   id: string | number
@@ -41,7 +44,7 @@ interface OptionGroup {
   items: Array<OptionItem>
 }
 
-interface ProductFormData {
+export interface ProductFormData {
   isDisplay: boolean
   isOutOfStockForced: boolean
   category: CategoryValue
@@ -108,6 +111,18 @@ export default function RegisterProductPage() {
         },
       },
     })
+
+  useCustomBlocker({
+    condition: formState.isDirty,
+    confirmOption: {
+      title: `상품 ${isEdit ? "수정" : "등록"} 취소`,
+      content: `${isEdit ? "수정" : "작성"} 중인 내용이 저장되지 않습니다.\n취소하시겠습니까?`,
+      type: "warn",
+      cancelText: "돌아가기",
+      confirmText: "취소",
+    },
+  })
+
   useEffect(() => {
     if (!productDetail || !categoryMap) {
       return
@@ -156,24 +171,6 @@ export default function RegisterProductPage() {
   const { fields, append, remove } = useFieldArray({
     control,
     name: "optionGroups",
-  })
-
-  const regularPrice = useWatch({
-    control,
-    name: "regularPrice",
-    defaultValue: 0,
-  })
-
-  const discountRate = useWatch({
-    control,
-    name: "discountRate",
-    defaultValue: 0,
-  })
-
-  const isDiscount = useWatch({
-    control,
-    name: "isDiscount",
-    defaultValue: false,
   })
 
   const handleAddOptionGroup = () => {
@@ -258,16 +255,6 @@ export default function RegisterProductPage() {
     }))
 
     setValue("optionCombinations", newCombinations)
-  }
-
-  const getDiscountedPrice = () => {
-    const regularPriceNum = Number(regularPrice)
-    const discountRateNum = Number(discountRate)
-    if (isDiscount) {
-      return Math.max(regularPriceNum - discountRateNum, 0).toLocaleString()
-    }
-
-    return regularPriceNum.toLocaleString()
   }
 
   const onSubmit = useCallback(
@@ -512,19 +499,12 @@ export default function RegisterProductPage() {
           control={control}
           render={({ field }) => (
             <FormItem label="">
-              <FormInput
-                disabled={!isDiscount}
-                type="number"
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-                min={0}
-              />
+              <DiscountRate control={control} field={field} />
             </FormItem>
           )}
         />
         <FormItem label="할인 판매가">
-          <FormDisplay value={getDiscountedPrice()} />
+          <DiscountPrice control={control} />
         </FormItem>
       </Section>
       <Section required title="옵션 설정">
