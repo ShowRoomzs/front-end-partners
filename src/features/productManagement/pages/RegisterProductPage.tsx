@@ -1,42 +1,44 @@
 import { useForm, useFieldArray } from "react-hook-form"
 import Section from "@/common/components/Section/Section"
-import FormItem from "@/common/components/Form/FormItem"
-import FormInput from "@/common/components/Form/FormInput"
-import FormCategorySelector, {
-  type CategoryValue,
-} from "@/common/components/Form/FormCategorySelector"
-import FormDisplay from "@/common/components/Form/FormDisplay"
-import FormRadioGroup from "@/common/components/Form/FormRadioGroup"
-import FormOptionTable, {
-  type OptionItem,
-} from "@/common/components/Form/FormOptionTable"
-import FormOptionCombinationTable, {
-  type OptionCombination,
-} from "@/common/components/Form/FormOptionCombinationTable"
+import type { CategoryValue } from "@/common/components/Form/FormCategorySelector"
+import type { OptionItem } from "@/common/components/Form/FormOptionTable"
+import type { OptionCombination } from "@/common/components/Form/FormOptionCombinationTable"
 import { Button } from "@/components/ui/button"
-import { Trash2, ArrowDown } from "lucide-react"
-import FormCheckbox from "@/common/components/Form/FormCheckbox"
-import FormImageUploader from "@/common/components/Form/FormImageUploader"
-import FormEditor from "@/common/components/Form/FormEditor"
 import {
   productService,
   type AddProductRequest,
   type ProductNotice,
 } from "@/features/productManagement/services/productService"
-import { PRODUCT_VALIDATION_RULES } from "@/features/productManagement/constants/validationRules"
 import { useCallback, useEffect, useState } from "react"
 import toast from "react-hot-toast"
 import type { AxiosError } from "axios"
 import { useNavigate, useParams } from "react-router-dom"
-import { confirm } from "@/common/components/ConfirmModal/confirm"
-import FormController from "@/common/components/Form/FormController"
+import {
+  confirm,
+  type ConfirmOptions,
+} from "@/common/components/ConfirmModal/confirm"
 import Form from "@/common/components/Form/Form"
 import { useGetProductDetail } from "@/features/productManagement/hooks/useGetProductDetail"
 import { useGetCategory } from "@/common/hooks/useGetCategory"
 import { getCategoryHierarchy } from "@/common/utils/getCategoryHierarchy"
 import { useCustomBlocker } from "@/common/hooks/useCustomBlocker"
-import DiscountRate from "@/features/productManagement/components/DiscountRate/DiscountRate"
-import DiscountPrice from "@/features/productManagement/components/DiscountPrice/DiscountPrice"
+import DiscountPriceForm from "@/features/productManagement/components/DiscountPriceForm/DiscountPriceForm"
+import DiscountRateForm from "@/features/productManagement/components/DiscountRateForm/DiscountRateForm"
+import IsDisplayForm from "@/features/productManagement/components/IsDisplayForm/IsDisplayForm"
+import IsOutOfStockForm from "@/features/productManagement/components/IsOutOfStockForm/IsOutOfStockForm"
+import CategoryForm from "@/features/productManagement/components/CategoryForm/CategoryForm"
+import ProductNameForm from "@/features/productManagement/components/ProductNameForm/ProductNameForm"
+import ProductNumberForm from "@/features/productManagement/components/ProductNumberForm/ProductNumberForm"
+import SellerProductCodeForm from "@/features/productManagement/components/SellerProductCodeForm/SellerProductCodeForm"
+import PurchasePriceForm from "@/features/productManagement/components/PurchasePriceForm/PurchasePriceForm"
+import RegularPriceForm from "@/features/productManagement/components/RegularPriceForm/RegularPriceForm"
+import IsDiscountForm from "@/features/productManagement/components/IsDiscountForm/IsDiscountForm"
+import TitleImageForm from "@/features/productManagement/components/TitleImageForm/TitleImageForm"
+import CoverImagesForm from "@/features/productManagement/components/CoverImagesForm/CoverImagesForm"
+import ProductNoticeForm from "@/features/productManagement/components/ProductNoticeForm/ProductNoticeForm"
+import DescriptionForm from "@/features/productManagement/components/DescriptionForm/DescriptionForm"
+import OptionGroupsForm from "@/features/productManagement/components/OptionGroupsForm/OptionGroupsForm"
+import OptionCombinationsForm from "@/features/productManagement/components/OptionCombinationsForm/OptionCombinationsForm"
 
 interface OptionGroup {
   id: string | number
@@ -69,6 +71,19 @@ export default function RegisterProductPage() {
   const { data: productDetail } = useGetProductDetail(Number(productId))
   const { categoryMap } = useGetCategory()
   const isEdit = !!productId
+
+  const getDefaultCancelConfirmOptions = useCallback(
+    (isEdit: boolean): ConfirmOptions => {
+      return {
+        title: `상품 ${isEdit ? "수정" : "등록"} 취소`,
+        content: `${isEdit ? "수정" : "작성"} 중인 내용이 저장되지 않습니다.\n취소하시겠습니까?`,
+        type: "warn",
+        cancelText: "돌아가기",
+        confirmText: "취소",
+      }
+    },
+    []
+  )
 
   const { control, handleSubmit, setValue, getValues, formState, reset } =
     useForm<ProductFormData>({
@@ -114,13 +129,7 @@ export default function RegisterProductPage() {
 
   useCustomBlocker({
     condition: formState.isDirty,
-    confirmOption: {
-      title: `상품 ${isEdit ? "수정" : "등록"} 취소`,
-      content: `${isEdit ? "수정" : "작성"} 중인 내용이 저장되지 않습니다.\n취소하시겠습니까?`,
-      type: "warn",
-      cancelText: "돌아가기",
-      confirmText: "취소",
-    },
+    confirmOption: getDefaultCancelConfirmOptions(isEdit),
   })
 
   useEffect(() => {
@@ -172,14 +181,6 @@ export default function RegisterProductPage() {
     control,
     name: "optionGroups",
   })
-
-  const handleAddOptionGroup = () => {
-    append({
-      id: crypto.randomUUID(),
-      name: "",
-      items: [{ id: crypto.randomUUID(), name: "", price: null }],
-    })
-  }
 
   const handleMoveToCombinations = () => {
     const optionGroups = getValues("optionGroups")
@@ -319,509 +320,76 @@ export default function RegisterProductPage() {
       return
     }
 
-    const result = await confirm({
-      type: "warn",
-      title: "상품 등록 취소",
-      content: `${isEdit ? "수정" : "작성"} 중인 내용이 저장되지 않습니다.\n취소하시겠습니까?`,
-      cancelText: "돌아가기",
-      confirmText: "취소",
-    })
+    const result = await confirm(getDefaultCancelConfirmOptions(isEdit))
 
     if (result) {
       navigate("/product/list")
     }
-  }, [formState.isDirty, isEdit, navigate])
+  }, [formState.isDirty, getDefaultCancelConfirmOptions, isEdit, navigate])
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLFormElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault()
+      }
+    },
+    []
+  )
 
   return (
     <Form
       handleSubmit={handleSubmit}
       onSubmit={onSubmit}
-      onKeyDown={e => {
-        if (e.key === "Enter") {
-          e.preventDefault()
-        }
-      }}
+      onKeyDown={handleKeyDown}
     >
       <Section title="표시 여부">
-        <FormController
-          name="isDisplay"
-          control={control}
-          render={({ field, fieldState }) => (
-            <FormItem
-              label="진열상태"
-              required
-              error={fieldState.error?.message}
-            >
-              <FormRadioGroup<boolean>
-                options={[
-                  { label: "진열", value: true },
-                  { label: "미진열", value: false },
-                ]}
-                value={field.value}
-                onChange={field.onChange}
-              />
-            </FormItem>
-          )}
-        />
-        <FormController
-          name="isOutOfStockForced"
-          control={control}
-          render={({ field, fieldState }) => (
-            <FormItem
-              tooltipInfo={
-                "강제 품절을 체크하면 해당 상품은 고객에게 품절로 노출되며,\n구매가 불가능하게 됩니다."
-              }
-              label="강제품절처리"
-              error={fieldState.error?.message}
-            >
-              <FormCheckbox
-                label="품절"
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            </FormItem>
-          )}
-        />
+        <IsDisplayForm control={control} />
+        <IsOutOfStockForm control={control} />
       </Section>
 
       <Section title="카테고리(한 개만 지정 가능)">
-        <FormController
-          name="category"
-          control={control}
-          rules={PRODUCT_VALIDATION_RULES.category}
-          render={({ field, fieldState }) => (
-            <FormItem
-              label="카테고리"
-              required
-              error={fieldState.error?.message}
-            >
-              <FormCategorySelector
-                categoryMap={categoryMap}
-                value={{
-                  main: field.value?.main ?? null,
-                  sub: field.value?.sub ?? null,
-                  detail: field.value?.detail ?? null,
-                }}
-                onChange={field.onChange}
-              />
-            </FormItem>
-          )}
-        />
+        <CategoryForm control={control} />
       </Section>
 
       <Section title="기본 정보">
-        <FormController
-          name="productName"
-          control={control}
-          rules={PRODUCT_VALIDATION_RULES.productName}
-          render={({ field, fieldState }) => (
-            <FormItem label="상품명" required error={fieldState.error?.message}>
-              <FormInput
-                value={field.value}
-                placeholder="상품명을 입력해 주세요(특수문자 입력은 피해 주세요)"
-                maxLength={100}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-              />
-            </FormItem>
-          )}
-        />
-
-        <FormItem label="상품번호">
-          <FormDisplay
-            value={productDetail?.productNumber || "자동입력됩니다."}
-          />
-        </FormItem>
-        <FormController
-          name="sellerProductCode"
-          control={control}
-          render={({ field }) => (
-            <FormItem label="판매자상품코드">
-              <FormInput
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-              />
-            </FormItem>
-          )}
-        />
+        <ProductNameForm control={control} />
+        <ProductNumberForm productDetail={productDetail} />
+        <SellerProductCodeForm control={control} />
       </Section>
+
       <Section title="가격 설정">
-        <FormController
-          name="purchasePrice"
-          control={control}
-          render={({ field }) => (
-            <FormItem label="매입가">
-              <FormInput
-                type="number"
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-                min={0}
-              />
-            </FormItem>
-          )}
-        />
-        <FormController
-          name="regularPrice"
-          control={control}
-          rules={PRODUCT_VALIDATION_RULES.regularPrice}
-          render={({ field, fieldState }) => (
-            <FormItem required label="판매가" error={fieldState.error?.message}>
-              <FormInput
-                type="number"
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-                min={0}
-              />
-            </FormItem>
-          )}
-        />
-        <FormController
-          name="isDiscount"
-          control={control}
-          render={({ field }) => (
-            <FormItem label="할인">
-              <FormRadioGroup<boolean>
-                options={[
-                  { label: "설정", value: true },
-                  { label: "설정 안함", value: false },
-                ]}
-                value={field.value}
-                onChange={field.onChange}
-              />
-            </FormItem>
-          )}
-        />
-        <FormController
-          name="discountRate"
-          control={control}
-          render={({ field }) => (
-            <FormItem label="">
-              <DiscountRate control={control} field={field} />
-            </FormItem>
-          )}
-        />
-        <FormItem label="할인 판매가">
-          <DiscountPrice control={control} />
-        </FormItem>
+        <PurchasePriceForm control={control} />
+        <RegularPriceForm control={control} />
+        <IsDiscountForm control={control} />
+        <DiscountRateForm control={control} />
+        <DiscountPriceForm control={control} />
       </Section>
+
       <Section required title="옵션 설정">
-        <div className="space-y-6">
-          {fields.map((field, index) => (
-            <div key={field.id} className="relative">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-medium text-gray-900">
-                  옵션 {index + 1}
-                </h3>
-                {fields.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => remove(index)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    옵션 삭제
-                  </Button>
-                )}
-              </div>
-              <FormController
-                name={`optionGroups.${index}.name`}
-                control={control}
-                rules={PRODUCT_VALIDATION_RULES.optionGroupName}
-                render={({ field: nameField, fieldState: nameFieldState }) => (
-                  <FormController
-                    name={`optionGroups.${index}.items`}
-                    control={control}
-                    rules={PRODUCT_VALIDATION_RULES.optionGroupItems}
-                    render={({
-                      field: itemsField,
-                      fieldState: itemsFieldState,
-                    }) => (
-                      <FormOptionTable
-                        optionName={nameField.value}
-                        onOptionNameChange={nameField.onChange}
-                        options={itemsField.value}
-                        onChange={itemsField.onChange}
-                        nameError={nameFieldState.error?.message}
-                        itemsError={itemsFieldState.error?.message}
-                      />
-                    )}
-                  />
-                )}
-              />
-            </div>
-          ))}
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleAddOptionGroup}
-          >
-            + 새로운 옵션 추가
-          </Button>
-
-          <div className="pt-4 border-t">
-            <Button
-              type="button"
-              variant="default"
-              onClick={handleMoveToCombinations}
-              className="w-full"
-            >
-              <ArrowDown className="h-4 w-4 mr-2" />
-              옵션 목록으로 이동
-            </Button>
-          </div>
-        </div>
+        <OptionGroupsForm
+          control={control}
+          fields={fields}
+          remove={remove}
+          append={append}
+          onMoveToCombinations={handleMoveToCombinations}
+        />
       </Section>
 
       <Section required title="옵션 조합">
-        <FormController
-          name="optionCombinations"
-          control={control}
-          rules={PRODUCT_VALIDATION_RULES.optionCombinations}
-          render={({ field }) => (
-            <FormOptionCombinationTable
-              combinations={field.value}
-              onChange={field.onChange}
-            />
-          )}
-        />
+        <OptionCombinationsForm control={control} />
       </Section>
+
       <Section title="상품 이미지">
-        <FormController
-          name="titleImage"
-          control={control}
-          rules={PRODUCT_VALIDATION_RULES.titleImage}
-          render={({ field: titleImageField, formState }) => (
-            <FormItem
-              required
-              label="대표 이미지"
-              error={formState.errors.titleImage?.message}
-            >
-              <FormImageUploader
-                value={titleImageField.value}
-                onImagesChange={items => titleImageField.onChange(items[0])}
-                accept=".jpg, .jpeg, .png, .gif"
-                type="PRODUCT"
-                maxLength={1}
-                maxStorage={1024}
-                recommendSize={{ width: 640, height: 768 }}
-              />
-            </FormItem>
-          )}
-        />
-        <FormController
-          name="coverImages"
-          control={control}
-          rules={PRODUCT_VALIDATION_RULES.coverImages}
-          render={({ field: coverImageField, formState }) => (
-            <FormItem
-              required
-              label="커버 이미지"
-              error={formState.errors.coverImages?.message}
-            >
-              <FormImageUploader
-                value={coverImageField.value}
-                onImagesChange={coverImageField.onChange}
-                accept=".jpg, .jpeg, .png, .gif"
-                type="PRODUCT"
-                maxLength={4}
-                maxStorage={1024}
-                recommendSize={{ width: 640, height: 640 }}
-              />
-            </FormItem>
-          )}
-        />
+        <TitleImageForm control={control} />
+        <CoverImagesForm control={control} />
       </Section>
 
       <Section title="상품정보고시">
-        <FormController
-          name="productNotice.origin"
-          control={control}
-          rules={PRODUCT_VALIDATION_RULES.productNotice.origin}
-          render={({ field, formState }) => (
-            <FormItem
-              required
-              label="제조국"
-              error={formState.errors.productNotice?.origin?.message}
-            >
-              <FormInput
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-              />
-            </FormItem>
-          )}
-        />
-        <FormController
-          name="productNotice.material"
-          control={control}
-          rules={PRODUCT_VALIDATION_RULES.productNotice.material}
-          render={({ field, formState }) => (
-            <FormItem
-              required
-              label="소재"
-              error={formState.errors.productNotice?.material?.message}
-            >
-              <FormInput
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-              />
-            </FormItem>
-          )}
-        />
-        <FormController
-          name="productNotice.color"
-          control={control}
-          rules={PRODUCT_VALIDATION_RULES.productNotice.color}
-          render={({ field, formState }) => (
-            <FormItem
-              required
-              label="색상"
-              error={formState.errors.productNotice?.color?.message}
-            >
-              <FormInput
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-              />
-            </FormItem>
-          )}
-        />
-        <FormController
-          name="productNotice.size"
-          control={control}
-          rules={PRODUCT_VALIDATION_RULES.productNotice.size}
-          render={({ field, formState }) => (
-            <FormItem
-              required
-              label="치수"
-              error={formState.errors.productNotice?.size?.message}
-            >
-              <FormInput
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-              />
-            </FormItem>
-          )}
-        />
-        <FormController
-          name="productNotice.manufacturer"
-          control={control}
-          rules={PRODUCT_VALIDATION_RULES.productNotice.manufacturer}
-          render={({ field, formState }) => (
-            <FormItem
-              required
-              label="제조자"
-              error={formState.errors.productNotice?.manufacturer?.message}
-            >
-              <FormInput
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-              />
-            </FormItem>
-          )}
-        />
-        <FormController
-          name="productNotice.washingMethod"
-          control={control}
-          rules={PRODUCT_VALIDATION_RULES.productNotice.washingMethod}
-          render={({ field, formState }) => (
-            <FormItem
-              required
-              label="세탁 방법"
-              error={formState.errors.productNotice?.washingMethod?.message}
-            >
-              <FormInput
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-              />
-            </FormItem>
-          )}
-        />
-        <FormController
-          name="productNotice.manufactureDate"
-          control={control}
-          rules={PRODUCT_VALIDATION_RULES.productNotice.manufactureDate}
-          render={({ field, formState }) => (
-            <FormItem
-              required
-              label="제조년월"
-              error={formState.errors.productNotice?.manufactureDate?.message}
-            >
-              <FormInput
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-              />
-            </FormItem>
-          )}
-        />
-        <FormController
-          name="productNotice.asInfo"
-          control={control}
-          rules={PRODUCT_VALIDATION_RULES.productNotice.asInfo}
-          render={({ field, formState }) => (
-            <FormItem
-              required
-              label="A/S안내 및 연락처"
-              error={formState.errors.productNotice?.asInfo?.message}
-            >
-              <FormInput
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-              />
-            </FormItem>
-          )}
-        />
-        <FormController
-          name="productNotice.qualityAssurance"
-          control={control}
-          rules={PRODUCT_VALIDATION_RULES.productNotice.qualityAssurance}
-          render={({ field, formState }) => (
-            <FormItem
-              required
-              label="품질 보증 기준"
-              error={formState.errors.productNotice?.qualityAssurance?.message}
-            >
-              <FormInput
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-              />
-            </FormItem>
-          )}
-        />
+        <ProductNoticeForm control={control} />
       </Section>
 
       <Section title="에디터">
-        <FormController
-          name="description"
-          control={control}
-          rules={PRODUCT_VALIDATION_RULES.description}
-          render={({ field, formState }) => (
-            <FormItem
-              required
-              label="상세설명"
-              error={formState.errors.description?.message}
-            >
-              <FormEditor
-                value={field.value}
-                onChange={field.onChange}
-                imageUploadType="PRODUCT"
-                placeholder="상품 상세설명을 입력하세요..."
-              />
-            </FormItem>
-          )}
-        />
+        <DescriptionForm control={control} />
       </Section>
 
       <div className="flex gap-3 justify-end mt-6">

@@ -1,13 +1,14 @@
 import FormDisplay from "@/common/components/Form/FormDisplay"
+import FormItem from "@/common/components/Form/FormItem"
 import type { ProductFormData } from "@/features/productManagement/pages/RegisterProductPage"
 import { useCallback } from "react"
 import { useWatch, type Control } from "react-hook-form"
 
-interface DiscountPriceProps {
+interface DiscountPriceFormProps {
   control: Control<ProductFormData>
 }
 
-export default function DiscountPrice(props: DiscountPriceProps) {
+export default function DiscountPriceForm(props: DiscountPriceFormProps) {
   const { control } = props
 
   const regularPrice = useWatch({
@@ -38,5 +39,9 @@ export default function DiscountPrice(props: DiscountPriceProps) {
     return regularPriceNum.toLocaleString()
   }, [discountRate, isDiscount, regularPrice])
 
-  return <FormDisplay value={getDiscountedPrice()} />
+  return (
+    <FormItem label="할인 판매가">
+      <FormDisplay value={getDiscountedPrice()} />
+    </FormItem>
+  )
 }
