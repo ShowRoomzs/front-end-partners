@@ -1,22 +1,108 @@
 import FormController from "@/common/components/Form/FormController"
-import FormOptionTable from "@/common/components/Form/FormOptionTable"
+import FormOptionTable, {
+  type OptionItem,
+} from "@/common/components/Form/FormOptionTable"
 import { Button } from "@/components/ui/button"
 import { PRODUCT_VALIDATION_RULES } from "@/features/productManagement/constants/validationRules"
 import type { ProductFormData } from "@/features/productManagement/pages/RegisterProductPage"
 import { ArrowDown, Trash2 } from "lucide-react"
 import { useCallback } from "react"
-import type { Control, UseFieldArrayReturn } from "react-hook-form"
+import {
+  useFieldArray,
+  useWatch,
+  type Control,
+  type UseFormSetValue,
+} from "react-hook-form"
+import toast from "react-hot-toast"
 
 interface OptionGroupsFormProps {
   control: Control<ProductFormData>
-  fields: UseFieldArrayReturn<ProductFormData, "optionGroups">["fields"]
-  remove: UseFieldArrayReturn<ProductFormData, "optionGroups">["remove"]
-  append: UseFieldArrayReturn<ProductFormData, "optionGroups">["append"]
-  onMoveToCombinations: () => void
+  setValue: UseFormSetValue<ProductFormData>
 }
 
 export default function OptionGroupsForm(props: OptionGroupsFormProps) {
-  const { control, fields, remove, append, onMoveToCombinations } = props
+  const { control, setValue } = props
+
+  const optionGroups = useWatch({ control, name: "optionGroups" })
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "optionGroups",
+  })
+
+  const handleMoveToCombinations = () => {
+    if (optionGroups.length === 0) {
+      toast.error("옵션을 입력해 주세요.")
+      return
+    }
+
+    for (const group of optionGroups) {
+      const index = optionGroups.indexOf(group)
+      if (!group.name) {
+        toast.error(`옵션${index + 1} 그룹명을 입력해 주세요.`)
+        return
+      }
+      const hasSameGroupName = optionGroups.some(
+        curGroup => curGroup.name === group.name && curGroup.id !== group.id
+      )
+      if (hasSameGroupName) {
+        toast.error("동일한 옵션명은 사용할 수 없습니다.")
+        return
+      }
+      const filledItems = group.items.filter(item => item.name)
+
+      if (filledItems.length === 0) {
+        toast.error(`"${group.name}" 옵션 항목을 입력해 주세요.`)
+        return
+      }
+      const hasSameItemName = group.items.some(item =>
+        group.items.some(
+          curItem => curItem.name === item.name && curItem.id !== item.id
+        )
+      )
+      if (hasSameItemName) {
+        toast.error("동일한 옵션 항목명은 사용할 수 없습니다.")
+        return
+      }
+    }
+
+    const validItems = optionGroups.map(group =>
+      group.items.filter(item => item.name)
+    )
+
+    const cartesianProduct = (
+      arrays: Array<Array<OptionItem>>
+    ): Array<Array<OptionItem>> => {
+      if (arrays.length === 0) return []
+      if (arrays.length === 1) return arrays[0].map(item => [item])
+
+      const result: Array<Array<OptionItem>> = []
+      const restProduct = cartesianProduct(arrays.slice(1))
+
+      for (const item of arrays[0]) {
+        for (const rest of restProduct) {
+          result.push([item, ...rest])
+        }
+      }
+
+      return result
+    }
+
+    const combinations = cartesianProduct(validItems)
+
+    const newCombinations = combinations.map((combo, index) => ({
+      id: crypto.randomUUID(),
+      combination: combo.map(item => item.name),
+      price: combo
+        .reduce((sum, item) => sum + Number(item.price || 0), 0)
+        .toString(),
+      stock: "0",
+      isDisplayed: true,
+      isRepresentative: index === 0,
+    }))
+
+    setValue("optionCombinations", newCombinations)
+  }
 
   const handleAddOptionGroup = useCallback(() => {
     append({
@@ -81,7 +167,7 @@ export default function OptionGroupsForm(props: OptionGroupsFormProps) {
         <Button
           type="button"
           variant="default"
-          onClick={onMoveToCombinations}
+          onClick={handleMoveToCombinations}
           className="w-full"
         >
           <ArrowDown className="h-4 w-4 mr-2" />

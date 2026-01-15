@@ -1,4 +1,4 @@
-import { useForm, useFieldArray } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import Section from "@/common/components/Section/Section"
 import type { CategoryValue } from "@/common/components/Form/FormCategorySelector"
 import type { OptionItem } from "@/common/components/Form/FormOptionTable"
@@ -85,7 +85,7 @@ export default function RegisterProductPage() {
     []
   )
 
-  const { control, handleSubmit, setValue, getValues, formState, reset } =
+  const { control, handleSubmit, formState, setValue, reset } =
     useForm<ProductFormData>({
       reValidateMode: "onSubmit",
       defaultValues: {
@@ -126,11 +126,6 @@ export default function RegisterProductPage() {
         },
       },
     })
-
-  useCustomBlocker({
-    condition: formState.isDirty,
-    confirmOption: getDefaultCancelConfirmOptions(isEdit),
-  })
 
   const initializeForm = useCallback(() => {
     if (!productDetail || !categoryMap) {
@@ -176,91 +171,6 @@ export default function RegisterProductPage() {
       productNotice: productDetail.productNotice,
     })
   }, [categoryMap, productDetail, reset])
-
-  useEffect(() => {
-    initializeForm()
-  }, [initializeForm])
-
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "optionGroups",
-  })
-
-  const handleMoveToCombinations = () => {
-    const optionGroups = getValues("optionGroups")
-
-    if (optionGroups.length === 0) {
-      toast.error("옵션을 입력해 주세요.")
-      return
-    }
-
-    for (const group of optionGroups) {
-      const index = optionGroups.indexOf(group)
-      if (!group.name) {
-        toast.error(`옵션${index + 1} 그룹명을 입력해 주세요.`)
-        return
-      }
-      const hasSameGroupName = optionGroups.some(
-        curGroup => curGroup.name === group.name && curGroup.id !== group.id
-      )
-      if (hasSameGroupName) {
-        toast.error("동일한 옵션명은 사용할 수 없습니다.")
-        return
-      }
-      const filledItems = group.items.filter(item => item.name)
-
-      if (filledItems.length === 0) {
-        toast.error(`"${group.name}" 옵션 항목을 입력해 주세요.`)
-        return
-      }
-      const hasSameItemName = group.items.some(item =>
-        group.items.some(
-          curItem => curItem.name === item.name && curItem.id !== item.id
-        )
-      )
-      if (hasSameItemName) {
-        toast.error("동일한 옵션 항목명은 사용할 수 없습니다.")
-        return
-      }
-    }
-
-    const validItems = optionGroups.map(group =>
-      group.items.filter(item => item.name)
-    )
-
-    const cartesianProduct = (
-      arrays: Array<Array<OptionItem>>
-    ): Array<Array<OptionItem>> => {
-      if (arrays.length === 0) return []
-      if (arrays.length === 1) return arrays[0].map(item => [item])
-
-      const result: Array<Array<OptionItem>> = []
-      const restProduct = cartesianProduct(arrays.slice(1))
-
-      for (const item of arrays[0]) {
-        for (const rest of restProduct) {
-          result.push([item, ...rest])
-        }
-      }
-
-      return result
-    }
-
-    const combinations = cartesianProduct(validItems)
-
-    const newCombinations = combinations.map((combo, index) => ({
-      id: crypto.randomUUID(),
-      combination: combo.map(item => item.name),
-      price: combo
-        .reduce((sum, item) => sum + Number(item.price || 0), 0)
-        .toString(),
-      stock: "0",
-      isDisplayed: true,
-      isRepresentative: index === 0,
-    }))
-
-    setValue("optionCombinations", newCombinations)
-  }
 
   const onSubmit = useCallback(
     async (data: ProductFormData) => {
@@ -340,6 +250,15 @@ export default function RegisterProductPage() {
     []
   )
 
+  useEffect(() => {
+    initializeForm()
+  }, [initializeForm])
+
+  useCustomBlocker({
+    condition: formState.isDirty,
+    confirmOption: getDefaultCancelConfirmOptions(isEdit),
+  })
+
   return (
     <Form
       handleSubmit={handleSubmit}
@@ -370,13 +289,7 @@ export default function RegisterProductPage() {
       </Section>
 
       <Section required title="옵션 설정">
-        <OptionGroupsForm
-          control={control}
-          fields={fields}
-          remove={remove}
-          append={append}
-          onMoveToCombinations={handleMoveToCombinations}
-        />
+        <OptionGroupsForm control={control} setValue={setValue} />
       </Section>
 
       <Section required title="옵션 조합">
