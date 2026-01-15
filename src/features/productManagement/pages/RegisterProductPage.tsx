@@ -24,7 +24,7 @@ import {
   type ProductNotice,
 } from "@/features/productManagement/services/productService"
 import { PRODUCT_VALIDATION_RULES } from "@/features/productManagement/constants/validationRules"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import toast from "react-hot-toast"
 import type { AxiosError } from "axios"
 import { useNavigate, useParams } from "react-router-dom"
