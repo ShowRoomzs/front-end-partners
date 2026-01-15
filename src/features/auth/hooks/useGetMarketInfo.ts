@@ -1,4 +1,4 @@
-import { COOKIE_NAME } from "@/common/constants"
+import { COOKIE_NAME } from "@/common/constants/cookie"
 import { QUERY_KEYS } from "@/common/constants/queryKeys"
 import { useCookie } from "@/common/hooks/useCookie"
 import { marketService } from "@/common/services/marketService"

@@ -1,4 +1,4 @@
-import { COOKIE_NAME } from "@/common/constants"
+import { COOKIE_NAME } from "@/common/constants/cookie"
 import { cookie } from "@/common/lib/cookie"
 import { authService } from "@/features/auth/services/authService"
 import axios from "axios"

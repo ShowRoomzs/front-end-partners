@@ -3,9 +3,9 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { authService } from "@/features/auth/services/authService"
 import { useCookie } from "@/common/hooks/useCookie"
-import { COOKIE_NAME } from "@/common/constants"
 import toast from "react-hot-toast"
 import { useNavigate } from "react-router-dom"
+import { COOKIE_NAME } from "@/common/constants/cookie"
 
 export default function LoginPage() {
   const navigate = useNavigate()

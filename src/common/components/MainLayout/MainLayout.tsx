@@ -1,16 +1,14 @@
 import { useMemo, useState, useEffect } from "react"
 import { Outlet, useLocation } from "react-router-dom"
 import Header from "./Header"
-import {
-  SELLER_MENU,
-  CREATOR_MENU,
-  COMMON_MENU,
-  CURRENT_USER_ROLE,
-} from "@/common/constants"
-import { getMenuTypeByRole, type MenuItem } from "@/common/types"
+
 import { SIDEBAR_WIDTH } from "../Sidebar/config"
 import { SIDEBAR_STORAGE_KEY } from "./config"
 import Sidebar from "@/common/components/Sidebar/Sidebar"
+import { COMMON_MENU, CREATOR_MENU, SELLER_MENU } from "@/common/constants/menu"
+import { getMenuTypeByRole } from "@/common/types/role"
+import { CURRENT_USER_ROLE } from "@/common/constants/role"
+import type { MenuItem } from "@/common/types/menu"
 
 export default function MainLayout() {
   const getInitialSidebarState = () => {

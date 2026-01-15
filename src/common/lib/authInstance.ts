@@ -1,4 +1,4 @@
-import { COOKIE_NAME } from "@/common/constants"
+import { COOKIE_NAME } from "@/common/constants/cookie"
 import { cookie } from "@/common/lib/cookie"
 import axios, { isAxiosError } from "axios"
 import toast from "react-hot-toast"

@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
-import type { MenuItem } from '@/common/types'
-import { menuStorage } from '@/common/utils/menuStorage'
-import MenuItemButton from './MenuItemButton'
-import MenuSubItem from './MenuSubItem'
-import MenuItemLink from './MenuItemLink'
+import { useState, useEffect } from "react"
+import { useLocation } from "react-router-dom"
+import { menuStorage } from "@/common/utils/menuStorage"
+import MenuItemButton from "./MenuItemButton"
+import MenuSubItem from "./MenuSubItem"
+import MenuItemLink from "./MenuItemLink"
+import type { MenuItem } from "@/common/types/menu"
 
 interface MenuItemComponentProps {
   item: MenuItem
@@ -42,7 +42,7 @@ export default function MenuItemComponent(props: MenuItemComponentProps) {
                 key={child.id}
                 id={child.id}
                 label={child.label}
-                path={child.path || '#'}
+                path={child.path || "#"}
                 isActive={child.path === location.pathname}
               />
             ))}
@@ -56,7 +56,7 @@ export default function MenuItemComponent(props: MenuItemComponentProps) {
   return (
     <MenuItemLink
       label={item.label}
-      path={item.path || '#'}
+      path={item.path || "#"}
       isActive={item.path === location.pathname}
     />
   )

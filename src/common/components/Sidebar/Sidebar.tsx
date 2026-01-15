@@ -1,7 +1,7 @@
-import type { MenuConfig } from '@/common/types'
-import MenuSection from './MenuSection'
-import { SIDEBAR_WIDTH } from './config'
-import { HEADER_HEIGHT } from '../MainLayout/config'
+import MenuSection from "./MenuSection"
+import { SIDEBAR_WIDTH } from "./config"
+import { HEADER_HEIGHT } from "../MainLayout/config"
+import type { MenuConfig } from "@/common/types/menu"
 
 interface SidebarProps {
   menus: Array<MenuConfig>
@@ -14,7 +14,7 @@ export default function Sidebar(props: SidebarProps) {
   return (
     <aside
       className={`bg-[#1c223f] border-r border-[#2a2d4a] flex flex-col transition-transform duration-300 ${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
+        isOpen ? "translate-x-0" : "-translate-x-full"
       }`}
       style={{
         width: `${SIDEBAR_WIDTH}px`,

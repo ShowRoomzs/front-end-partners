@@ -1,5 +1,5 @@
-import type { MenuItem } from '@/common/types'
-import MenuGroupComponent from './MenuGroupComponent'
+import type { MenuItem } from "@/common/types/menu"
+import MenuGroupComponent from "./MenuGroupComponent"
 
 interface MenuSectionProps {
   groups: Array<MenuItem>

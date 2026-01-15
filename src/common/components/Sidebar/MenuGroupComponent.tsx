@@ -1,8 +1,8 @@
-import { useMemo, useState, useEffect } from 'react'
-import type { MenuItem } from '@/common/types'
-import MenuItemComponent from './MenuItemComponent'
-import MenuGroupButton from './MenuGroupButton'
-import { useLocation, useNavigate } from 'react-router-dom'
+import MenuGroupButton from "@/common/components/Sidebar/MenuGroupButton"
+import MenuItemComponent from "@/common/components/Sidebar/MenuItemComponent"
+import type { MenuItem } from "@/common/types/menu"
+import { useEffect, useMemo, useState } from "react"
+import { useLocation, useNavigate } from "react-router-dom"
 
 interface MenuGroupComponentProps {
   group: MenuItem
@@ -17,7 +17,7 @@ export default function MenuGroupComponent(props: MenuGroupComponentProps) {
   const getInitialOpenState = () => {
     const storageKey = `menu-group-${group.id}`
     const stored = sessionStorage.getItem(storageKey)
-    return stored === 'true'
+    return stored === "true"
   }
 
   const [isOpen, setIsOpen] = useState(getInitialOpenState)
@@ -64,7 +64,7 @@ export default function MenuGroupComponent(props: MenuGroupComponentProps) {
       )}
 
       {isOpen && (
-        <div className={group.label ? 'mt-1 mb-2' : ''}>
+        <div className={group.label ? "mt-1 mb-2" : ""}>
           {group.children?.map(item => (
             <MenuItemComponent key={item.id} item={item} />
           ))}
