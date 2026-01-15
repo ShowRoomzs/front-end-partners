@@ -132,11 +132,10 @@ export default function RegisterProductPage() {
     confirmOption: getDefaultCancelConfirmOptions(isEdit),
   })
 
-  useEffect(() => {
+  const initializeForm = useCallback(() => {
     if (!productDetail || !categoryMap) {
       return
     }
-
     const discountRate = productDetail.regularPrice - productDetail.salePrice
 
     const optionGroups: Array<OptionGroup> = productDetail.optionGroups.map(
@@ -177,6 +176,11 @@ export default function RegisterProductPage() {
       productNotice: productDetail.productNotice,
     })
   }, [categoryMap, productDetail, reset])
+
+  useEffect(() => {
+    initializeForm()
+  }, [initializeForm])
+
   const { fields, append, remove } = useFieldArray({
     control,
     name: "optionGroups",
