@@ -9,7 +9,8 @@ export const authInstance = axios.create({
 authInstance.interceptors.response.use(
   res => res,
   error => {
-    if (error.response.status === 401) {
+    const hasAccessToken = !!cookie.get(COOKIE_NAME.ACCESS_TOKEN)
+    if (error.response.status === 401 && hasAccessToken) {
       cookie.remove(COOKIE_NAME.ACCESS_TOKEN)
       cookie.remove(COOKIE_NAME.REFRESH_TOKEN)
       toast.error("세션이 만료되었습니다. 다시 로그인해주세요.")
