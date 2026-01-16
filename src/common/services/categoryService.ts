@@ -13,7 +13,7 @@ type CategoriesResponse = Array<Category>
 export const categoryService = {
   getCategories: async () => {
     const { data: response } =
-      await apiInstance.get<CategoriesResponse>("/seller/category")
+      await apiInstance.get<CategoriesResponse>("/common/categories")
 
     return response
   },
