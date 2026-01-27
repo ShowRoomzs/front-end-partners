@@ -218,14 +218,17 @@ export default function RegisterProductPage() {
         toast.success(
           isEdit ? "상품 정보를 수정했습니다." : "상품 정보를 등록했습니다."
         )
-        navigate("/product/list") // TODO : path 상수로 관리
+        reset(data, { keepValues: true })
+        setTimeout(() => {
+          navigate("/product/list") // TODO : path 상수로 관리
+        }, 100)
       } catch (error) {
         throw error as AxiosError
       } finally {
         setIsLoading(false)
       }
     },
-    [isEdit, navigate, productId]
+    [isEdit, navigate, productId, reset]
   )
 
   const handleClickCancel = useCallback(async () => {

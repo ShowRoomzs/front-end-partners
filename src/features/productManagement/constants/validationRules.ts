@@ -41,19 +41,6 @@ export const PRODUCT_VALIDATION_RULES = {
         return "'옵션 목록으로 이동' 버튼을 눌러주세요"
       }
 
-      const validItems = validOptionGroups.map(group =>
-        group.items.filter(item => item.name.trim())
-      )
-
-      const expectedCombinationCount = validItems.reduce(
-        (acc, items) => acc * items.length,
-        1
-      )
-
-      if (value.length !== expectedCombinationCount) {
-        return "옵션 설정이 변경되었습니다. '옵션 목록으로 이동' 버튼을 눌러주세요"
-      }
-
       const currentOptionNames = validOptionGroups.map(group =>
         group.items
           .filter(item => item.name.trim())
