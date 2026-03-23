@@ -3,6 +3,7 @@ import MainLayout from "@/common/components/MainLayout/MainLayout"
 import RegisterProductPage from "@/features/productManagement/pages/RegisterProductPage"
 import LoginPage from "@/features/auth/pages/LoginPage"
 import RegisterPage from "@/features/auth/pages/RegisterPage"
+import RegisterIntroPage from "@/features/auth/pages/RegisterIntroPage"
 import ProductListPage from "@/features/productManagement/pages/ProductListPage"
 import BasicManagement from "@/features/storeManagement/pages/BasicManagement"
 
@@ -13,6 +14,10 @@ export const authRoutes: Array<RouteObject> = [
   },
   {
     path: "/register",
+    element: <RegisterIntroPage />,
+  },
+  {
+    path: "/register/market",
     element: <RegisterPage />,
   },
   {

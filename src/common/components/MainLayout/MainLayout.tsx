@@ -1,5 +1,5 @@
-import { useMemo, useState, useEffect } from "react"
-import { Outlet, useLocation } from "react-router-dom"
+import { useMemo, useState, useEffect, useCallback } from "react"
+import { Outlet, useLocation, useNavigate } from "react-router-dom"
 import Header from "./Header"
 
 import { SIDEBAR_WIDTH } from "../Sidebar/config"
@@ -9,8 +9,12 @@ import { COMMON_MENU, CREATOR_MENU, SELLER_MENU } from "@/common/constants/menu"
 import { getMenuTypeByRole } from "@/common/types/role"
 import { CURRENT_USER_ROLE } from "@/common/constants/role"
 import type { MenuItem } from "@/common/types/menu"
+import { cookie } from "@/common/lib/cookie"
+import { COOKIE_NAME } from "@/common/constants/cookie"
 
 export default function MainLayout() {
+  const navigate = useNavigate()
+
   const getInitialSidebarState = () => {
     const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY)
     return stored === null ? true : stored === "true"
@@ -30,6 +34,12 @@ export default function MainLayout() {
   }, [menuType])
 
   const flattenMenus = menus.flatMap(m => m.groups)
+
+  const handleLogout = useCallback(() => {
+    cookie.remove(COOKIE_NAME.ACCESS_TOKEN)
+    cookie.remove(COOKIE_NAME.REFRESH_TOKEN)
+    navigate("/")
+  }, [navigate])
 
   const title = useMemo(() => {
     const find = (menus: Array<MenuItem>): string | undefined => {
@@ -52,6 +62,7 @@ export default function MainLayout() {
   return (
     <div className="h-screen bg-[#f7f8fa] flex flex-col">
       <Header
+        onLogout={handleLogout}
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
