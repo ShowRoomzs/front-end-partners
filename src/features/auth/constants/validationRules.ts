@@ -5,7 +5,10 @@ import {
   validatePhoneNumber,
   validateMarketNameRules,
 } from "../utils/validationHelpers"
-import { type RegisterData } from "@/features/auth/services/authService"
+import {
+  type RegisterData,
+  type CreatorRegisterData,
+} from "@/features/auth/services/authService"
 import { createDebouncedValidation } from "../utils/createDebouncedValidation"
 import {
   checkEmailDuplicate,
@@ -59,4 +62,61 @@ export const VALIDATION_RULES = Object.entries(RAW_VALIDATION_RULES).reduce(
     return acc
   },
   {} as Record<keyof RegisterData, RegisterOptions>
+)
+
+const RAW_CREATOR_VALIDATION_RULES = {
+  email: {
+    required: "이메일을 입력해주세요",
+    validate: {
+      format: validateEmailFormat,
+      duplicate: checkEmailDuplicate,
+    },
+  },
+  password: {
+    required: "비밀번호를 입력해주세요",
+    validate: validatePasswordStrength,
+  },
+  passwordConfirm: {
+    required: "비밀번호 확인을 입력해주세요",
+    validate: (value: string, formValues: unknown) => {
+      const data = formValues as CreatorRegisterData
+      return value === data.password || "비밀번호가 일치하지 않습니다"
+    },
+  },
+  marketName: {
+    required: "마켓명을 입력해주세요",
+    validate: {
+      format: validateMarketNameRules,
+      duplicate: checkMarketNameDuplicate,
+    },
+  },
+  snsType: {
+    required: "플랫폼을 선택해주세요",
+  },
+  activityName: {
+    required: "활동명을 입력해주세요",
+  },
+  snsUrl: {
+    required: "사이트 주소를 입력해주세요",
+  },
+  sellerName: {
+    required: "크리에이터 이름을 입력해주세요",
+  },
+  sellerContact: {
+    required: "연락처를 입력해주세요",
+    validate: validatePhoneNumber,
+  },
+} as const satisfies Record<keyof CreatorRegisterData, RegisterOptions>
+
+export const CREATOR_VALIDATION_RULES = Object.entries(
+  RAW_CREATOR_VALIDATION_RULES
+).reduce(
+  (acc, [key, rules]) => {
+    acc[key as keyof CreatorRegisterData] = createDebouncedValidation(
+      rules,
+      300
+    )
+    return acc
+  },
+  {} as Record<keyof CreatorRegisterData, RegisterOptions>
 )

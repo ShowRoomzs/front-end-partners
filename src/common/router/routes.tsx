@@ -4,6 +4,7 @@ import RegisterProductPage from "@/features/productManagement/pages/RegisterProd
 import LoginPage from "@/features/auth/pages/LoginPage"
 import RegisterPage from "@/features/auth/pages/RegisterPage"
 import RegisterIntroPage from "@/features/auth/pages/RegisterIntroPage"
+import RegisterCreatorPage from "@/features/auth/pages/RegisterCreatorPage"
 import ProductListPage from "@/features/productManagement/pages/ProductListPage"
 import BasicManagement from "@/features/storeManagement/pages/BasicManagement"
 
@@ -19,6 +20,10 @@ export const authRoutes: Array<RouteObject> = [
   {
     path: "/register/market",
     element: <RegisterPage />,
+  },
+  {
+    path: "/register/creator",
+    element: <RegisterCreatorPage />,
   },
   {
     path: "*",

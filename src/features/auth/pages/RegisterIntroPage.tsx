@@ -59,7 +59,7 @@ export default function RegisterIntroPage() {
             </Button>
           </div>
 
-          <div className="border border-gray-200 rounded-xl p-8 flex flex-col items-center opacity-50">
+          <div className="border border-gray-200 rounded-xl p-8 flex flex-col items-center">
             <div className="w-20 h-20 bg-purple-50 rounded-full flex items-center justify-center mb-5">
               <MonitorPlay size={36} className="text-purple-400" />
             </div>
@@ -78,7 +78,10 @@ export default function RegisterIntroPage() {
                 </li>
               ))}
             </ul>
-            <Button className="w-full" disabled>
+            <Button
+              className="w-full bg-blue-500 hover:bg-blue-600"
+              onClick={() => navigate("/register/creator")}
+            >
               크리에이터로 시작하기
             </Button>
           </div>

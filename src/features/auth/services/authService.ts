@@ -9,6 +9,7 @@ export interface RegisterData {
   marketName: string
   csNumber: string
 }
+
 export interface RegisterResponse {
   message: string
 }
@@ -32,7 +33,20 @@ export interface CheckDuplicateResponse {
 }
 export type MarketImageStatus = "APPROVED" | "UNDER_REVIEW" | "REJECTED"
 
-export type SnsType = "INSTAGRAM" | "YOUTUBE"
+export type SnsType = "INSTAGRAM" | "YOUTUBE" | "X" | "TIKTOK"
+
+export interface CreatorRegisterData {
+  email: string
+  password: string
+  passwordConfirm: string
+  marketName: string
+  snsType: SnsType
+  activityName: string
+  snsUrl: string
+  sellerName: string
+  sellerContact: string
+}
+
 export interface SnsLink {
   snsType: SnsType
   snsUrl: string
@@ -96,6 +110,14 @@ export const authService = {
           marketName,
         },
       }
+    )
+
+    return response
+  },
+  creatorRegister: async (data: CreatorRegisterData) => {
+    const { data: response } = await authInstance.post<RegisterResponse>(
+      "/creator/auth/signup",
+      data
     )
 
     return response
