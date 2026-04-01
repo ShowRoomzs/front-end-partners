@@ -160,9 +160,9 @@ export const COMMON_MENU: MenuConfig = {
           path: "/coupon/list",
         },
         {
-          id: "coupon-register",
-          label: "쿠폰 등록",
-          path: "/coupon/register",
+          id: "coupon-register-direct",
+          label: "쿠폰 등록 (직접 발급)",
+          path: "/coupon/register-direct",
         },
       ],
     },

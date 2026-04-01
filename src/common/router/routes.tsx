@@ -7,6 +7,7 @@ import RegisterIntroPage from "@/features/auth/pages/RegisterIntroPage"
 import RegisterCreatorPage from "@/features/auth/pages/RegisterCreatorPage"
 import ProductListPage from "@/features/productManagement/pages/ProductListPage"
 import BasicManagement from "@/features/storeManagement/pages/BasicManagement"
+import RegisterDirect from "@/features/coupon/RegisterDirect/RegisterDirect"
 
 export const authRoutes: Array<RouteObject> = [
   {
@@ -89,7 +90,7 @@ export const mainRoutes: Array<RouteObject> = [
             element: <div>aasdf</div>,
           },
           {
-            path: "coupon",
+            path: "coupon-direct",
             element: <div>aasdf</div>,
           },
           {
@@ -167,8 +168,8 @@ export const mainRoutes: Array<RouteObject> = [
             element: <div>aasdf</div>,
           },
           {
-            path: "register",
-            element: <div>aasdf</div>,
+            path: "register-direct",
+            element: <RegisterDirect />,
           },
         ],
       },

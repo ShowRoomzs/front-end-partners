@@ -9,5 +9,6 @@ export function useGetProductList(params: ProductListParams) {
   return useQuery({
     queryKey: [PRODUCT_QUERY_KEYS.PRODUCT_LIST, params],
     queryFn: () => productService.getProductList(params),
+    enabled: !!params.keyword,
   })
 }
