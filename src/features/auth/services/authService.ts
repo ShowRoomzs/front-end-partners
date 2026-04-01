@@ -1,4 +1,5 @@
 import { authInstance } from "@/common/lib/authInstance"
+import type { Role } from "@/common/types/role"
 
 export interface RegisterData {
   email: string
@@ -20,6 +21,7 @@ export interface LoginResponse {
   refreshTokenExpiresIn: number
   tokenType: string
   isNewMember: boolean
+  role: Role
 }
 export interface LoginData {
   email: string

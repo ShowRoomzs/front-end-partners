@@ -6,22 +6,21 @@ import { SIDEBAR_WIDTH } from "../Sidebar/config"
 import { SIDEBAR_STORAGE_KEY } from "./config"
 import Sidebar from "@/common/components/Sidebar/Sidebar"
 import { COMMON_MENU, CREATOR_MENU, SELLER_MENU } from "@/common/constants/menu"
-import { getMenuTypeByRole } from "@/common/types/role"
-import { CURRENT_USER_ROLE } from "@/common/constants/role"
+import { getMenuTypeByRole, type Role } from "@/common/types/role"
 import type { MenuItem } from "@/common/types/menu"
 import { cookie } from "@/common/lib/cookie"
 import { COOKIE_NAME } from "@/common/constants/cookie"
+import { useMarketStore } from "@/common/stores/useMarketStore"
 
 export default function MainLayout() {
   const navigate = useNavigate()
-
+  const { role } = useMarketStore()
   const getInitialSidebarState = () => {
     const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY)
     return stored === null ? true : stored === "true"
   }
-
   const [isSidebarOpen, setIsSidebarOpen] = useState(getInitialSidebarState)
-  const menuType = getMenuTypeByRole(CURRENT_USER_ROLE)
+  const menuType = getMenuTypeByRole(role as Role)
   const location = useLocation()
 
   useEffect(() => {

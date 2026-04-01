@@ -6,9 +6,11 @@ import { useCookie } from "@/common/hooks/useCookie"
 import toast from "react-hot-toast"
 import { useNavigate } from "react-router-dom"
 import { COOKIE_NAME } from "@/common/constants/cookie"
+import { useMarketStore } from "@/common/stores/useMarketStore"
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const { setRole } = useMarketStore()
   const [, setAccessToken] = useCookie<string>(COOKIE_NAME.ACCESS_TOKEN)
   const [, setRefreshToken] = useCookie<string>(COOKIE_NAME.REFRESH_TOKEN)
   const [formData, setFormData] = useState({
@@ -54,7 +56,8 @@ export default function LoginPage() {
         email: formData.email,
         password: formData.password,
       })
-      const { accessToken, refreshToken } = res
+      const { accessToken, refreshToken, role } = res
+      setRole(role)
       setAccessToken(accessToken)
       setRefreshToken(refreshToken)
       toast.success("로그인 성공")
