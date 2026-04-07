@@ -304,12 +304,12 @@ export default function RegisterProductPage() {
         <CoverImagesForm control={control} />
       </Section>
 
-      <Section title="상품정보고시">
-        <ProductNoticeForm control={control} />
-      </Section>
-
       <Section title="에디터">
         <DescriptionForm control={control} />
+      </Section>
+
+      <Section title="상품정보고시">
+        <ProductNoticeForm control={control} />
       </Section>
 
       <div className="flex gap-3 justify-end mt-6">
