@@ -16,7 +16,8 @@ export const ANSWER_TEMPLATE_INCLUDE_INACTIVE = {
   true: "미사용 템플릿 포함",
 } as const
 
-export type IncludeInactiveOption = keyof typeof ANSWER_TEMPLATE_INCLUDE_INACTIVE
+export type IncludeInactiveOption =
+  keyof typeof ANSWER_TEMPLATE_INCLUDE_INACTIVE
 
 export const ANSWER_TEMPLATE_IS_ACTIVE = {
   true: "사용",
