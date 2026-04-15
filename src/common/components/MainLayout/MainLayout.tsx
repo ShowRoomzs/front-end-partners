@@ -14,7 +14,8 @@ import { useMarketStore } from "@/common/stores/useMarketStore"
 
 export default function MainLayout() {
   const navigate = useNavigate()
-  const { role } = useMarketStore()
+  const { role, clear } = useMarketStore()
+
   const getInitialSidebarState = () => {
     const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY)
     return stored === null ? true : stored === "true"
@@ -37,8 +38,9 @@ export default function MainLayout() {
   const handleLogout = useCallback(() => {
     cookie.remove(COOKIE_NAME.ACCESS_TOKEN)
     cookie.remove(COOKIE_NAME.REFRESH_TOKEN)
+    clear()
     navigate("/")
-  }, [navigate])
+  }, [clear, navigate])
 
   const title = useMemo(() => {
     const find = (menus: Array<MenuItem>): string | undefined => {

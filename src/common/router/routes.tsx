@@ -1,4 +1,4 @@
-import type { RouteObject } from "react-router-dom"
+import { Outlet, type RouteObject } from "react-router-dom"
 import MainLayout from "@/common/components/MainLayout/MainLayout"
 import RegisterProductPage from "@/features/productManagement/pages/RegisterProductPage"
 import LoginPage from "@/features/auth/pages/LoginPage"
@@ -8,6 +8,8 @@ import RegisterCreatorPage from "@/features/auth/pages/RegisterCreatorPage"
 import ProductListPage from "@/features/productManagement/pages/ProductListPage"
 import BasicManagement from "@/features/storeManagement/pages/BasicManagement"
 import RegisterDirect from "@/features/coupon/RegisterDirect/RegisterDirect"
+import AnswerTemplateListPage from "@/features/inquiry/pages/AnswerTemplateListPage"
+import AnswerTemplateWritePage from "@/features/inquiry/pages/AnswerTemplateWritePage"
 
 export const authRoutes: Array<RouteObject> = [
   {
@@ -49,6 +51,10 @@ export const mainRoutes: Array<RouteObject> = [
             path: "basic",
             element: <BasicManagement />,
           },
+          {
+            path: "settlement-account",
+            element: <div>aasdf</div>,
+          },
         ],
       },
       // Seller - 상품 관리
@@ -69,6 +75,14 @@ export const mainRoutes: Array<RouteObject> = [
           },
           {
             path: "notice",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "notice/register",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "request",
             element: <div>aasdf</div>,
           },
         ],
@@ -95,6 +109,56 @@ export const mainRoutes: Array<RouteObject> = [
           },
           {
             path: "lottery",
+            element: <div>aasdf</div>,
+          },
+        ],
+      },
+      // Creator - 통계/분석
+      {
+        path: "analytics",
+        children: [
+          {
+            path: "visitors",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "conversion",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "followers",
+            element: <div>aasdf</div>,
+          },
+        ],
+      },
+      // Creator - 게시물 관리
+      {
+        path: "post",
+        children: [
+          {
+            path: "list",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "register",
+            element: <div>aasdf</div>,
+          },
+        ],
+      },
+      // Creator - 쿠폰 관리(추첨)
+      {
+        path: "lottery",
+        children: [
+          {
+            path: "list",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "register",
+            element: <div>aasdf</div>,
+          },
+          {
+            path: "winners",
             element: <div>aasdf</div>,
           },
         ],
@@ -189,6 +253,10 @@ export const mainRoutes: Array<RouteObject> = [
             path: "vat",
             element: <div>aasdf</div>,
           },
+          {
+            path: "commission",
+            element: <div>aasdf</div>,
+          },
         ],
       },
       // Common - 리뷰 관리
@@ -201,9 +269,19 @@ export const mainRoutes: Array<RouteObject> = [
           },
         ],
       },
+      // Common - 답변 템플릿
+      {
+        path: "inquiry/template",
+        element: <AnswerTemplateListPage />,
+      },
+      {
+        path: "inquiry/template/write",
+        element: <AnswerTemplateWritePage />,
+      },
       // Common - 문의 관리
       {
         path: "inquiry",
+        element: <Outlet />,
         children: [
           {
             path: "respond",
@@ -215,10 +293,6 @@ export const mainRoutes: Array<RouteObject> = [
           },
           {
             path: "order",
-            element: <div>aasdf</div>,
-          },
-          {
-            path: "template",
             element: <div>aasdf</div>,
           },
         ],

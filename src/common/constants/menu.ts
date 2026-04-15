@@ -5,18 +5,23 @@ export const SELLER_MENU: MenuConfig = {
   groups: [
     {
       id: "store",
-      label: "스토어 관리",
+      label: "마켓관리",
       children: [
         {
           id: "store-basic",
           label: "기본정보 관리",
           path: "/store/basic",
         },
+        {
+          id: "store-settlement-account",
+          label: "정산 계좌 관리",
+          path: "/store/settlement-account",
+        },
       ],
     },
     {
       id: "product",
-      label: "상품 관리",
+      label: "상품관리",
       children: [
         {
           id: "product-register",
@@ -33,80 +38,16 @@ export const SELLER_MENU: MenuConfig = {
           label: "상품 공지사항 관리",
           path: "/product/notice",
         },
-      ],
-    },
-  ],
-}
-
-export const CREATOR_MENU: MenuConfig = {
-  menuType: "CREATOR",
-  groups: [
-    {
-      id: "showroom",
-      label: "쇼룸 관리",
-      children: [
         {
-          id: "showroom-basic",
-          label: "기본정보 관리",
-          path: "/showroom/basic",
-        },
-        {
-          id: "showroom-product",
-          label: "상품 관리",
-          path: "/showroom/product",
-        },
-        {
-          id: "showroom-post",
-          label: "게시물",
-          path: "/showroom/post",
-        },
-        {
-          id: "showroom-coupon",
-          label: "쿠폰",
-          path: "/showroom/coupon",
-        },
-        {
-          id: "showroom-lottery",
-          label: "추첨",
-          path: "/showroom/lottery",
+          id: "review-list",
+          label: "리뷰 관리",
+          path: "/review/list",
         },
       ],
     },
-    {
-      id: "goods",
-      label: "굿즈 관리",
-      children: [
-        {
-          id: "goods-store",
-          label: "스토어 관리",
-          path: "/goods/store",
-        },
-        {
-          id: "goods-register",
-          label: "굿즈 등록",
-          path: "/goods/register",
-        },
-        {
-          id: "goods-list",
-          label: "굿즈 목록",
-          path: "/goods/list",
-        },
-        {
-          id: "goods-notice",
-          label: "굿즈 공지사항 관리",
-          path: "/goods/notice",
-        },
-      ],
-    },
-  ],
-}
-
-export const COMMON_MENU: MenuConfig = {
-  menuType: "COMMON",
-  groups: [
     {
       id: "sales",
-      label: "판매 관리",
+      label: "판매관리",
       children: [
         {
           id: "sales-all-orders",
@@ -161,7 +102,7 @@ export const COMMON_MENU: MenuConfig = {
         },
         {
           id: "coupon-register-direct",
-          label: "쿠폰 등록 (직접 발급)",
+          label: "쿠폰 등록",
           path: "/coupon/register-direct",
         },
       ],
@@ -184,17 +125,6 @@ export const COMMON_MENU: MenuConfig = {
           id: "settlement-vat",
           label: "부가세 신고 내역",
           path: "/settlement/vat",
-        },
-      ],
-    },
-    {
-      id: "review",
-      label: "리뷰 관리",
-      children: [
-        {
-          id: "review-list",
-          label: "리뷰 목록",
-          path: "/review/list",
         },
       ],
     },
@@ -224,6 +154,124 @@ export const COMMON_MENU: MenuConfig = {
         },
       ],
     },
+  ],
+}
+
+export const CREATOR_MENU: MenuConfig = {
+  menuType: "CREATOR",
+  groups: [
+    {
+      id: "showroom",
+      label: "쇼룸관리",
+      children: [
+        {
+          id: "showroom-basic",
+          label: "기본정보 관리",
+          path: "/showroom/basic",
+        },
+      ],
+    },
+    {
+      id: "analytics",
+      label: "통계/분석",
+      children: [
+        {
+          id: "analytics-visitors",
+          label: "방문자 현황",
+          path: "/analytics/visitors",
+        },
+        {
+          id: "analytics-conversion",
+          label: "상품별 클릭 전환율",
+          path: "/analytics/conversion",
+        },
+        {
+          id: "analytics-followers",
+          label: "팔로워 추이",
+          path: "/analytics/followers",
+        },
+      ],
+    },
+    {
+      id: "product",
+      label: "상품 관리",
+      children: [
+        {
+          id: "creator-product-list",
+          label: "상품 목록",
+          path: "/product/list",
+        },
+        {
+          id: "creator-product-register",
+          label: "상품 등록",
+          path: "/product/register",
+        },
+        {
+          id: "product-request",
+          label: "상품 등록 요청",
+          path: "/product/request",
+        },
+      ],
+    },
+    {
+      id: "post",
+      label: "게시물 관리",
+      children: [
+        {
+          id: "post-list",
+          label: "게시물 목록",
+          path: "/post/list",
+        },
+      ],
+    },
+    {
+      id: "lottery",
+      label: "쿠폰 관리",
+      children: [
+        {
+          id: "lottery-list",
+          label: "추첨 목록",
+          path: "/lottery/list",
+        },
+        {
+          id: "lottery-register",
+          label: "추첨 등록",
+          path: "/lottery/register",
+        },
+        {
+          id: "lottery-winners",
+          label: "당첨자 관리",
+          path: "/lottery/winners",
+        },
+      ],
+    },
+    {
+      id: "settlement",
+      label: "정산 관리",
+      children: [
+        {
+          id: "creator-settlement-history",
+          label: "정산 내역",
+          path: "/settlement/history",
+        },
+        {
+          id: "settlement-commission",
+          label: "상품별 커미션 내역",
+          path: "/settlement/commission",
+        },
+        {
+          id: "creator-settlement-vat",
+          label: "부가세 신고 내역",
+          path: "/settlement/vat",
+        },
+      ],
+    },
+  ],
+}
+
+export const COMMON_MENU: MenuConfig = {
+  menuType: "COMMON",
+  groups: [
     {
       id: "support-bug",
       path: "/support/bug",
