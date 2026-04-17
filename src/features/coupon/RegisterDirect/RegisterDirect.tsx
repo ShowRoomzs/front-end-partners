@@ -110,10 +110,13 @@ export default function RegisterDirect() {
   const targetProductType = useWatch({ control, name: "targetProductType" })
   const [localProductSearch, setLocalProductSearch] = useState("")
   const [productSearch, setProductSearch] = useState("")
-  const { data: productList } = useGetProductList({
-    ...INITIAL_PRODUCT_LIST_PARAMS,
-    keyword: productSearch,
-  })
+  const { data: productList } = useGetProductList(
+    {
+      ...INITIAL_PRODUCT_LIST_PARAMS,
+      keyword: productSearch,
+    },
+    !!productSearch
+  )
 
   const onSubmit = () => {
     toast.success("쿠폰이 등록되었습니다.")

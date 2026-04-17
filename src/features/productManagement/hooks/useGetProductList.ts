@@ -5,10 +5,13 @@ import {
 import { PRODUCT_QUERY_KEYS } from "@/features/productManagement/constants/queryKeys"
 import { useQuery } from "@tanstack/react-query"
 
-export function useGetProductList(params: ProductListParams) {
+export function useGetProductList(
+  params: ProductListParams,
+  enabled: boolean = true
+) {
   return useQuery({
     queryKey: [PRODUCT_QUERY_KEYS.PRODUCT_LIST, params],
     queryFn: () => productService.getProductList(params),
-    enabled: !!params.keyword,
+    enabled,
   })
 }
