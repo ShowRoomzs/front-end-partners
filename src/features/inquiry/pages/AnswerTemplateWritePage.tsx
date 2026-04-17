@@ -158,6 +158,12 @@ export default function AnswerTemplateWritePage() {
     confirmOption: getDefaultCancelConfirmOptions(isEdit),
   })
 
+  const isDisabled =
+    Object.keys(formState.errors).length > 0 ||
+    isLoading ||
+    !formState.isValid ||
+    !formState.isDirty
+
   return (
     <Form handleSubmit={handleSubmit} onSubmit={onSubmit}>
       <Section title="템플릿 제목" required>
@@ -184,7 +190,7 @@ export default function AnswerTemplateWritePage() {
         <Button type="button" variant="outline" onClick={handleClickCancel}>
           취소
         </Button>
-        <Button isLoading={isLoading} type="submit">
+        <Button disabled={isDisabled} isLoading={isLoading} type="submit">
           {isEdit ? "수정하기" : "등록하기"}
         </Button>
       </div>
