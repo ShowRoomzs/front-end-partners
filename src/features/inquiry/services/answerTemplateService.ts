@@ -32,10 +32,6 @@ export interface AnswerTemplateUpsertRequest {
   isActive: boolean
 }
 
-interface DeleteAnswerTemplatesParams {
-  templateIds: Array<number>
-}
-
 export const answerTemplateService = {
   getAnswerTemplateList: async (params: AnswerTemplateListParams) => {
     const { data: response } =
