@@ -42,6 +42,32 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* ── SHOWROOMZ 디자인시스템 v1.1 토큰 (--sz- 접두사, auth 화면 전용/추가) ──
+     기존 shadcn 토큰과 이름 충돌 없음. 순수 additive. */
+  --color-sz-n-50: var(--sz-n-50);
+  --color-sz-n-100: var(--sz-n-100);
+  --color-sz-n-200: var(--sz-n-200);
+  --color-sz-n-300: var(--sz-n-300);
+  --color-sz-n-400: var(--sz-n-400);
+  --color-sz-n-500: var(--sz-n-500);
+  --color-sz-n-600: var(--sz-n-600);
+  --color-sz-n-700: var(--sz-n-700);
+  --color-sz-n-900: var(--sz-n-900);
+  --color-sz-accent-50: var(--sz-accent-50);
+  --color-sz-accent-100: var(--sz-accent-100);
+  --color-sz-accent-500: var(--sz-accent-500);
+  --color-sz-accent-600: var(--sz-accent-600);
+  --color-sz-info-bg: var(--sz-info-bg);
+  --color-sz-info-text: var(--sz-info-text);
+  --color-sz-success-bg: var(--sz-success-bg);
+  --color-sz-success-text: var(--sz-success-text);
+  --color-sz-warning-bg: var(--sz-warning-bg);
+  --color-sz-warning-text: var(--sz-warning-text);
+  --color-sz-danger-bg: var(--sz-danger-bg);
+  --color-sz-danger-text: var(--sz-danger-text);
+  --color-sz-auth-action: var(--sz-auth-action);
+  --color-sz-auth-action-hover: var(--sz-auth-action-hover);
 }
 
 :root {
@@ -77,6 +103,54 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* ── SHOWROOMZ 디자인시스템 v1.1 원시 토큰 (auth 화면: 로그인/브랜드 회원가입) ── */
+  /* Neutral ramp (cool) */
+  --sz-n-50: #fafafb;
+  --sz-n-100: #f1f2f4;
+  --sz-n-200: #e4e5e9;
+  --sz-n-300: #c7c9d1;
+  --sz-n-400: #a8acb4;
+  --sz-n-500: #7b7f89;
+  --sz-n-600: #5b5f68;
+  --sz-n-700: #3a3d45;
+  --sz-n-900: #1a1b1f;
+  /* Accent (indigo) */
+  --sz-accent-50: #eef1fc;
+  --sz-accent-100: #dce2f8;
+  --sz-accent-500: #3b5bdb;
+  --sz-accent-600: #2e48b0;
+  /* Status */
+  --sz-info-bg: #e9eaf6;
+  --sz-info-text: #3b5bdb;
+  --sz-success-bg: #e4f1ea;
+  --sz-success-text: #1f7a54;
+  --sz-warning-bg: #f3e7d2;
+  --sz-warning-text: #8f6620;
+  --sz-danger-bg: #fbe6e6;
+  --sz-danger-text: #b23434;
+  /* Auth 전용 주 액션 (accent-500이 아닌 검정 — 두 스펙 파일 확정 예외) */
+  --sz-auth-action: #1a1b1f;
+  --sz-auth-action-hover: #3a3d45;
+  /* 치수 토큰 (컴포넌트 내부에서 var()로 직접 참조, 유틸리티 미생성) */
+  --sz-auth-control-h: 40px;
+  --sz-auth-card-w: 400px;
+  --sz-signup-card-w: 480px;
+  --sz-fs-h1: 20px;
+  --sz-fs-h2: 16px;
+  --sz-fs-h3: 13px;
+  --sz-fs-body: 13px;
+  --sz-fs-caption: 12px;
+  --sz-fs-micro: 11px;
+  --sz-sp-1: 4px;
+  --sz-sp-2: 8px;
+  --sz-sp-3: 12px;
+  --sz-sp-4: 16px;
+  --sz-sp-5: 20px;
+  --sz-sp-6: 24px;
+  --sz-r-sm: 6px;
+  --sz-r-md: 8px;
+  --sz-r-pill: 10px;
 }
 
 .dark {
