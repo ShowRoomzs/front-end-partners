@@ -158,7 +158,7 @@ export default function LoginPage() {
         <div className="mt-4 flex items-center justify-center">
           <button
             type="button"
-            onClick={() => navigate("/register")}
+            onClick={() => navigate("/register/market")}
             className="text-[12px] text-sz-n-600 hover:text-sz-n-900 hover:underline"
           >
             회원가입
