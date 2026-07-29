@@ -37,6 +37,27 @@ export const validateMobilePhone = (phone: string) => {
   return true
 }
 
+// 반품 수취인 연락처(온보딩) — 백엔드 SellerCompleteRegistrationRequest @Pattern과 동일:
+//   ^01(?:0|1|[6-9])-\d{3,4}-\d{4}$  → 010/011/016~019 + 10~11자리, 하이픈 필수
+//
+// ⚠️ validateMobilePhone(010 11자리 고정)과 의도적으로 다른 규칙이다.
+// 그쪽은 내부 관리자용 비공개 연락처, 이쪽은 반품 택배기사 등 외부에 노출되는
+// 연락처라 구 통신사 번호(011~019, 10자리)까지 수용한다. 두 필드를 같은 함수로 묶지 말 것.
+export const validateRecipientContact = (phone: string) => {
+  if (!phone) return true
+  if (!/^01(?:0|1|[6-9])-\d{3,4}-\d{4}$/.test(phone))
+    return "올바른 휴대폰 번호 형식으로 입력해 주세요. (예: 010-1234-5678)"
+  return true
+}
+
+// 반품 수취인 이름 — 한글·영문·공백만(백엔드 @Pattern ^[가-힣a-zA-Z\s]+$와 동일).
+// 이모지·특수문자는 입력 시점에 실시간 필터링하지만, 붙여넣기 등 우회 대비로 검증도 둔다.
+export const validateRecipientName = (value: string) => {
+  if (!value) return true
+  if (!/^[가-힣a-zA-Z\s]+$/.test(value)) return "한글·영문만 입력해 주세요."
+  return true
+}
+
 // 고객센터 전화번호 — 백엔드 @Pattern과 100% 동일한 정규식(제출 실패 방지):
 //   \d{4}-\d{4}            대표번호(8자리, 예: 1588-1234)
 //   \d{2,4}-\d{3,4}-\d{4}  유선·휴대폰·안심번호(9~12자리, 예: 02-1234-5678 / 010-1234-5678 / 0507-1234-5678)

@@ -86,6 +86,36 @@ export interface LoginData {
   password: string
 }
 
+/**
+ * 승인 후 온보딩(필수 정보 입력) 제출 페이로드.
+ * 필드명은 백엔드 SellerCompleteRegistrationRequest와 1:1 일치.
+ *
+ * 숫자 필드는 서버가 Integer로 받으므로 number로 변환해 보낸다.
+ * 선택 항목(freeShippingThreshold·remoteAreaSurcharge)은 미입력 시 null.
+ */
+export interface OnboardingData {
+  recipientName: string
+  contact: string
+  address: string
+  detailAddress: string
+  defaultDeliveryFee: number
+  freeShippingThreshold: number | null
+  remoteAreaSurcharge: number | null
+  shippingLeadDays: number
+  returnFee: number
+  exchangeFee: number
+}
+
+// 온보딩 성공 응답 — 정식 access/refresh 토큰이 발급된다(로그인 완료 처리에 사용).
+export interface TokenResponse {
+  accessToken: string
+  refreshToken: string
+  accessTokenExpiresIn: number
+  refreshTokenExpiresIn: number
+  tokenType: string
+  role: Role
+}
+
 // 실제 배포 API의 JSON 필드는 available (true=사용가능, false=중복).
 // 백엔드 Java 필드는 isAvailable이지만 Jackson이 boolean getter의 is 접두사를 떼고 직렬화함.
 export interface CheckDuplicateResponse {
@@ -166,6 +196,21 @@ export const authService = {
       "/seller/auth/login",
       data,
       config
+    )
+
+    return response
+  },
+  // 승인 후 온보딩 제출. 이 시점엔 access token 쿠키가 없고 로그인 응답으로 받은
+  // 단명(5분) registerToken만 있으므로, Authorization 헤더를 직접 실어 보낸다.
+  completeRegistration: async (registerToken: string, data: OnboardingData) => {
+    const { data: response } = await authInstance.post<TokenResponse>(
+      "/seller/auth/complete-registration",
+      data,
+      {
+        headers: { Authorization: `Bearer ${registerToken}` },
+        // 에러를 화면 내 배너·필드로 직접 표현하므로 전역 토스트 억제
+        suppressErrorToast: true,
+      }
     )
 
     return response

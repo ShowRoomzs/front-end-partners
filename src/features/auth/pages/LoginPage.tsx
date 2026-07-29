@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useForm } from "react-hook-form"
-import { useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import { isAxiosError } from "axios"
 import { cn } from "@/lib/utils"
 import { AuthShell } from "@/common/components/Auth/AuthShell"
@@ -20,13 +20,17 @@ const SERVER_ERROR_MESSAGE =
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { setRole } = useMarketStore()
   const [, setAccessToken] = useCookie<string>(COOKIE_NAME.ACCESS_TOKEN)
   const [, setRefreshToken] = useCookie<string>(COOKIE_NAME.REFRESH_TOKEN)
 
-  // 상태 C(서버 일시 오류) 배너 / 승인 후 첫 로그인 안내
+  // 상태 C(서버 일시 오류) 배너
   const [serverError, setServerError] = useState<string | null>(null)
-  const [info, setInfo] = useState<string | null>(null)
+  // 안내 배너 — 온보딩에서 registerToken이 만료돼 돌려보내진 경우 등
+  const [info, setInfo] = useState<string | null>(
+    (location.state as { info?: string } | null)?.info ?? null
+  )
 
   const {
     register,
@@ -45,11 +49,16 @@ export default function LoginPage() {
     try {
       const res = await authService.login(data, { suppressErrorToast: true })
 
-      // 승인 후 첫 로그인: 토큰 없이 registerToken만 옴(배송 설정 온보딩 필요 — 범위 밖)
+      // 승인 후 첫 로그인: access/refresh 없이 registerToken(5분)만 온다.
+      // 온보딩 게이트에서 필수 정보를 제출해야 정식 토큰이 발급되므로 여기서는 로그인 처리를 하지 않는다.
       if (res.isNewMember) {
-        setInfo(
-          "가입이 승인되었습니다. 추가 정보 입력(배송 설정)은 준비 중입니다."
-        )
+        if (!res.registerToken) {
+          setServerError(SERVER_ERROR_MESSAGE)
+          return
+        }
+        navigate("/onboarding", {
+          state: { registerToken: res.registerToken },
+        })
         return
       }
 
