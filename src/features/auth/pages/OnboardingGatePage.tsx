@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Controller, useForm, useWatch } from "react-hook-form"
 import { useLocation, useNavigate } from "react-router-dom"
 import { isAxiosError } from "axios"
@@ -45,6 +45,9 @@ type OnboardingFormValues = {
 const DEFAULT_RETURN_FEE = "3000"
 const DEFAULT_EXCHANGE_FEE = "6000"
 
+// 수취인 이름에서 허용하지 않는 문자(이모지·숫자·특수문자)
+const RECIPIENT_NAME_FILTER = /[^가-힣a-zA-Z\s]/g
+
 const Required = () => <span className="ml-0.5 text-sz-danger-text">*</span>
 const Optional = () => (
   <span className="ml-1 font-normal text-sz-n-400">(선택)</span>
@@ -68,6 +71,13 @@ export default function OnboardingGatePage() {
     ?.registerToken
 
   const [serverError, setServerError] = useState<string | null>(null)
+
+  // 한글 IME 조합 상태.
+  // 조합 중에는 "ㅎ"·"호" 같은 미완성 음절이 잠시 input value에 실리는데,
+  // 이걸 즉시 필터링하거나 검증하면 글자가 지워지고 에러가 깜빡여 한글 입력 자체가 불가능해진다.
+  // state가 아니라 ref인 이유: 값이 바뀌어도 리렌더가 필요 없고,
+  // rules.validate 클로저가 stale해도 ref는 호출 시점의 최신 값을 읽기 때문.
+  const isComposingRef = useRef(false)
 
   const {
     control,
@@ -209,7 +219,9 @@ export default function OnboardingGatePage() {
             name="recipientName"
             rules={{
               required: "수취인 이름을 입력해 주세요.",
-              validate: validateRecipientName,
+              // 조합 중인 자모는 검증에서 통과시킨다(조합이 끝나면 정상 음절이 된다).
+              validate: value =>
+                isComposingRef.current || validateRecipientName(value),
             }}
             render={({ field }) => (
               <FormField
@@ -230,10 +242,24 @@ export default function OnboardingGatePage() {
                   className={authInputClass(!!errors.recipientName)}
                   value={field.value}
                   onBlur={field.onBlur}
-                  // 이모지·특수문자는 입력 즉시 걸러낸다
+                  onCompositionStart={() => {
+                    isComposingRef.current = true
+                  }}
+                  // compositionend와 change의 발생 순서는 브라우저마다 다르므로
+                  // 양쪽 모두에서 필터링해 어느 순서든 최종 값이 정제되게 한다.
+                  onCompositionEnd={e => {
+                    isComposingRef.current = false
+                    field.onChange(
+                      e.currentTarget.value.replace(RECIPIENT_NAME_FILTER, "")
+                    )
+                  }}
+                  // 이모지·특수문자는 입력 즉시 걸러낸다.
+                  // 단 조합 중에는 그대로 둔다 — 자모를 지우면 조합이 깨진다.
                   onChange={e =>
                     field.onChange(
-                      e.target.value.replace(/[^가-힣a-zA-Z\s]/g, "")
+                      isComposingRef.current
+                        ? e.target.value
+                        : e.target.value.replace(RECIPIENT_NAME_FILTER, "")
                     )
                   }
                 />
