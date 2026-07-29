@@ -565,7 +565,7 @@ export default function RegisterPage() {
             {renderText("sellerContact", "판매 담당자 연락처", {
               type: "tel",
               inputMode: "tel",
-              placeholder: "010-0000-0000",
+              placeholder: "010-0000-0000 ('-' 포함)",
             })}
 
             <div className="mt-6" />
@@ -576,7 +576,7 @@ export default function RegisterPage() {
             {renderText("csNumber", "고객센터 전화번호", {
               type: "tel",
               inputMode: "tel",
-              placeholder: "02-1234-5678",
+              placeholder: "'-' 포함 8~12자리 숫자",
               help: "소비자 앱 상세에 노출됩니다. 존재하지 않는 번호 입력 시 서비스 이용이 제한될 수 있습니다.",
             })}
 

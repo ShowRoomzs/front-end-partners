@@ -13,6 +13,8 @@ type AddressFieldProps = {
    * 제공되면 "검색" 버튼을 렌더링 → 추후 다음/카카오 우편번호 팝업으로 이 콜백만 교체.
    */
   onSearchClick?: () => void
+  /** 직접 타이핑을 막고 검색 결과로만 채우게 한다(온보딩 반품 주소) */
+  readOnly?: boolean
 }
 
 // 사업장 주소 입력. 현재는 수동 텍스트 입력(사용자 결정). 팝업-agnostic 인터페이스 유지.
@@ -25,6 +27,7 @@ export function AddressField({
   placeholder,
   disabled,
   onSearchClick,
+  readOnly,
 }: AddressFieldProps) {
   return (
     <div className="flex w-full gap-2">
@@ -36,7 +39,12 @@ export function AddressField({
         onBlur={onBlur}
         placeholder={placeholder}
         disabled={disabled}
-        className={authInputClass(hasError, "flex-1")}
+        readOnly={readOnly}
+        className={authInputClass(
+          hasError,
+          readOnly ? "flex-1 cursor-pointer" : "flex-1"
+        )}
+        onClick={readOnly ? onSearchClick : undefined}
       />
       {onSearchClick && (
         <button

@@ -1,7 +1,8 @@
 import type { ReactNode } from "react"
 
 type FormFieldProps = {
-  label: string
+  /** 문자열 외에 필수(*)·선택 표기를 섞은 노드도 받는다 */
+  label: ReactNode
   htmlFor?: string
   /** RHF 등에서 온 에러 메시지 */
   error?: string
