@@ -36,7 +36,9 @@ export interface BusinessInfoData {
   mailOrderRegNumberYear: string
   mailOrderRegNumberRegion: string
   mailOrderRegNumberSeq: string
-  bankName: string
+  // 은행 표준 3자리 코드("004" 등). 목록은 GET /common/banks로 조회하며,
+  // 서버가 코드로 은행명을 찾아 저장한다(잘못된 코드는 404 BANK_NOT_FOUND).
+  bankCode: string
   accountHolder: string
   accountNumber: string
   bankbookImageUrl: string

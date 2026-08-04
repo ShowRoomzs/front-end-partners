@@ -37,6 +37,7 @@ import {
   type BusinessType,
   type RegisterData,
 } from "@/features/auth/services/authService"
+import { useGetBanks } from "@/common/hooks/useGetBanks"
 import { formatPhoneNumber } from "@/features/auth/utils/formatPhoneNumber"
 import { loadDaumPostcode } from "@/features/auth/utils/loadDaumPostcode"
 
@@ -54,29 +55,6 @@ const BUSINESS_TYPES: BusinessType[] = [
 // (Radix Select는 value=""인 SelectItem을 허용하지 않아 문자열 sentinel로 표현)
 const BUSINESS_TYPE_PLACEHOLDER = "선택하세요"
 const BANK_PLACEHOLDER = "은행 선택"
-
-const BANKS = [
-  "국민은행",
-  "신한은행",
-  "우리은행",
-  "하나은행",
-  "농협은행",
-  "기업은행",
-  "카카오뱅크",
-  "토스뱅크",
-  "케이뱅크",
-  "SC제일은행",
-  "씨티은행",
-  "부산은행",
-  "대구은행",
-  "경남은행",
-  "광주은행",
-  "전북은행",
-  "제주은행",
-  "새마을금고",
-  "신협",
-  "우체국",
-]
 
 const STEP1_FIELDS: FieldName[] = [
   "email",
@@ -103,7 +81,7 @@ const STEP2_FIELDS: FieldName[] = [
   "mailOrderRegNumberYear",
   "mailOrderRegNumberRegion",
   "mailOrderRegNumberSeq",
-  "bankName",
+  "bankCode",
   "accountHolder",
   "accountNumber",
   "bankbookImageUrl",
@@ -138,7 +116,7 @@ const DEFAULT_VALUES: SignupFormValues = {
   mailOrderRegNumberYear: "",
   mailOrderRegNumberRegion: "",
   mailOrderRegNumberSeq: "",
-  bankName: "",
+  bankCode: "",
   accountHolder: "",
   accountNumber: "",
   bankbookImageUrl: "",
@@ -212,6 +190,13 @@ export default function RegisterPage() {
   const [viewingTerm, setViewingTerm] = useState<(typeof TERMS)[number] | null>(
     null
   )
+  // 은행 목록은 서버 조회 — 하드코딩하면 코드가 서버와 어긋나 제출 시 404가 난다.
+  const {
+    data: banks,
+    isLoading: banksLoading,
+    isError: banksError,
+    refetch: refetchBanks,
+  } = useGetBanks()
   const [completed, setCompleted] = useState<{
     marketName: string
     appliedAt: Date
@@ -286,9 +271,9 @@ export default function RegisterPage() {
     rules: rule("mailOrderRegNumberSeq"),
   })
   const bankCtl = useController({
-    name: "bankName",
+    name: "bankCode",
     control,
-    rules: rule("bankName"),
+    rules: rule("bankCode"),
   })
   const bankbookCtl = useController({
     name: "bankbookImageUrl",
@@ -794,7 +779,7 @@ export default function RegisterPage() {
             <FormField
               label="은행명"
               error={bankCtl.fieldState.error?.message}
-              showError={interacted.has("bankName")}
+              showError={interacted.has("bankCode")}
             >
               <Select
                 // 항상 controlled 유지: 빈 값이면 sentinel을 표시(undefined 전달 시
@@ -803,33 +788,51 @@ export default function RegisterPage() {
                 onValueChange={v => {
                   // "은행 선택"을 고르면 미선택("")으로 처리 → required 오류 노출
                   bankCtl.field.onChange(v === BANK_PLACEHOLDER ? "" : v)
-                  markInteracted("bankName")
+                  markInteracted("bankCode")
                 }}
                 // 값 선택 없이 열었다 닫아도 required 오류가 뜨도록 닫힘 시점에 마킹
                 onOpenChange={open => {
-                  if (!open) markInteracted("bankName")
+                  if (!open) markInteracted("bankCode")
                 }}
-                disabled={submitting}
+                disabled={submitting || banksLoading || banksError}
               >
                 <SelectTrigger
                   className={authInputClass(
-                    interacted.has("bankName") && !!bankCtl.fieldState.error,
+                    interacted.has("bankCode") && !!bankCtl.fieldState.error,
                     cn("font-normal", !bankCtl.field.value && "text-sz-n-400")
                   )}
                 >
-                  <SelectValue placeholder="은행 선택" />
+                  <SelectValue
+                    placeholder={
+                      banksLoading ? "은행 목록 불러오는 중…" : "은행 선택"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={BANK_PLACEHOLDER}>
                     {BANK_PLACEHOLDER}
                   </SelectItem>
-                  {BANKS.map(b => (
-                    <SelectItem key={b} value={b}>
-                      {b}
+                  {/* value는 은행 코드("004"), 표시는 은행명.
+                      서버가 노출 순서대로 내려주므로 재정렬하지 않는다. */}
+                  {banks?.map(b => (
+                    <SelectItem key={b.code} value={b.code}>
+                      {b.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {banksError && (
+                <p className="mt-1.5 flex items-center gap-2 text-[12px] text-sz-danger-text">
+                  은행 목록을 불러오지 못했습니다.
+                  <button
+                    type="button"
+                    onClick={() => refetchBanks()}
+                    className="underline hover:no-underline"
+                  >
+                    다시 시도
+                  </button>
+                </p>
+              )}
             </FormField>
             {renderText("accountHolder", "예금주명", {
               placeholder: isCorporate
