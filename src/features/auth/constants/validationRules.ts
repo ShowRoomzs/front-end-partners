@@ -143,7 +143,8 @@ const RAW_BUSINESS_VALIDATION_RULES = {
     },
   },
   // ── 정산 정보 ──
-  bankName: {
+  // 값은 은행 코드지만 사용자가 고르는 것은 은행명이라 문구는 그대로 둔다.
+  bankCode: {
     required: "은행명을 선택해 주세요.",
   },
   accountHolder: {
