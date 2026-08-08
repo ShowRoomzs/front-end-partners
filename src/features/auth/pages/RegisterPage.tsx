@@ -667,11 +667,30 @@ export default function RegisterPage() {
                 }
                 placeholder="사업자등록증 기재 주소"
                 disabled={submitting}
+                readOnly
               />
             </FormField>
-            {renderText("detailAddress", "상세주소", {
-              placeholder: "상세주소",
-            })}
+            <FormField
+              label="상세주소"
+              error={errors.detailAddress?.message as string | undefined}
+              showError={!!touchedFields.detailAddress}
+              help={
+                addressCtl.field.value
+                  ? undefined
+                  : "주소 검색 완료 후 입력할 수 있습니다."
+              }
+            >
+              <input
+                id="detailAddress"
+                type="text"
+                placeholder="상세주소"
+                disabled={submitting || !addressCtl.field.value}
+                className={authInputClass(
+                  !!touchedFields.detailAddress && !!errors.detailAddress
+                )}
+                {...register("detailAddress", rule("detailAddress"))}
+              />
+            </FormField>
             {renderText("taxEmail", "이메일 (tax 확인용)", {
               type: "email",
               placeholder: "세금계산서·정산 확인용 메일 주소",
