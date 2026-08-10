@@ -1,7 +1,6 @@
 import FormController from "@/common/components/Form/FormController"
 import FormImageUploader from "@/common/components/Form/FormImageUploader"
-import FormItem from "@/common/components/Form/FormItem"
-
+import { ImageSubLabel } from "@/features/productManagement/components/ProductFormLayout/ProductFormLayout"
 import type { ProductFormData } from "@/features/productManagement/pages/RegisterProductPage"
 import type { Control } from "react-hook-form"
 
@@ -19,10 +18,8 @@ export default function CoverImagesForm(props: CoverImagesFormProps) {
       name="coverImages"
       control={control}
       render={({ field: coverImageField, formState }) => (
-        <FormItem
-          label="커버 이미지 (선택, 최대 4개)"
-          error={formState.errors.coverImages?.message}
-        >
+        <div className="mt-3.5">
+          <ImageSubLabel note="(선택, 최대 4개)">커버 이미지</ImageSubLabel>
           <div className={disabled ? "pointer-events-none opacity-60" : ""}>
             <FormImageUploader
               value={coverImageField.value}
@@ -34,7 +31,12 @@ export default function CoverImagesForm(props: CoverImagesFormProps) {
               recommendSize={{ width: 1000, height: 1000 }}
             />
           </div>
-        </FormItem>
+          {formState.errors.coverImages?.message && (
+            <p className="mt-1.5 text-[11px] font-medium text-sz-danger-text">
+              {formState.errors.coverImages.message}
+            </p>
+          )}
+        </div>
       )}
     />
   )

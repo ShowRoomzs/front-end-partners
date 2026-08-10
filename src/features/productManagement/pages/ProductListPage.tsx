@@ -106,6 +106,22 @@ export default function ProductListPage() {
     })
   }, [])
 
+  /** 시안 A2 — 머리글은 그대로 두고 본문 자리만 빈 상태로 바꾼다 */
+  const emptyState = useMemo(
+    () => (
+      <div className="px-6 py-[72px] text-center">
+        <div className="mb-2.5 text-[28px] leading-none text-sz-n-300">⌕</div>
+        <div className="mb-1 text-[13px] font-semibold text-sz-n-700">
+          검색 결과가 없습니다
+        </div>
+        <div className="text-[12px] text-sz-n-500">
+          다른 검색어로 찾아보세요.
+        </div>
+      </div>
+    ),
+    []
+  )
+
   /** 관리 열은 행 클릭(수정 이동)과 충돌하므로 preventRowClick으로 분리한다 */
   const columns = useMemo<Columns<ProductItem>>(
     () => [
@@ -234,6 +250,7 @@ export default function ProductListPage() {
           pageInfo={pageInfo}
           isLoading={isLoading}
           onRowClick={handleClickRow}
+          emptyState={emptyState}
           bodyClassName="overflow-hidden whitespace-nowrap"
           headerClassName="whitespace-nowrap"
         />

@@ -31,6 +31,7 @@ export default function Table<T, K extends keyof T = keyof T>(
     bodyClassName = "",
     headerClassName = "",
     onSortChange,
+    emptyState,
   } = props
   const [checkedKeys, setCheckedKeys] = useState<Array<T[K]>>(
     originCheckedKeys as Array<T[K]>
@@ -288,10 +289,12 @@ export default function Table<T, K extends keyof T = keyof T>(
           </div>
         )
       }
-      // 데이터 없음 and 로딩 완료 : EmptyView
+      // 데이터 없음 and 로딩 완료 : EmptyView (머리글은 위에서 항상 렌더된다)
       return (
         <div className="absolute flex items-center justify-center h-full w-full">
-          <div className="text-sm text-gray-500">데이터가 없습니다</div>
+          {emptyState ?? (
+            <div className="text-sm text-gray-500">데이터가 없습니다</div>
+          )}
         </div>
       )
     }
@@ -318,6 +321,7 @@ export default function Table<T, K extends keyof T = keyof T>(
     renderColGroup,
     totalTableWidth,
     bodyClassName,
+    emptyState,
   ])
 
   return (

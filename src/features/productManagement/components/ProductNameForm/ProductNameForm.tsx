@@ -1,6 +1,6 @@
 import FormController from "@/common/components/Form/FormController"
-import FormItem from "@/common/components/Form/FormItem"
 import { Input } from "@/components/ui/input"
+import { ProductField } from "@/features/productManagement/components/ProductFormLayout/ProductFormLayout"
 import { PRODUCT_NAME_MAX_LENGTH } from "@/features/productManagement/constants/params"
 import { PRODUCT_VALIDATION_RULES } from "@/features/productManagement/constants/validationRules"
 import type { ProductFormData } from "@/features/productManagement/pages/RegisterProductPage"
@@ -54,11 +54,16 @@ export default function ProductNameForm(props: ProductNameFormProps) {
         const isMax = length >= PRODUCT_NAME_MAX_LENGTH
 
         return (
-          <FormItem label="상품명" required error={fieldState.error?.message}>
+          <ProductField
+            label="상품명"
+            required
+            error={fieldState.error?.message}
+            hint="이모지는 입력할 수 없습니다."
+          >
             <div className="relative">
               <Input
                 value={field.value}
-                placeholder="상품명을 입력해 주세요(특수문자 입력은 피해 주세요)"
+                placeholder="상품명을 입력하세요 (특수문자 입력은 피해주세요)"
                 maxLength={PRODUCT_NAME_MAX_LENGTH}
                 disabled={disabled}
                 className="pr-[52px]"
@@ -76,10 +81,7 @@ export default function ProductNameForm(props: ProductNameFormProps) {
                 {length}/{PRODUCT_NAME_MAX_LENGTH}
               </span>
             </div>
-            <p className="mt-1.5 text-[11px] text-sz-n-500">
-              이모지는 입력할 수 없습니다.
-            </p>
-          </FormItem>
+          </ProductField>
         )
       }}
     />

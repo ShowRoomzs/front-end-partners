@@ -1,6 +1,6 @@
 import FormController from "@/common/components/Form/FormController"
 import FormInput from "@/common/components/Form/FormInput"
-import FormItem from "@/common/components/Form/FormItem"
+import { ProductField } from "@/features/productManagement/components/ProductFormLayout/ProductFormLayout"
 import type { ProductFormData } from "@/features/productManagement/pages/RegisterProductPage"
 import type { Control } from "react-hook-form"
 
@@ -20,18 +20,21 @@ export default function SellerProductCodeForm(
       name="sellerProductCode"
       control={control}
       render={({ field }) => (
-        <FormItem label="브랜드상품코드">
-          <FormInput
-            value={field.value}
-            placeholder="브랜드 내부 관리 코드"
-            disabled={disabled}
-            onChange={field.onChange}
-            onBlur={field.onBlur}
-          />
-          <p className="mt-1.5 text-[11px] text-sz-n-500">
-            브랜드 자체 재고·ERP 매칭용 · 소비자에게 노출되지 않습니다
-          </p>
-        </FormItem>
+        <ProductField
+          label="브랜드상품코드"
+          sub="(선택)"
+          hint="브랜드 자체 재고·ERP 매칭용 · 소비자에게 노출되지 않습니다"
+        >
+          <div className="max-w-[240px]">
+            <FormInput
+              value={field.value}
+              placeholder="브랜드 내부 관리 코드"
+              disabled={disabled}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+            />
+          </div>
+        </ProductField>
       )}
     />
   )
