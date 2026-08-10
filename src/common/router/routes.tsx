@@ -81,14 +81,7 @@ export const mainRoutes: Array<RouteObject> = [
             element: <RegisterProductPage />,
           },
           {
-            path: "notice",
-            element: <div>aasdf</div>,
-          },
-          {
-            path: "notice/register",
-            element: <div>aasdf</div>,
-          },
-          {
+            // 크리에이터 메뉴에서만 진입한다(셀러 "상품 관리"는 목록 단일 화면)
             path: "request",
             element: <div>aasdf</div>,
           },
@@ -262,16 +255,6 @@ export const mainRoutes: Array<RouteObject> = [
           },
           {
             path: "commission",
-            element: <div>aasdf</div>,
-          },
-        ],
-      },
-      // Common - 리뷰 관리
-      {
-        path: "review",
-        children: [
-          {
-            path: "list",
             element: <div>aasdf</div>,
           },
         ],

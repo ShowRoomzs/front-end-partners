@@ -74,10 +74,16 @@ export default function MainLayout() {
           className="flex flex-1 flex-col overflow-auto bg-sz-n-50 p-6 transition-[margin] duration-300"
           style={{ marginLeft: isSidebarOpen ? 0 : `-${SIDEBAR_WIDTH}px` }}
         >
-          {/* 디자인시스템 H1 — 20px/600(bold 아님) */}
-          <h1 className="mb-4 shrink-0 text-[20px] font-semibold text-sz-n-900">
-            {title}
-          </h1>
+          {/*
+            디자인시스템 H1 — 20px/600(bold 아님).
+            메뉴에 없는 화면(상품 등록·수정 등)은 페이지가 제 제목을 직접 그리므로
+            여기서 빈 h1을 렌더하지 않는다(빈 태그도 여백은 그대로 먹는다).
+          */}
+          {title && (
+            <h1 className="mb-4 shrink-0 text-[20px] font-semibold text-sz-n-900">
+              {title}
+            </h1>
+          )}
           <Outlet />
         </main>
       </div>

@@ -168,14 +168,10 @@ export default function ProductListPage() {
 
   return (
     <ListViewWrapper>
+      {/* 제목은 셸(MainLayout)이 메뉴 라벨로 그린다 — 여기선 설명과 액션만 */}
       <div className="mb-4 flex shrink-0 items-end justify-between">
-        <div>
-          <div className="text-[20px] font-semibold text-sz-n-900">
-            상품 목록
-          </div>
-          <div className="mt-0.5 text-[12px] text-sz-n-600">
-            등록된 상품을 확인하고 관리합니다.
-          </div>
+        <div className="text-[12px] text-sz-n-600">
+          등록된 상품을 확인하고 관리합니다.
         </div>
         <button
           type="button"
