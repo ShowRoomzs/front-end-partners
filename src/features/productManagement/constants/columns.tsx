@@ -1,83 +1,108 @@
-import Image from "@/common/components/Image/Image"
 import type { Columns } from "@/common/components/Table/types"
-import { formatDate } from "@/common/utils/formatDate"
+import { formatDateOnly } from "@/common/utils/formatDate"
 import {
-  PRODUCT_LIST_IS_DISPLAY_TYPE,
-  PRODUCT_LIST_IS_OUT_OF_STOCK_TYPE,
-} from "@/features/productManagement/constants/params"
+  DisplayStatusBadge,
+  GroupBuyStatusBadge,
+  SoldOutBadge,
+} from "@/features/productManagement/components/StatusBadge/StatusBadge"
 import type { ProductItem } from "@/features/productManagement/services/productService"
+
+/** 등록/수정일 1열 통합 — 최신 날짜 + "(등록)"/"(수정)" 표기(§11-1) */
+function renderTimestamp(record: ProductItem) {
+  const isModified =
+    !!record.modifiedAt && record.modifiedAt !== record.createdAt
+  const date = isModified ? record.modifiedAt : record.createdAt
+
+  return (
+    <span className="whitespace-nowrap text-[12px] text-sz-n-500">
+      {formatDateOnly(date)} {isModified ? "(수정)" : "(등록)"}
+    </span>
+  )
+}
 
 export const PRODUCT_LIST_COLUMNS: Columns<ProductItem> = [
   {
-    key: "productNumber",
-    label: "상품 번호",
-  },
-  {
-    key: "sellerProductCode",
-    label: "판매자 상품 코드",
-  },
-  {
     key: "thumbnailUrl",
-    label: "대표 이미지",
-    align: "center",
-    render: (value, record: ProductItem) => {
+    label: "",
+    width: 56,
+    render: value => {
+      const url = value as string | null
       return (
-        <Image
-          src={value as string}
-          alt={record.name}
-          className="w-10 h-10"
-          showPreview
-        />
+        <div className="h-9 w-9 overflow-hidden rounded-[6px] bg-sz-n-200">
+          {url && (
+            <img
+              src={url}
+              alt=""
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+          )}
+        </div>
       )
     },
   },
   {
     key: "name",
     label: "상품명",
+    width: 160,
+    render: value => (
+      <span
+        className="block max-w-[150px] truncate text-[13px] font-medium text-sz-n-900"
+        title={value as string}
+      >
+        {value as string}
+      </span>
+    ),
   },
   {
-    key: "price",
-    label: "판매가",
-    render: value => {
-      return (
-        <span>
-          {(value as ProductItem["price"]).regularPrice.toLocaleString()}원
-        </span>
-      )
-    },
+    key: "sellerProductCode",
+    label: "브랜드상품코드",
+    width: 110,
+    render: value => (value as string | null) || "—",
   },
   {
-    key: "price",
-    label: "할인 판매가",
-    render: value => {
-      return (
-        <span>
-          {(value as ProductItem["price"]).salePrice.toLocaleString()}원
-        </span>
-      )
-    },
+    key: "regularPrice",
+    label: "정가",
+    width: 90,
+    render: value => `${(value as number).toLocaleString()}원`,
   },
   {
-    key: "createdAt",
-    label: "등록일",
-    render: value => formatDate(new Date(value as string)),
-  },
-  {
-    key: "stockStatus",
-    label: "품절상태",
+    key: "stock",
+    label: "재고",
     align: "center",
-    render: value =>
-      PRODUCT_LIST_IS_OUT_OF_STOCK_TYPE[
-        value as keyof typeof PRODUCT_LIST_IS_OUT_OF_STOCK_TYPE
-      ],
+    width: 80,
+    // 재고 0이면 숫자 없이 품절 배지만 — 별도 필터 카테고리가 아니라 재고 열의 부가 표시다
+    render: value => {
+      const stock = value as number | null
+      if (stock === null) {
+        return "—"
+      }
+      return stock === 0 ? <SoldOutBadge /> : stock.toLocaleString()
+    },
   },
   {
     key: "displayStatus",
-    label: "판매상태",
+    label: "진열 상태",
     align: "center",
-    render: value =>
-      PRODUCT_LIST_IS_DISPLAY_TYPE[
-        value as keyof typeof PRODUCT_LIST_IS_DISPLAY_TYPE
-      ],
+    width: 100,
+    render: (_value, record) => (
+      <DisplayStatusBadge status={record.displayStatus} />
+    ),
+  },
+  {
+    key: "groupBuyStatus",
+    label: "공구 상태",
+    align: "center",
+    width: 90,
+    render: (_value, record) => (
+      <GroupBuyStatusBadge status={record.groupBuyStatus} />
+    ),
+  },
+  {
+    key: "createdAt",
+    label: "등록/수정일",
+    align: "center",
+    width: 150,
+    render: (_value, record) => renderTimestamp(record),
   },
 ]

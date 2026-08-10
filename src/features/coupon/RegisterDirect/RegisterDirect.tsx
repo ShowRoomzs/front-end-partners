@@ -76,9 +76,10 @@ const INITIAL_PRODUCT_LIST_PARAMS: ProductListParams = {
   page: 1,
   size: 100,
   keyword: "",
-  keywordType: null,
-  displayStatus: "ALL",
-  stockStatus: "ALL",
+  // null이면 전체 조회 — 쿠폰 적용 대상은 진열·공구 상태와 무관하게 고른다
+  displayStatus: null,
+  groupBuyStatus: null,
+  sortType: "CREATED_AT",
 }
 export default function RegisterDirect() {
   const navigate = useNavigate()

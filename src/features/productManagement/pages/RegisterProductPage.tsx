@@ -1,44 +1,50 @@
-import { useForm } from "react-hook-form"
-import Section from "@/common/components/Section/Section"
-import type { CategoryValue } from "@/common/components/Form/FormCategorySelector"
-import type { OptionItem } from "@/common/components/Form/FormOptionTable"
-import type { OptionCombination } from "@/common/components/Form/FormOptionCombinationTable"
-import { Button } from "@/components/ui/button"
-import {
-  productService,
-  type AddProductRequest,
-  type ProductNotice,
-} from "@/features/productManagement/services/productService"
-import { useCallback, useEffect, useState } from "react"
-import toast from "react-hot-toast"
-import type { AxiosError } from "axios"
-import { useNavigate, useParams } from "react-router-dom"
 import {
   confirm,
   type ConfirmOptions,
 } from "@/common/components/ConfirmModal/confirm"
 import Form from "@/common/components/Form/Form"
-import { useGetProductDetail } from "@/features/productManagement/hooks/useGetProductDetail"
-import { useGetCategory } from "@/common/hooks/useGetCategory"
-import { getCategoryHierarchy } from "@/common/utils/getCategoryHierarchy"
+import type { CategoryValue } from "@/common/components/Form/FormCategorySelector"
+import type { OptionCombination } from "@/common/components/Form/FormOptionCombinationTable"
+import type { OptionItem } from "@/common/components/Form/FormOptionTable"
+import Section from "@/common/components/Section/Section"
 import { useCustomBlocker } from "@/common/hooks/useCustomBlocker"
-import DiscountPriceForm from "@/features/productManagement/components/DiscountPriceForm/DiscountPriceForm"
-import DiscountRateForm from "@/features/productManagement/components/DiscountRateForm/DiscountRateForm"
-import IsDisplayForm from "@/features/productManagement/components/IsDisplayForm/IsDisplayForm"
-import IsOutOfStockForm from "@/features/productManagement/components/IsOutOfStockForm/IsOutOfStockForm"
+import { useGetCategory } from "@/common/hooks/useGetCategory"
+import { queryClient } from "@/common/lib/queryClient"
+import { getCategoryHierarchy } from "@/common/utils/getCategoryHierarchy"
+import { Button } from "@/components/ui/button"
 import CategoryForm from "@/features/productManagement/components/CategoryForm/CategoryForm"
-import ProductNameForm from "@/features/productManagement/components/ProductNameForm/ProductNameForm"
-import ProductNumberForm from "@/features/productManagement/components/ProductNumberForm/ProductNumberForm"
-import SellerProductCodeForm from "@/features/productManagement/components/SellerProductCodeForm/SellerProductCodeForm"
-import PurchasePriceForm from "@/features/productManagement/components/PurchasePriceForm/PurchasePriceForm"
-import RegularPriceForm from "@/features/productManagement/components/RegularPriceForm/RegularPriceForm"
-import IsDiscountForm from "@/features/productManagement/components/IsDiscountForm/IsDiscountForm"
-import TitleImageForm from "@/features/productManagement/components/TitleImageForm/TitleImageForm"
 import CoverImagesForm from "@/features/productManagement/components/CoverImagesForm/CoverImagesForm"
-import ProductNoticeForm from "@/features/productManagement/components/ProductNoticeForm/ProductNoticeForm"
 import DescriptionForm from "@/features/productManagement/components/DescriptionForm/DescriptionForm"
-import OptionGroupsForm from "@/features/productManagement/components/OptionGroupsForm/OptionGroupsForm"
 import OptionCombinationsForm from "@/features/productManagement/components/OptionCombinationsForm/OptionCombinationsForm"
+import OptionGroupsForm from "@/features/productManagement/components/OptionGroupsForm/OptionGroupsForm"
+import ProductNameForm from "@/features/productManagement/components/ProductNameForm/ProductNameForm"
+import ProductNoticeForm from "@/features/productManagement/components/ProductNoticeForm/ProductNoticeForm"
+import ProductNumberForm from "@/features/productManagement/components/ProductNumberForm/ProductNumberForm"
+import ProductStatusRail from "@/features/productManagement/components/ProductStatusRail/ProductStatusRail"
+import RegularPriceForm from "@/features/productManagement/components/RegularPriceForm/RegularPriceForm"
+import SellerProductCodeForm from "@/features/productManagement/components/SellerProductCodeForm/SellerProductCodeForm"
+import TitleImageForm from "@/features/productManagement/components/TitleImageForm/TitleImageForm"
+import { DELETE_BLOCKED_TOOLTIP } from "@/features/productManagement/constants/params"
+import { PRODUCT_QUERY_KEYS } from "@/features/productManagement/constants/queryKeys"
+import { useGetProductDetail } from "@/features/productManagement/hooks/useGetProductDetail"
+import {
+  DEFAULT_PRODUCT_NOTICE,
+  parseProductNotice,
+  productService,
+  type AddProductRequest,
+  type ProductNotice,
+} from "@/features/productManagement/services/productService"
+import {
+  getProductBanner,
+  isDeleteBlocked,
+  isProductLocked,
+} from "@/features/productManagement/utils/productPermission"
+import { cn } from "@/lib/utils"
+import type { AxiosError } from "axios"
+import { useCallback, useEffect, useState } from "react"
+import { useForm } from "react-hook-form"
+import toast from "react-hot-toast"
+import { useNavigate, useParams } from "react-router-dom"
 
 interface OptionGroup {
   id: string | number
@@ -47,17 +53,16 @@ interface OptionGroup {
 }
 
 export interface ProductFormData {
-  isDisplay: boolean
-  isOutOfStockForced: boolean
   category: CategoryValue
   productName: string
   sellerProductCode: string
-  purchasePrice: number
-  isDiscount: boolean
   regularPrice: number
-  discountRate: number
+  /** 옵션 그룹 사용 여부 — 끄면 기본 조합 1개로 통일된다(§11-7) */
+  useOptionGroup: boolean
   optionGroups: Array<OptionGroup>
   optionCombinations: Array<OptionCombination>
+  /** 옵션 미사용일 때의 단일 재고 */
+  stock: number
   titleImage: string
   coverImages: Array<string>
   description: string
@@ -72,6 +77,21 @@ export default function RegisterProductPage() {
   const { categoryMap } = useGetCategory()
   const isEdit = !!productId
 
+  /**
+   * 진행중 공구 잠금 — "진열 AND 진행중"일 때만. 나머지 3종 진열 상태는
+   * 소비자에게 노출되지 않아 공구·계약과 어긋날 위험이 없으므로 잠기지 않는다(§11-9).
+   */
+  const isLocked = isProductLocked(
+    productDetail?.displayStatus,
+    productDetail?.groupBuyStatus
+  )
+  const deleteBlocked = isDeleteBlocked(productDetail?.groupBuyStatus)
+  const banner = getProductBanner(
+    productDetail?.displayStatus,
+    productDetail?.groupBuyStatus,
+    productDetail?.latestHideInfo?.hideReasonType
+  )
+
   const getDefaultCancelConfirmOptions = useCallback(
     (isEdit: boolean): ConfirmOptions => {
       return {
@@ -85,23 +105,15 @@ export default function RegisterProductPage() {
     []
   )
 
-  const { control, handleSubmit, formState, setValue, reset } =
+  const { control, handleSubmit, formState, setValue, reset, watch } =
     useForm<ProductFormData>({
       reValidateMode: "onSubmit",
       defaultValues: {
-        isDisplay: true,
-        isOutOfStockForced: false,
-        category: {
-          main: null,
-          sub: null,
-          detail: null,
-        },
+        category: { main: null, sub: null, detail: null },
         productName: "",
         sellerProductCode: "",
-        purchasePrice: 0,
-        isDiscount: false,
         regularPrice: 0,
-        discountRate: 0,
+        useOptionGroup: true,
         optionGroups: [
           {
             id: crypto.randomUUID(),
@@ -110,65 +122,69 @@ export default function RegisterProductPage() {
           },
         ],
         optionCombinations: [],
+        stock: 0,
         titleImage: "",
         coverImages: [],
         description: "",
-        productNotice: {
-          origin: "제품 상세 참고",
-          material: "제품 상세 참고",
-          color: "제품 상세 참고",
-          size: "제품 상세 참고",
-          manufacturer: "제품 상세 참고",
-          washingMethod: "제품 상세 참고",
-          manufactureDate: "제품 상세 참고",
-          asInfo: "제품 상세 참고",
-          qualityAssurance: "제품 상세 참고",
-        },
+        productNotice: { ...DEFAULT_PRODUCT_NOTICE },
       },
     })
+
+  const useOptionGroup = watch("useOptionGroup")
 
   const initializeForm = useCallback(() => {
     if (!productDetail || !categoryMap) {
       return
     }
-    const discountRate = productDetail.regularPrice - productDetail.salePrice
 
-    const optionGroups: Array<OptionGroup> = productDetail.optionGroups.map(
-      group => ({
-        id: group.optionGroupId,
-        name: group.name,
-        items: group.options.map(option => ({
-          id: option.optionId,
-          name: option.name,
-          price: option.price || 0,
-        })),
+    const optionGroups: Array<OptionGroup> = (
+      productDetail.optionGroups ?? []
+    ).map(group => ({
+      id: group.optionGroupId,
+      name: group.name,
+      items: group.options.map(option => ({
+        id: option.optionId,
+        name: option.name,
+        price: option.price || 0,
+      })),
+    }))
+
+    const variants = productDetail.variants ?? []
+    // 옵션 그룹이 없으면 옵션 미사용 상품이다 — 조합 표 대신 단일 재고만 쓴다
+    const hasOptionGroups = optionGroups.length > 0
+
+    const optionCombinations: Array<OptionCombination> = variants.map(
+      variant => ({
+        id: variant.variantId.toString(),
+        combination: variant.name.split(",").map(v => v.trim()),
+        price: variant.regularPrice.toString(),
+        stock: variant.stock.toString(),
+        isDisplayed: true,
+        isRepresentative: variant.isRepresentative,
       })
     )
-    const optionCombinations: Array<OptionCombination> =
-      productDetail.variants.map(variant => ({
-        id: variant.variantId.toString(),
-        combination: variant.name.split("/").map(v => v.trim()),
-        price: variant.salePrice.toString(),
-        stock: variant.stock.toString(),
-        isDisplayed: variant.isDisplay,
-        isRepresentative: variant.isRepresentative,
-      }))
+
     reset({
-      isDisplay: productDetail.isDisplay,
-      isOutOfStockForced: productDetail.isOutOfStockForced,
       category: getCategoryHierarchy(productDetail.categoryId, categoryMap),
       productName: productDetail.name,
-      sellerProductCode: productDetail.sellerProductCode,
-      purchasePrice: productDetail.purchasePrice,
+      sellerProductCode: productDetail.sellerProductCode ?? "",
       regularPrice: productDetail.regularPrice,
-      discountRate: discountRate,
-      isDiscount: discountRate > 0,
-      optionGroups: optionGroups,
-      optionCombinations: optionCombinations,
-      titleImage: productDetail.representativeImageUrl,
-      coverImages: productDetail.coverImageUrls,
-      description: productDetail.description,
-      productNotice: productDetail.productNotice,
+      useOptionGroup: hasOptionGroups,
+      optionGroups: hasOptionGroups
+        ? optionGroups
+        : [
+            {
+              id: crypto.randomUUID(),
+              name: "",
+              items: [{ id: crypto.randomUUID(), name: "", price: null }],
+            },
+          ],
+      optionCombinations: hasOptionGroups ? optionCombinations : [],
+      stock: hasOptionGroups ? 0 : (variants[0]?.stock ?? 0),
+      titleImage: productDetail.representativeImageUrl ?? "",
+      coverImages: productDetail.coverImageUrls ?? [],
+      description: productDetail.description ?? "",
+      productNotice: parseProductNotice(productDetail.productNotice),
     })
   }, [categoryMap, productDetail, reset])
 
@@ -176,40 +192,38 @@ export default function RegisterProductPage() {
     async (data: ProductFormData) => {
       try {
         setIsLoading(true)
-        const regularPriceNum = Number(data.regularPrice)
-        const discountRateNum = Number(data.discountRate)
-        const finalSalePrice = data.isDiscount
-          ? Math.max(regularPriceNum - discountRateNum, 0)
-          : regularPriceNum
 
         const apiData: AddProductRequest = {
-          isDisplay: data.isDisplay,
-          isOutOfStockForced: data.isOutOfStockForced,
           categoryId: data.category.detail as number,
           name: data.productName,
-          sellerProductCode: data.sellerProductCode,
-          purchasePrice: Number(data.purchasePrice),
-          regularPrice: regularPriceNum,
-          salePrice: finalSalePrice,
-          isDiscount: data.isDiscount,
+          sellerProductCode: data.sellerProductCode || undefined,
+          regularPrice: Number(data.regularPrice),
           representativeImageUrl: data.titleImage,
           coverImageUrls: data.coverImages,
           description: data.description,
           productNotice: data.productNotice,
-          optionGroups: data.optionGroups.map(group => ({
-            name: group.name,
-            options: group.items
-              .filter(item => item.name)
-              .map(item => ({ name: item.name, price: Number(item.price) })),
-          })),
-          variants: data.optionCombinations.map(combo => ({
-            optionNames: combo.combination,
-            salePrice: Number(combo.price),
-            stock: Number(combo.stock),
-            isDisplay: combo.isDisplayed,
-            isRepresentative: combo.isRepresentative,
-          })),
+          ...(data.useOptionGroup
+            ? {
+                optionGroups: data.optionGroups.map(group => ({
+                  name: group.name,
+                  options: group.items
+                    .filter(item => item.name)
+                    .map(item => ({
+                      name: item.name,
+                      price: Number(item.price ?? 0),
+                    })),
+                })),
+                variants: data.optionCombinations.map(combo => ({
+                  optionNames: combo.combination,
+                  regularPrice: Number(combo.price),
+                  stock: Number(combo.stock),
+                  isRepresentative: combo.isRepresentative,
+                })),
+              }
+            : // 옵션 미사용 — variants를 안 보내면 서버가 stock으로 단일 상품을 만든다
+              { stock: Number(data.stock) }),
         }
+
         const apiCall = isEdit
           ? productService.updateProduct(Number(productId), apiData)
           : productService.addProduct(apiData)
@@ -218,9 +232,12 @@ export default function RegisterProductPage() {
         toast.success(
           isEdit ? "상품 정보를 수정했습니다." : "상품 정보를 등록했습니다."
         )
+        queryClient.invalidateQueries({
+          queryKey: [PRODUCT_QUERY_KEYS.PRODUCT_LIST],
+        })
         reset(data, { keepValues: true })
         setTimeout(() => {
-          navigate("/product/list") // TODO : path 상수로 관리
+          navigate("/product/list")
         }, 100)
       } catch (error) {
         throw error as AxiosError
@@ -244,6 +261,27 @@ export default function RegisterProductPage() {
     }
   }, [formState.isDirty, getDefaultCancelConfirmOptions, isEdit, navigate])
 
+  const handleClickDelete = useCallback(async () => {
+    if (!productDetail) {
+      return
+    }
+    const result = await confirm({
+      type: "warn",
+      title: "상품 삭제",
+      content: `${productDetail.name} 상품을 삭제합니다.\n삭제한 상품은 목록·수정 화면 어디에서도 복구할 수 없습니다.\n\n이미 발생한 주문·정산 이력이 있어도 상품 정보 자체는 사라집니다. 계속하시겠습니까?`,
+      confirmText: "삭제",
+    })
+    if (!result) {
+      return
+    }
+    await productService.deleteProduct(productDetail.productId)
+    toast.success("상품을 삭제했습니다.")
+    queryClient.invalidateQueries({
+      queryKey: [PRODUCT_QUERY_KEYS.PRODUCT_LIST],
+    })
+    navigate("/product/list")
+  }, [navigate, productDetail])
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLFormElement>) => {
       if (e.key === "Enter") {
@@ -263,63 +301,125 @@ export default function RegisterProductPage() {
   })
 
   return (
-    <Form
-      handleSubmit={handleSubmit}
-      onSubmit={onSubmit}
-      onKeyDown={handleKeyDown}
-    >
-      <Section title="표시 여부">
-        <IsDisplayForm control={control} />
-        <IsOutOfStockForm control={control} />
-      </Section>
-
-      <Section title="카테고리(한 개만 지정 가능)">
-        <CategoryForm control={control} />
-      </Section>
-
-      <Section title="기본 정보">
-        <ProductNameForm control={control} />
-        <ProductNumberForm productDetail={productDetail} />
-        <SellerProductCodeForm control={control} />
-      </Section>
-
-      <Section title="가격 설정">
-        <PurchasePriceForm control={control} />
-        <RegularPriceForm control={control} />
-        <IsDiscountForm control={control} />
-        <DiscountRateForm control={control} />
-        <DiscountPriceForm control={control} />
-      </Section>
-
-      <Section required title="옵션 설정">
-        <OptionGroupsForm control={control} setValue={setValue} />
-      </Section>
-
-      <Section required title="옵션 조합">
-        <OptionCombinationsForm control={control} />
-      </Section>
-
-      <Section title="상품 이미지">
-        <TitleImageForm control={control} />
-        <CoverImagesForm control={control} />
-      </Section>
-
-      <Section title="에디터">
-        <DescriptionForm control={control} />
-      </Section>
-
-      <Section title="상품정보고시">
-        <ProductNoticeForm control={control} />
-      </Section>
-
-      <div className="flex gap-3 justify-end mt-6">
-        <Button type="button" variant={"outline"} onClick={handleClickCancel}>
-          취소
-        </Button>
-        <Button isLoading={isLoading} type="submit">
-          {isEdit ? "수정하기" : "등록하기"}
-        </Button>
+    <div>
+      <div className="mb-4">
+        <div className="text-[20px] font-semibold text-sz-n-900">
+          상품 {isEdit ? "수정" : "등록"}
+        </div>
+        {!isEdit && (
+          <div className="mt-0.5 text-[12px] text-sz-n-600">
+            등록 즉시 진열됩니다. 진열/미진열 전환은 이후 운영자만 처리할 수
+            있습니다.
+          </div>
+        )}
       </div>
-    </Form>
+
+      {banner && (
+        <div
+          className={cn(
+            "mb-4 flex max-w-[820px] gap-2 rounded-[6px] px-3.5 py-3 text-[11px] leading-relaxed",
+            banner.tone === "warn"
+              ? "bg-sz-warning-bg text-[#6b4d16]"
+              : "bg-sz-info-bg text-sz-info-text"
+          )}
+        >
+          <span>{banner.tone === "warn" ? "⚠" : "ⓘ"}</span>
+          <span>{banner.message}</span>
+        </div>
+      )}
+
+      <div className="flex items-start gap-4">
+        <div className="min-w-0 flex-1">
+          <Form
+            handleSubmit={handleSubmit}
+            onSubmit={onSubmit}
+            onKeyDown={handleKeyDown}
+          >
+            <Section title="카테고리(한 개만 지정 가능)">
+              <CategoryForm control={control} disabled={isLocked} />
+            </Section>
+
+            <Section title="기본 정보">
+              <ProductNameForm control={control} disabled={isLocked} />
+              <ProductNumberForm productDetail={productDetail} />
+              <SellerProductCodeForm control={control} disabled={isLocked} />
+            </Section>
+
+            <Section title="가격">
+              <RegularPriceForm control={control} disabled={isLocked} />
+            </Section>
+
+            <Section required title="옵션 설정">
+              <OptionGroupsForm
+                control={control}
+                setValue={setValue}
+                disabled={isLocked}
+              />
+            </Section>
+
+            <Section
+              required
+              title={useOptionGroup ? "옵션 목록 (조합 SKU)" : "재고 수량"}
+            >
+              {/*
+                재고 입력은 **모든 상태에서 항상 활성**이다(§11-9 확정).
+                잠금 계산을 폼 전체에 걸고 재고만 예외 처리하는 순서를 지켜야 한다 —
+                반대로 하면 잠금 상태에서 재고 보충 자체가 막힌다.
+              */}
+              <OptionCombinationsForm control={control} isLocked={isLocked} />
+            </Section>
+
+            <Section required title="상품 이미지">
+              <TitleImageForm control={control} disabled={isLocked} />
+              <CoverImagesForm control={control} disabled={isLocked} />
+            </Section>
+
+            <Section required title="상품 설명">
+              <DescriptionForm control={control} disabled={isLocked} />
+            </Section>
+
+            <Section required title="상품 정보 제공 고시 (화장품)">
+              <ProductNoticeForm control={control} disabled={isLocked} />
+            </Section>
+
+            {isLocked && (
+              <p className="mt-4 text-right text-[11px] text-sz-n-600">
+                저장해도 <b className="text-sz-n-900">재고 수량만</b> 반영됩니다
+              </p>
+            )}
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              {isEdit && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mr-auto text-sz-danger-text"
+                  disabled={deleteBlocked}
+                  title={deleteBlocked ? DELETE_BLOCKED_TOOLTIP : undefined}
+                  onClick={handleClickDelete}
+                >
+                  상품 삭제
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClickCancel}
+              >
+                취소
+              </Button>
+              <Button isLoading={isLoading} type="submit">
+                {isEdit ? "수정하기" : "등록하기"}
+              </Button>
+            </div>
+          </Form>
+        </div>
+
+        {/* 우측 레일은 수정 화면에서만 — 신규 등록은 아직 상태·이력이 없다 */}
+        {isEdit && productDetail && (
+          <ProductStatusRail detail={productDetail} />
+        )}
+      </div>
+    </div>
   )
 }
