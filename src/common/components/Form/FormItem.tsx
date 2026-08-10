@@ -33,9 +33,13 @@ export default function FormItem(props: FormItemProps) {
     <div className="space-y-2">
       <div className="flex gap-4 items-center">
         <div className="flex items-center gap-1.5 w-32 shrink-0">
-          <Label htmlFor={htmlFor} className="text-sm font-medium">
+          {/* 디자인시스템 label — 12px/500 n-600 */}
+          <Label
+            htmlFor={htmlFor}
+            className="text-[12px] font-medium text-sz-n-600"
+          >
             {label}
-            {required && <span className="text-destructive ml-1">*</span>}
+            {required && <span className="ml-1 text-sz-danger-text">*</span>}
           </Label>
           {tooltipInfo && (
             <TooltipProvider>
@@ -55,13 +59,15 @@ export default function FormItem(props: FormItemProps) {
       {error && (
         <div className="flex gap-4">
           <div className="w-32 shrink-0" />
-          <p className="text-sm font-medium text-destructive flex-1">{error}</p>
+          <p className="flex-1 text-[11px] font-medium text-sz-danger-text">
+            {error}
+          </p>
         </div>
       )}
       {success && (
         <div className="flex gap-4">
           <div className="w-32 shrink-0" />
-          <p className="text-sm font-medium text-sz-success-text flex-1">
+          <p className="flex-1 text-[11px] font-medium text-sz-success-text">
             {success}
           </p>
         </div>

@@ -15,7 +15,7 @@ export default function TableBody<T>(props: TableBodyProps<T>) {
   const { columns, data, onRowClick, bodyClassName = "" } = props
   const { getColumnFixedStyle } = useTableFixed<T>(columns, false)
   const isRowClickClass = onRowClick ? "cursor-pointer" : ""
-  const rowClickClassName = cn("group hover:bg-[#FFFBF0]", isRowClickClass)
+  const rowClickClassName = cn("group hover:bg-sz-n-50", isRowClickClass)
   const cellRef = useRef<Record<string, HTMLTableCellElement>>({})
   const handleRowClick = useCallback(
     (record: T) => {
@@ -58,7 +58,7 @@ export default function TableBody<T>(props: TableBodyProps<T>) {
 
             const key = getColumnKey(col, false)
             const tableBodyClassName = cn(
-              `flex text-[#00000099] text-[12px]`,
+              `flex text-[12px] text-sz-n-900`,
               alignClass,
               bodyClassName
             )
@@ -73,7 +73,7 @@ export default function TableBody<T>(props: TableBodyProps<T>) {
                 }}
                 onClick={e => handleCellClick(e, col, index)}
                 className={`px-4 py-[8px] border-b border-sz-n-200 ${
-                  col.fixed ? "bg-white group-hover:bg-[#FFFBF0]" : ""
+                  col.fixed ? "bg-white group-hover:bg-sz-n-50" : ""
                 }`}
                 style={{
                   width: width ? `${width}px` : undefined,

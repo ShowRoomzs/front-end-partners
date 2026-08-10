@@ -231,7 +231,7 @@ export default function ImageUploader(props: ImageUploaderProps) {
                 setIsDragging(false)
                 handleFiles(e.dataTransfer.files)
               }}
-              className={`flex flex-col items-center justify-center w-full min-h-28 cursor-pointer rounded-lg border-[1px] border-[#BCBEC0] transition-colors !m-0 ${
+              className={`flex flex-col items-center justify-center w-full min-h-28 cursor-pointer rounded-lg border-[1px] border-sz-n-300 transition-colors !m-0 ${
                 isDragging
                   ? "border-sz-accent-500 bg-sz-accent-50"
                   : "border-sz-n-300 hover:bg-sz-n-50"

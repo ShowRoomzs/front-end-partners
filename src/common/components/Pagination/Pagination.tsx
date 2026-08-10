@@ -38,8 +38,8 @@ export default function Pagination(props: PaginationProps) {
           className={cn(
             "min-w-[30px] min-h-[30px] rounded-[4px] text-[14px] px-[5px] font-medium transition-colors",
             isActive
-              ? "bg-[#5468CD] text-white"
-              : "bg-white text-[#666666] hover:bg-sz-n-50 border border-[#E0E0E0]"
+              ? "bg-sz-accent-500 text-white"
+              : "bg-white text-sz-n-600 hover:bg-sz-n-50 border border-sz-n-300"
           )}
           onClick={() => handlePageChange(page)}
         >
@@ -59,7 +59,7 @@ export default function Pagination(props: PaginationProps) {
       // totalPages가 INITIAL_DISPLAY_COUNT보다 클 때만 ... totalPages 표시
       if (totalPages > INITIAL_DISPLAY_COUNT) {
         buttons.push(
-          <span key="ellipsis" className="text-[#999999] px-2">
+          <span key="ellipsis" className="text-sz-n-400 px-2">
             ...
           </span>
         )
@@ -77,7 +77,7 @@ export default function Pagination(props: PaginationProps) {
       // 1과 첫 번째 중간 페이지 사이에 페이지가 있을 때만 ... 표시
       if (leftmostPage > 2) {
         buttons.push(
-          <span key="ellipsis-start" className="text-[#999999] px-2">
+          <span key="ellipsis-start" className="text-sz-n-400 px-2">
             ...
           </span>
         )
@@ -95,7 +95,7 @@ export default function Pagination(props: PaginationProps) {
         // ... 표시 (rightmostPage와 totalPages 사이에 페이지가 있을 때)
         if (rightmostPage < totalPages - 1) {
           buttons.push(
-            <span key="ellipsis-end" className="text-[#999999] px-2">
+            <span key="ellipsis-end" className="text-sz-n-400 px-2">
               ...
             </span>
           )
@@ -134,7 +134,7 @@ export default function Pagination(props: PaginationProps) {
       {/* 이전 버튼 */}
       <button
         className={cn(
-          "w-[30px] h-[30px] rounded-[4px] bg-white border border-[#E0E0E0] flex items-center justify-center transition-colors",
+          "w-[30px] h-[30px] rounded-[4px] bg-white border border-sz-n-300 flex items-center justify-center transition-colors",
           isPreviousDisabled
             ? "opacity-50 cursor-not-allowed"
             : "hover:bg-sz-n-50"
@@ -151,7 +151,7 @@ export default function Pagination(props: PaginationProps) {
         >
           <path
             d="M6 10L2 6L6 2"
-            stroke="#666666"
+            stroke="currentColor"
             strokeWidth="2"
             strokeLinecap="round"
           />
@@ -163,7 +163,7 @@ export default function Pagination(props: PaginationProps) {
       {/* 다음 버튼 */}
       <button
         className={cn(
-          "w-[30px] h-[30px] rounded-[4px] bg-white border border-[#E0E0E0] flex items-center justify-center transition-colors",
+          "w-[30px] h-[30px] rounded-[4px] bg-white border border-sz-n-300 flex items-center justify-center transition-colors",
           isNextDisabled ? "opacity-50 cursor-not-allowed" : "hover:bg-sz-n-50"
         )}
         onClick={handleClickNext}
@@ -178,7 +178,7 @@ export default function Pagination(props: PaginationProps) {
         >
           <path
             d="M2 2L6 6L2 10"
-            stroke="#666666"
+            stroke="currentColor"
             strokeWidth="2"
             strokeLinecap="round"
           />

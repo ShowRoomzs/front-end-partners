@@ -16,18 +16,18 @@ export default function Header(props: HeaderProps) {
 
   return (
     <header
-      className="bg-white border-b border-[#e3e6f0] flex items-center justify-between gap-3 px-3"
+      className="flex items-center justify-between gap-3 border-b border-sz-n-200 bg-white px-3"
       style={{ height: `${HEADER_HEIGHT}px` }}
     >
       <div className="flex items-center min-w-0">
         <button
           type="button"
           onClick={onToggleSidebar}
-          className="mr-4 p-2 hover:bg-[#f7f8fa] rounded transition-colors cursor-pointer shrink-0"
+          className="mr-4 shrink-0 cursor-pointer rounded-[6px] p-2 transition-colors hover:bg-sz-n-100"
           aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
         >
           <svg
-            className="w-6 h-6 text-[#2e3547]"
+            className="h-6 w-6 text-sz-n-700"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -46,6 +46,9 @@ export default function Header(props: HeaderProps) {
           className="h-4 cursor-pointer"
           onClick={() => navigate("/")}
         />
+        <span className="ml-2.5 border-l border-sz-n-300 pl-2.5 text-[11px] font-medium text-sz-n-500">
+          파트너센터
+        </span>
       </div>
 
       <Button
@@ -53,7 +56,7 @@ export default function Header(props: HeaderProps) {
         variant="ghost"
         size="sm"
         onClick={onLogout}
-        className="shrink-0 h-8 px-2.5 text-[#2e3547] hover:bg-[#f7f8fa] hover:text-[#2e3547]"
+        className="h-8 shrink-0 px-2.5 text-sz-n-700 hover:bg-sz-n-100 hover:text-sz-n-900"
       >
         <LogOut className="size-4" aria-hidden />
         로그아웃

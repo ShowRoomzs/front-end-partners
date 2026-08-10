@@ -26,11 +26,11 @@ export default function ScrollBar(props: ScrollBarProps) {
 
   const getThumbClassName = () => {
     const defaultCalss =
-      "bg-[#D8D8D8] cursor-pointer hover:bg-[#999999] transition-colors"
+      "bg-sz-n-300 cursor-pointer hover:bg-sz-n-400 transition-colors"
     if (direction === "horizontal") {
-      return cn(defaultCalss, "h-full", isDragging ? "bg-[#999999]" : "")
+      return cn(defaultCalss, "h-full", isDragging ? "bg-sz-n-400" : "")
     }
-    return cn(defaultCalss, "w-full", isDragging ? "bg-[#999999]" : "")
+    return cn(defaultCalss, "w-full", isDragging ? "bg-sz-n-400" : "")
   }
 
   const updateScrollBar = useCallback(() => {
@@ -203,7 +203,7 @@ export default function ScrollBar(props: ScrollBarProps) {
   return (
     <div
       ref={trackRef}
-      className={cn("bg-[#F4F4F4] relative", getWrapperClassName())}
+      className={cn("bg-sz-n-100 relative", getWrapperClassName())}
       style={{
         [direction === "horizontal" ? "width" : "height"]:
           direction === "horizontal"

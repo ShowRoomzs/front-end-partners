@@ -61,20 +61,23 @@ export default function MainLayout() {
   }, [flattenMenus, location.pathname])
 
   return (
-    <div className="h-screen bg-[#f7f8fa] flex flex-col">
+    <div className="flex h-screen flex-col bg-sz-n-50">
       <Header
         onLogout={handleLogout}
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
 
-      <div className="flex flex-1 overflow-hidden bg-[#f7f8fa]">
+      <div className="flex flex-1 overflow-hidden bg-sz-n-50">
         <Sidebar menus={menus} isOpen={isSidebarOpen} />
         <main
-          className="flex-1 overflow-auto p-[20px] bg-[#f7f8fa] transition-[margin] duration-300 flex flex-col"
+          className="flex flex-1 flex-col overflow-auto bg-sz-n-50 p-6 transition-[margin] duration-300"
           style={{ marginLeft: isSidebarOpen ? 0 : `-${SIDEBAR_WIDTH}px` }}
         >
-          <h1 className="text-[20px] font-bold mb-4 shrink-0">{title}</h1>
+          {/* 디자인시스템 H1 — 20px/600(bold 아님) */}
+          <h1 className="mb-4 shrink-0 text-[20px] font-semibold text-sz-n-900">
+            {title}
+          </h1>
           <Outlet />
         </main>
       </div>
