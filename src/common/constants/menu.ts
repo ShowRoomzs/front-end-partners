@@ -19,31 +19,15 @@ export const SELLER_MENU: MenuConfig = {
         },
       ],
     },
+    /*
+      하위 메뉴 없는 단일 항목 — "상품 관리"를 누르면 바로 상품 목록이다.
+      상품 등록(/product/register)·수정(/product/edit/:id)은 목록 안에서 진입하므로
+      메뉴에 따로 두지 않는다.
+    */
     {
       id: "product",
-      label: "상품관리",
-      children: [
-        {
-          id: "product-register",
-          label: "상품 등록",
-          path: "/product/register",
-        },
-        {
-          id: "product-list",
-          label: "상품 목록",
-          path: "/product/list",
-        },
-        {
-          id: "product-notice",
-          label: "상품 공지사항 관리",
-          path: "/product/notice",
-        },
-        {
-          id: "review-list",
-          label: "리뷰 관리",
-          path: "/review/list",
-        },
-      ],
+      label: "상품 관리",
+      path: "/product/list",
     },
     {
       id: "sales",
