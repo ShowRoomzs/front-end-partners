@@ -59,11 +59,19 @@ export const DELETE_BLOCKED_GROUP_BUY_STATUSES: Array<ProductGroupBuyStatus> = [
 export const DELETE_BLOCKED_TOOLTIP =
   "공구 준비~진행 구간에 연결된 상품은 삭제할 수 없습니다"
 
-/** 상품정보제공고시 11필드 — 화장품 고정, 표기 순서도 시안 그대로 */
+/** 기능성 화장품 심사필 여부 — 자유 입력이 아니라 2지 선택이다(시안 `select`) */
+export const FUNCTIONAL_COSMETIC_OPTIONS = [
+  "해당사항 없음",
+  "기능성 화장품(식품의약품안전처 심사필)",
+]
+
+/** 상품정보제공고시 11필드 — 화장품 고정, 표기 순서·컨트롤 종류도 시안 그대로 */
 export const PRODUCT_NOTICE_FIELDS: Array<{
   key: string
   label: string
-  multiline?: boolean
+  control?: "input" | "textarea" | "select"
+  /** 라벨 아래 회색 보조 문구 */
+  hint?: string
 }> = [
   { key: "capacityWeight", label: "용량·중량" },
   { key: "mainSpecs", label: "제품 주요 사양" },
@@ -71,9 +79,17 @@ export const PRODUCT_NOTICE_FIELDS: Array<{
   { key: "usageMethod", label: "사용방법" },
   { key: "manufacturerSeller", label: "화장품제조업자·책임판매업자" },
   { key: "origin", label: "제조국" },
-  { key: "ingredients", label: "전성분", multiline: true },
-  { key: "functionalCosmeticApproval", label: "기능성 화장품 심사필 여부" },
-  { key: "precautions", label: "사용 시 주의사항", multiline: true },
+  { key: "ingredients", label: "전성분", control: "textarea" },
+  {
+    key: "functionalCosmeticApproval",
+    label: "기능성 화장품 식약처 심사필 여부",
+    control: "select",
+  },
+  { key: "precautions", label: "사용 시 주의사항", control: "textarea" },
   { key: "qualityAssurance", label: "품질보증기준" },
-  { key: "customerServicePhone", label: "소비자상담 전화번호" },
+  {
+    key: "customerServicePhone",
+    label: "소비자상담 전화번호",
+    hint: "고객센터 전화번호로 자동 입력됨 · 수정 가능",
+  },
 ]

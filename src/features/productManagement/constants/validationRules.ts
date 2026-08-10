@@ -1,6 +1,8 @@
 import type { CategoryValue } from "@/common/components/Form/FormCategorySelector"
-import type { OptionItem } from "@/common/components/Form/FormOptionTable"
-import type { OptionCombination } from "@/common/components/Form/FormOptionCombinationTable"
+import type {
+  OptionCombination,
+  OptionItem,
+} from "@/features/productManagement/types"
 import {
   PRICE_MAX,
   PRODUCT_NAME_MAX_LENGTH,
@@ -65,7 +67,7 @@ export const PRODUCT_VALIDATION_RULES = {
       }
 
       if (value.length === 0) {
-        return "'옵션 목록으로 이동' 버튼을 눌러주세요"
+        return "「옵션 조합 생성·갱신」을 눌러주세요"
       }
 
       const currentOptionNames = validOptionGroups.map(group =>
@@ -75,13 +77,13 @@ export const PRODUCT_VALIDATION_RULES = {
       )
       for (const combination of value) {
         if (combination.combination.length !== currentOptionNames.length) {
-          return "옵션 설정이 변경되었습니다. '옵션 목록으로 이동' 버튼을 눌러주세요"
+          return "옵션 설정이 변경되었습니다. 「옵션 조합 생성·갱신」을 눌러주세요"
         }
 
         for (let i = 0; i < combination.combination.length; i++) {
           const comboItem = combination.combination[i].trim()
           if (!currentOptionNames[i].includes(comboItem)) {
-            return "옵션 설정이 변경되었습니다. '옵션 목록으로 이동' 버튼을 눌러주세요"
+            return "옵션 설정이 변경되었습니다. 「옵션 조합 생성·갱신」을 눌러주세요"
           }
         }
       }

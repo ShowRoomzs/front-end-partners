@@ -10,12 +10,15 @@ import type {
 } from "@/features/productManagement/services/productService"
 import { cn } from "@/lib/utils"
 
-const DISPLAY_TABS: Array<{
+/**
+ * 진열 상태 4종 — 파트너센터 시안은 어드민과 달리 "미진열(요청)"까지 필터에 노출한다.
+ * 브랜드 본인이 요청해 내린 상품과 운영자가 내린 상품을 구분해 찾아야 하기 때문이다.
+ */
+const DISPLAY_ITEMS: Array<{
   label: string
-  value: ProductDisplayStatus | null
+  value: ProductDisplayStatus
   countKey: keyof DisplayStatusCounts
 }> = [
-  { label: "전체", value: null, countKey: "all" },
   {
     label: PRODUCT_DISPLAY_STATUS.DISPLAY,
     value: "DISPLAY",
@@ -34,12 +37,11 @@ const DISPLAY_TABS: Array<{
   },
 ]
 
-const GROUP_BUY_TABS: Array<{
+const GROUP_BUY_ITEMS: Array<{
   label: string
-  value: ProductGroupBuyStatus | null
+  value: ProductGroupBuyStatus
   countKey: keyof GroupBuyStatusCounts
 }> = [
-  { label: "전체", value: null, countKey: "all" },
   {
     label: PRODUCT_GROUP_BUY_STATUS.PREPARING,
     value: "PREPARING",
@@ -58,49 +60,74 @@ const GROUP_BUY_TABS: Array<{
   },
 ]
 
-function StatusTabRow<T extends string>(props: {
+/** 시안 `.fp-item` — 체크박스 + 라벨 + 건수 */
+function CheckItem(props: {
   label: string
-  tabs: Array<{ label: string; value: T | null; count: number }>
+  count: number
+  checked: boolean
+  onToggle: () => void
+}) {
+  const { label, count, checked, onToggle } = props
+
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={checked}
+      onClick={onToggle}
+      className={cn(
+        "inline-flex items-center gap-1.5 text-[12px]",
+        checked ? "font-medium text-sz-n-900" : "text-sz-n-600"
+      )}
+    >
+      <span
+        className={cn(
+          "flex h-[15px] w-[15px] shrink-0 items-center justify-center rounded-[4px] border-[1.5px]",
+          checked
+            ? "border-sz-accent-500 bg-sz-accent-500"
+            : "border-sz-n-300 bg-white"
+        )}
+      >
+        {checked && (
+          <svg viewBox="0 0 9 9" className="h-[9px] w-[9px]">
+            <path
+              d="M1 4.5L3.3 7L8 1.5"
+              stroke="#fff"
+              strokeWidth="1.6"
+              fill="none"
+            />
+          </svg>
+        )}
+      </span>
+      {label}
+      <span className="text-[11px] font-normal text-sz-n-400">{count}</span>
+    </button>
+  )
+}
+
+function CheckRow<T extends string>(props: {
+  label: string
+  items: Array<{ label: string; value: T; count: number }>
   selected: T | null
   onSelect: (value: T | null) => void
 }) {
-  const { label, tabs, selected, onSelect } = props
+  const { label, items, selected, onSelect } = props
 
   return (
-    <div className="flex items-center gap-3.5">
+    <div className="flex flex-wrap items-center gap-3.5">
       <span className="w-[58px] shrink-0 text-[11px] font-semibold text-sz-n-400">
         {label}
       </span>
-      <div className="flex flex-wrap">
-        {tabs.map(tab => {
-          const isActive = selected === tab.value
-          return (
-            <button
-              key={tab.label}
-              type="button"
-              onClick={() => onSelect(tab.value)}
-              className={cn(
-                "mr-5 flex items-center gap-1.5 border-b-2 px-0.5 py-1.5 text-[12px]",
-                isActive
-                  ? "border-sz-accent-500 font-medium text-sz-accent-500"
-                  : "border-transparent text-sz-n-500 hover:text-sz-n-700"
-              )}
-            >
-              {tab.label}
-              <span
-                className={cn(
-                  "rounded-lg px-1.5 text-[10px]",
-                  isActive
-                    ? "bg-sz-accent-50 text-sz-accent-600"
-                    : "bg-sz-n-100 text-sz-n-600"
-                )}
-              >
-                {tab.count}
-              </span>
-            </button>
-          )
-        })}
-      </div>
+      {items.map(item => (
+        <CheckItem
+          key={item.value}
+          label={item.label}
+          count={item.count}
+          checked={selected === item.value}
+          // 이미 켜진 항목을 다시 누르면 해제 → 그 축은 "전체"로 돌아간다
+          onToggle={() => onSelect(selected === item.value ? null : item.value)}
+        />
+      ))}
     </div>
   )
 }
@@ -121,9 +148,10 @@ interface ProductStatusFilterProps {
 /**
  * 시안 `.filter-panel` — 진열 상태 행 + 공구 상태 행 + 우상단 초기화 + 하단 검색.
  *
- * ⚠️ 시안은 체크박스 **다중선택**이지만 백엔드 검색 조건이 각 축 단일값만 받아
- * (SellerProductSearchCondition) 실제 동작은 단일선택이다. 서버가 IN 조건을
- * 지원하게 되면 이 컴포넌트만 체크박스로 바꾸면 된다.
+ * ⚠️ 생김새는 체크박스지만 **한 축에 하나만 켜진다.** 백엔드 검색 조건
+ * (SellerProductSearchCondition)의 displayStatus·groupBuyStatus가 각각 단일 enum이라
+ * 서버가 OR(IN) 조건을 못 받는다. 서버가 List<>를 받게 되면 selected를 배열로
+ * 바꾸고 CheckRow의 onToggle만 누적 방식으로 고치면 된다.
  */
 export default function ProductStatusFilter(props: ProductStatusFilterProps) {
   const {
@@ -147,30 +175,43 @@ export default function ProductStatusFilter(props: ProductStatusFilterProps) {
         onClick={onReset}
         className="absolute right-3.5 top-[17px] inline-flex h-[26px] items-center gap-[5px] rounded-[6px] border border-sz-n-300 bg-white px-2.5 text-[11px] font-medium text-sz-n-500 hover:border-sz-n-400 hover:bg-sz-n-100 hover:text-sz-n-700"
       >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-[11px] w-[11px]"
+        >
+          <polyline points="23 4 23 10 17 10" />
+          <polyline points="1 20 1 14 7 14" />
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+        </svg>
         초기화
       </button>
 
       <div className="pr-[90px]">
-        <StatusTabRow
+        <CheckRow
           label="진열 상태"
           selected={displayStatus}
           onSelect={onDisplayStatusChange}
-          tabs={DISPLAY_TABS.map(tab => ({
-            label: tab.label,
-            value: tab.value,
-            count: displayCounts[tab.countKey],
+          items={DISPLAY_ITEMS.map(item => ({
+            label: item.label,
+            value: item.value,
+            count: displayCounts[item.countKey],
           }))}
         />
       </div>
 
-      <StatusTabRow
+      <CheckRow
         label="공구 상태"
         selected={groupBuyStatus}
         onSelect={onGroupBuyStatusChange}
-        tabs={GROUP_BUY_TABS.map(tab => ({
-          label: tab.label,
-          value: tab.value,
-          count: groupBuyCounts[tab.countKey],
+        items={GROUP_BUY_ITEMS.map(item => ({
+          label: item.label,
+          value: item.value,
+          count: groupBuyCounts[item.countKey],
         }))}
       />
 

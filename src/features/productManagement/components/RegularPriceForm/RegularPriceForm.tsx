@@ -1,6 +1,6 @@
 import FormController from "@/common/components/Form/FormController"
-import FormItem from "@/common/components/Form/FormItem"
 import { Input } from "@/components/ui/input"
+import { ProductField } from "@/features/productManagement/components/ProductFormLayout/ProductFormLayout"
 import { PRICE_MAX } from "@/features/productManagement/constants/params"
 import { PRODUCT_VALIDATION_RULES } from "@/features/productManagement/constants/validationRules"
 import type { ProductFormData } from "@/features/productManagement/pages/RegisterProductPage"
@@ -30,12 +30,18 @@ export default function RegularPriceForm(props: RegularPriceFormProps) {
       control={control}
       rules={PRODUCT_VALIDATION_RULES.regularPrice}
       render={({ field, fieldState }) => (
-        <FormItem required label="정가" error={fieldState.error?.message}>
+        <ProductField
+          required
+          label="정가"
+          error={fieldState.error?.message}
+          hint={`옵션 조합(SKU)과 무관한 단일가입니다. 3자리마다 콤마(,) 자동 표시 · 숫자만 입력 · 최대 ${PRICE_MAX.toLocaleString()}원까지 입력 가능합니다.`}
+        >
           <div className="flex items-center gap-2">
             <Input
               type="text"
               inputMode="numeric"
               disabled={disabled}
+              placeholder="0"
               className="max-w-[200px]"
               value={field.value ? formatComma(String(field.value)) : ""}
               onChange={event => {
@@ -54,12 +60,7 @@ export default function RegularPriceForm(props: RegularPriceFormProps) {
             />
             <span className="shrink-0 text-[12px] text-sz-n-600">원</span>
           </div>
-          <p className="mt-1.5 text-[11px] leading-relaxed text-sz-n-500">
-            옵션 조합(SKU)과 무관한 단일가입니다. 3자리마다 콤마(,) 자동 표시 ·
-            숫자만 입력 · 최대 {PRICE_MAX.toLocaleString()}원까지 입력
-            가능합니다.
-          </p>
-        </FormItem>
+        </ProductField>
       )}
     />
   )

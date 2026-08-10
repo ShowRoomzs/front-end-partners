@@ -43,4 +43,6 @@ export interface TableProps<T, K extends keyof T = keyof T> {
   onSortChange?: (sortKey: string, sortOrder: SortOrder) => void
   bodyClassName?: string
   headerClassName?: string
+  /** 데이터 0건일 때 본문 자리에 넣을 내용. 머리글은 그대로 유지된다 */
+  emptyState?: ReactNode
 }

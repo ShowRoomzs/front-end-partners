@@ -4,14 +4,12 @@ import {
 } from "@/common/components/ConfirmModal/confirm"
 import Form from "@/common/components/Form/Form"
 import type { CategoryValue } from "@/common/components/Form/FormCategorySelector"
-import type { OptionCombination } from "@/common/components/Form/FormOptionCombinationTable"
-import type { OptionItem } from "@/common/components/Form/FormOptionTable"
-import Section from "@/common/components/Section/Section"
 import { useCustomBlocker } from "@/common/hooks/useCustomBlocker"
 import { useGetCategory } from "@/common/hooks/useGetCategory"
 import { queryClient } from "@/common/lib/queryClient"
 import { getCategoryHierarchy } from "@/common/utils/getCategoryHierarchy"
 import { Button } from "@/components/ui/button"
+import { useGetMarketInfo } from "@/features/auth/hooks/useGetMarketInfo"
 import CategoryForm from "@/features/productManagement/components/CategoryForm/CategoryForm"
 import CoverImagesForm from "@/features/productManagement/components/CoverImagesForm/CoverImagesForm"
 import DescriptionForm from "@/features/productManagement/components/DescriptionForm/DescriptionForm"
@@ -19,12 +17,19 @@ import OptionCombinationsForm from "@/features/productManagement/components/Opti
 import OptionGroupsForm from "@/features/productManagement/components/OptionGroupsForm/OptionGroupsForm"
 import ProductNameForm from "@/features/productManagement/components/ProductNameForm/ProductNameForm"
 import ProductNoticeForm from "@/features/productManagement/components/ProductNoticeForm/ProductNoticeForm"
-import ProductNumberForm from "@/features/productManagement/components/ProductNumberForm/ProductNumberForm"
+import {
+  ProductFormCard,
+  ProductSection,
+} from "@/features/productManagement/components/ProductFormLayout/ProductFormLayout"
 import ProductStatusRail from "@/features/productManagement/components/ProductStatusRail/ProductStatusRail"
 import RegularPriceForm from "@/features/productManagement/components/RegularPriceForm/RegularPriceForm"
 import SellerProductCodeForm from "@/features/productManagement/components/SellerProductCodeForm/SellerProductCodeForm"
 import TitleImageForm from "@/features/productManagement/components/TitleImageForm/TitleImageForm"
-import { DELETE_BLOCKED_TOOLTIP } from "@/features/productManagement/constants/params"
+import {
+  DELETE_BLOCKED_TOOLTIP,
+  PRODUCT_DISPLAY_STATUS,
+  PRODUCT_GROUP_BUY_STATUS,
+} from "@/features/productManagement/constants/params"
 import { PRODUCT_QUERY_KEYS } from "@/features/productManagement/constants/queryKeys"
 import { useGetProductDetail } from "@/features/productManagement/hooks/useGetProductDetail"
 import {
@@ -34,6 +39,10 @@ import {
   type AddProductRequest,
   type ProductNotice,
 } from "@/features/productManagement/services/productService"
+import type {
+  OptionCombination,
+  OptionGroup,
+} from "@/features/productManagement/types"
 import {
   getProductBanner,
   isDeleteBlocked,
@@ -45,12 +54,6 @@ import { useCallback, useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import toast from "react-hot-toast"
 import { useNavigate, useParams } from "react-router-dom"
-
-interface OptionGroup {
-  id: string | number
-  name: string
-  items: Array<OptionItem>
-}
 
 export interface ProductFormData {
   category: CategoryValue
@@ -69,12 +72,21 @@ export interface ProductFormData {
   productNotice: ProductNotice
 }
 
+function createEmptyOptionGroup(): OptionGroup {
+  return {
+    id: crypto.randomUUID(),
+    name: "",
+    items: [{ id: crypto.randomUUID(), name: "" }],
+  }
+}
+
 export default function RegisterProductPage() {
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
   const { productId } = useParams<{ productId?: string }>()
   const { data: productDetail } = useGetProductDetail(Number(productId))
   const { categoryMap } = useGetCategory()
+  const { data: marketInfo } = useGetMarketInfo()
   const isEdit = !!productId
 
   /**
@@ -105,7 +117,7 @@ export default function RegisterProductPage() {
     []
   )
 
-  const { control, handleSubmit, formState, setValue, reset, watch } =
+  const { control, handleSubmit, formState, setValue, reset } =
     useForm<ProductFormData>({
       reValidateMode: "onSubmit",
       defaultValues: {
@@ -114,13 +126,7 @@ export default function RegisterProductPage() {
         sellerProductCode: "",
         regularPrice: 0,
         useOptionGroup: true,
-        optionGroups: [
-          {
-            id: crypto.randomUUID(),
-            name: "",
-            items: [{ id: crypto.randomUUID(), name: "", price: null }],
-          },
-        ],
+        optionGroups: [createEmptyOptionGroup()],
         optionCombinations: [],
         stock: 0,
         titleImage: "",
@@ -129,8 +135,6 @@ export default function RegisterProductPage() {
         productNotice: { ...DEFAULT_PRODUCT_NOTICE },
       },
     })
-
-  const useOptionGroup = watch("useOptionGroup")
 
   const initializeForm = useCallback(() => {
     if (!productDetail || !categoryMap) {
@@ -145,7 +149,6 @@ export default function RegisterProductPage() {
       items: group.options.map(option => ({
         id: option.optionId,
         name: option.name,
-        price: option.price || 0,
       })),
     }))
 
@@ -157,9 +160,12 @@ export default function RegisterProductPage() {
       variant => ({
         id: variant.variantId.toString(),
         combination: variant.name.split(",").map(v => v.trim()),
-        price: variant.regularPrice.toString(),
-        stock: variant.stock.toString(),
-        isDisplayed: true,
+        // 서버는 옵션가가 더해진 절대 판매가를 준다 — 폼은 추가금으로 다룬다
+        extraPrice: Math.max(
+          0,
+          variant.regularPrice - productDetail.regularPrice
+        ),
+        stock: variant.stock,
         isRepresentative: variant.isRepresentative,
       })
     )
@@ -170,15 +176,7 @@ export default function RegisterProductPage() {
       sellerProductCode: productDetail.sellerProductCode ?? "",
       regularPrice: productDetail.regularPrice,
       useOptionGroup: hasOptionGroups,
-      optionGroups: hasOptionGroups
-        ? optionGroups
-        : [
-            {
-              id: crypto.randomUUID(),
-              name: "",
-              items: [{ id: crypto.randomUUID(), name: "", price: null }],
-            },
-          ],
+      optionGroups: hasOptionGroups ? optionGroups : [createEmptyOptionGroup()],
       optionCombinations: hasOptionGroups ? optionCombinations : [],
       stock: hasOptionGroups ? 0 : (variants[0]?.stock ?? 0),
       titleImage: productDetail.representativeImageUrl ?? "",
@@ -208,14 +206,14 @@ export default function RegisterProductPage() {
                   name: group.name,
                   options: group.items
                     .filter(item => item.name)
-                    .map(item => ({
-                      name: item.name,
-                      price: Number(item.price ?? 0),
-                    })),
+                    // 옵션 항목 단위 가격은 쓰지 않는다 — 가격은 조합(SKU) 단위다
+                    .map(item => ({ name: item.name, price: 0 })),
                 })),
                 variants: data.optionCombinations.map(combo => ({
                   optionNames: combo.combination,
-                  regularPrice: Number(combo.price),
+                  // 폼의 옵션가(추가금)를 서버 계약인 절대 판매가로 되돌린다
+                  regularPrice:
+                    Number(data.regularPrice) + Number(combo.extraPrice),
                   stock: Number(combo.stock),
                   isRepresentative: combo.isRepresentative,
                 })),
@@ -295,10 +293,37 @@ export default function RegisterProductPage() {
     initializeForm()
   }, [initializeForm])
 
+  /**
+   * 소비자상담 전화번호는 가입 시 등록한 고객센터 번호로 채운다(수정 가능).
+   * 신규 등록에서 값이 비어 있을 때만 넣는다 — 수정 화면에서 브랜드가 다른 번호로
+   * 바꿔 저장해 둔 걸 덮어쓰면 안 된다.
+   */
+  useEffect(() => {
+    if (isEdit || !marketInfo?.csNumber) {
+      return
+    }
+    setValue("productNotice.customerServicePhone", marketInfo.csNumber)
+  }, [isEdit, marketInfo?.csNumber, setValue])
+
   useCustomBlocker({
     condition: formState.isDirty,
     confirmOption: getDefaultCancelConfirmOptions(isEdit),
   })
+
+  const pageDescription = isEdit
+    ? productDetail && (
+        <>
+          진열 상태:{" "}
+          <b className="font-semibold text-sz-n-900">
+            {PRODUCT_DISPLAY_STATUS[productDetail.displayStatus]}
+          </b>{" "}
+          · 공구 상태:{" "}
+          <b className="font-semibold text-sz-n-900">
+            {PRODUCT_GROUP_BUY_STATUS[productDetail.groupBuyStatus]}
+          </b>
+        </>
+      )
+    : "등록 즉시 진열됩니다. 진열/미진열 전환은 이후 운영자만 처리할 수 있습니다."
 
   return (
     <div>
@@ -306,10 +331,9 @@ export default function RegisterProductPage() {
         <div className="text-[20px] font-semibold text-sz-n-900">
           상품 {isEdit ? "수정" : "등록"}
         </div>
-        {!isEdit && (
+        {pageDescription && (
           <div className="mt-0.5 text-[12px] text-sz-n-600">
-            등록 즉시 진열됩니다. 진열/미진열 전환은 이후 운영자만 처리할 수
-            있습니다.
+            {pageDescription}
           </div>
         )}
       </div>
@@ -335,83 +359,84 @@ export default function RegisterProductPage() {
             onSubmit={onSubmit}
             onKeyDown={handleKeyDown}
           >
-            <Section title="카테고리(한 개만 지정 가능)">
-              <CategoryForm control={control} disabled={isLocked} />
-            </Section>
+            {/* 섹션 순서는 시안 B1 그대로 — 기본 정보 → 가격 → 이미지 → 옵션 → 설명 → 고시 */}
+            <ProductFormCard>
+              <ProductSection title="기본 정보">
+                <ProductNameForm control={control} disabled={isLocked} />
+                <SellerProductCodeForm control={control} disabled={isLocked} />
+                <CategoryForm control={control} disabled={isLocked} />
+              </ProductSection>
 
-            <Section title="기본 정보">
-              <ProductNameForm control={control} disabled={isLocked} />
-              <ProductNumberForm productDetail={productDetail} />
-              <SellerProductCodeForm control={control} disabled={isLocked} />
-            </Section>
+              <ProductSection title="가격">
+                <RegularPriceForm control={control} disabled={isLocked} />
+              </ProductSection>
 
-            <Section title="가격">
-              <RegularPriceForm control={control} disabled={isLocked} />
-            </Section>
+              <ProductSection
+                required
+                title="상품 이미지"
+                description="권장 크기 1000×1000px(1:1 비율) · 제한 개수 대표 1개 · 커버 4개 · 제한 용량 각 1MB 이하 · 허용 확장자 JPG, PNG"
+              >
+                <TitleImageForm control={control} disabled={isLocked} />
+                <CoverImagesForm control={control} disabled={isLocked} />
+              </ProductSection>
 
-            <Section required title="옵션 설정">
-              <OptionGroupsForm
-                control={control}
-                setValue={setValue}
-                disabled={isLocked}
-              />
-            </Section>
+              <ProductSection title="옵션">
+                <OptionGroupsForm
+                  control={control}
+                  setValue={setValue}
+                  disabled={isLocked}
+                />
+                {/*
+                  재고 입력은 **모든 상태에서 항상 활성**이다(§11-9 확정).
+                  잠금 계산을 폼 전체에 걸고 재고만 예외 처리하는 순서를 지켜야 한다 —
+                  반대로 하면 잠금 상태에서 재고 보충 자체가 막힌다.
+                */}
+                <OptionCombinationsForm control={control} isLocked={isLocked} />
+              </ProductSection>
 
-            <Section
-              required
-              title={useOptionGroup ? "옵션 목록 (조합 SKU)" : "재고 수량"}
-            >
-              {/*
-                재고 입력은 **모든 상태에서 항상 활성**이다(§11-9 확정).
-                잠금 계산을 폼 전체에 걸고 재고만 예외 처리하는 순서를 지켜야 한다 —
-                반대로 하면 잠금 상태에서 재고 보충 자체가 막힌다.
-              */}
-              <OptionCombinationsForm control={control} isLocked={isLocked} />
-            </Section>
+              <ProductSection required title="상품 설명">
+                <DescriptionForm control={control} disabled={isLocked} />
+              </ProductSection>
 
-            <Section required title="상품 이미지">
-              <TitleImageForm control={control} disabled={isLocked} />
-              <CoverImagesForm control={control} disabled={isLocked} />
-            </Section>
+              <ProductSection
+                required
+                title="상품 정보 제공 고시"
+                note="(화장품)"
+              >
+                <ProductNoticeForm control={control} disabled={isLocked} />
+              </ProductSection>
 
-            <Section required title="상품 설명">
-              <DescriptionForm control={control} disabled={isLocked} />
-            </Section>
-
-            <Section required title="상품 정보 제공 고시 (화장품)">
-              <ProductNoticeForm control={control} disabled={isLocked} />
-            </Section>
-
-            {isLocked && (
-              <p className="mt-4 text-right text-[11px] text-sz-n-600">
-                저장해도 <b className="text-sz-n-900">재고 수량만</b> 반영됩니다
-              </p>
-            )}
-
-            <div className="mt-6 flex items-center justify-end gap-3">
-              {isEdit && (
+              <div className="flex items-center justify-end gap-2 p-5">
+                {isEdit && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="mr-auto text-sz-danger-text"
+                    disabled={deleteBlocked}
+                    title={deleteBlocked ? DELETE_BLOCKED_TOOLTIP : undefined}
+                    onClick={handleClickDelete}
+                  >
+                    상품 삭제
+                  </Button>
+                )}
                 <Button
                   type="button"
                   variant="outline"
-                  className="mr-auto text-sz-danger-text"
-                  disabled={deleteBlocked}
-                  title={deleteBlocked ? DELETE_BLOCKED_TOOLTIP : undefined}
-                  onClick={handleClickDelete}
+                  onClick={handleClickCancel}
                 >
-                  상품 삭제
+                  취소
                 </Button>
-              )}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleClickCancel}
-              >
-                취소
-              </Button>
-              <Button isLoading={isLoading} type="submit">
-                {isEdit ? "수정하기" : "등록하기"}
-              </Button>
-            </div>
+                <Button isLoading={isLoading} type="submit">
+                  저장
+                </Button>
+              </div>
+            </ProductFormCard>
+
+            {isLocked && (
+              <p className="mt-3 text-right text-[11px] text-sz-n-600">
+                저장해도 <b className="text-sz-n-900">재고 수량만</b> 반영됩니다
+              </p>
+            )}
           </Form>
         </div>
 
