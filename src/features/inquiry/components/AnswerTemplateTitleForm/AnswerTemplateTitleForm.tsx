@@ -25,7 +25,11 @@ export default function AnswerTemplateTitleForm(
         },
       }}
       render={({ field, fieldState }) => (
-        <FormItem label="템플릿 제목" required error={fieldState.error?.message}>
+        <FormItem
+          label="템플릿 제목"
+          required
+          error={fieldState.error?.message}
+        >
           <FormInput
             value={field.value}
             onChange={field.onChange}

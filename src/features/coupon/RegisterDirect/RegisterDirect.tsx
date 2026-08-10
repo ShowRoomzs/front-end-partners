@@ -125,7 +125,7 @@ export default function RegisterDirect() {
 
   return (
     <div className="p-6">
-      <p className="text-sm text-red-500 mb-6">* 필수항목</p>
+      <p className="text-sm text-sz-danger-text mb-6">* 필수항목</p>
 
       <Form handleSubmit={handleSubmit} onSubmit={onSubmit}>
         <Section>
@@ -150,7 +150,7 @@ export default function RegisterDirect() {
                     onChange={field.onChange}
                     onBlur={field.onBlur}
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-sz-n-400">
                     {(nameValue ?? "").length}/20
                   </span>
                 </div>
@@ -176,7 +176,7 @@ export default function RegisterDirect() {
                     onChange={field.onChange}
                   />
                   {targetType && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-sz-n-500">
                       {TARGET_TYPE_DESC[targetType]}
                     </p>
                   )}
@@ -203,7 +203,7 @@ export default function RegisterDirect() {
                     onChange={field.onChange}
                   />
                   {issueType && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-sz-n-500">
                       {ISSUE_TYPE_DESC[issueType]}
                     </p>
                   )}
@@ -251,7 +251,7 @@ export default function RegisterDirect() {
                         rules={{ required: "총 발급 수량을 입력해주세요." }}
                         render={({ field: qtyField }) => (
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500">
+                            <span className="text-sm text-sz-n-500">
                               총 발급 수량
                             </span>
                             <div className="w-32">
@@ -262,7 +262,7 @@ export default function RegisterDirect() {
                                 onChange={val => qtyField.onChange(Number(val))}
                               />
                             </div>
-                            <span className="text-sm text-gray-700">개</span>
+                            <span className="text-sm text-sz-n-700">개</span>
                           </div>
                         )}
                       />
@@ -274,7 +274,7 @@ export default function RegisterDirect() {
                     name="perPersonQuantity"
                     render={({ field: ppField }) => (
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-sz-n-500">
                           인당 발급 수량
                         </span>
                         <div className="w-24">
@@ -285,7 +285,7 @@ export default function RegisterDirect() {
                             onChange={val => ppField.onChange(Number(val))}
                           />
                         </div>
-                        <span className="text-sm text-gray-700">개</span>
+                        <span className="text-sm text-sz-n-700">개</span>
                       </div>
                     )}
                   />
@@ -342,7 +342,7 @@ export default function RegisterDirect() {
                             onChange={val => dvField.onChange(Number(val))}
                           />
                         </div>
-                        <span className="text-sm text-gray-700">
+                        <span className="text-sm text-sz-n-700">
                           {discountType === "RATE" ? "%" : "원"}
                         </span>
                       </div>
@@ -369,7 +369,7 @@ export default function RegisterDirect() {
                       onChange={val => field.onChange(Number(val))}
                     />
                   </div>
-                  <span className="text-sm text-gray-700">원 이상</span>
+                  <span className="text-sm text-sz-n-700">원 이상</span>
                 </div>
               </FormItem>
             )}
@@ -392,7 +392,7 @@ export default function RegisterDirect() {
                     onChange={field.onChange}
                   />
                   {isDuplicatable && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-sz-n-500">
                       {DUPLICATE_DESC[isDuplicatable]}
                     </p>
                   )}
@@ -431,7 +431,7 @@ export default function RegisterDirect() {
             render={({ field, fieldState }) => (
               <FormItem label="쿠폰 유효기간" error={fieldState.error?.message}>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">발급일로부터</span>
+                  <span className="text-sm text-sz-n-500">발급일로부터</span>
                   <div className="w-24">
                     <FormInput
                       type="number"
@@ -441,7 +441,7 @@ export default function RegisterDirect() {
                       onChange={val => field.onChange(Number(val))}
                     />
                   </div>
-                  <span className="text-sm text-gray-700">일</span>
+                  <span className="text-sm text-sz-n-700">일</span>
                 </div>
               </FormItem>
             )}
@@ -466,7 +466,7 @@ export default function RegisterDirect() {
                       onChange={field.onChange}
                     />
                     {targetProductType === "ALL" && (
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-sz-n-500">
                         {TARGET_PRODUCT_DESC["ALL"]}
                       </p>
                     )}
@@ -477,19 +477,19 @@ export default function RegisterDirect() {
                       <div className="relative flex-1 max-w-md">
                         <Search
                           size={16}
-                          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                          className="absolute left-3 top-1/2 -translate-y-1/2 text-sz-n-400"
                         />
                         <input
                           type="text"
                           placeholder="상품명을 검색해 주세요"
                           value={localProductSearch}
                           onChange={e => setLocalProductSearch(e.target.value)}
-                          className="w-full pl-9 pr-3 h-10 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+                          className="w-full pl-9 pr-3 h-10 rounded-md border border-sz-n-300 text-sm focus:outline-none focus:ring-2 focus:ring-sz-accent-500/20 focus:border-sz-accent-500"
                         />
                       </div>
                       <Button
                         type="button"
-                        className="bg-blue-500 hover:bg-blue-600 px-5"
+                        className="bg-sz-accent-500 hover:bg-sz-accent-600 px-5"
                         onClick={() => setProductSearch(localProductSearch)}
                       >
                         검색
@@ -499,12 +499,12 @@ export default function RegisterDirect() {
                   {targetProductType === "SPECIFIC" &&
                     productSearch &&
                     productList && (
-                      <div className="w-full border border-gray-200 rounded-md overflow-hidden">
-                        <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200 text-sm text-gray-600">
+                      <div className="w-full border border-sz-n-200 rounded-md overflow-hidden">
+                        <div className="px-4 py-2.5 bg-sz-n-50 border-b border-sz-n-200 text-sm text-sz-n-600">
                           검색 결과 {productList.content.length}건
                         </div>
                         {productList.content.length === 0 ? (
-                          <div className="px-4 py-6 text-center text-sm text-gray-400">
+                          <div className="px-4 py-6 text-center text-sm text-sz-n-400">
                             검색 결과가 없습니다.
                           </div>
                         ) : (
@@ -512,10 +512,10 @@ export default function RegisterDirect() {
                             {productList.content.map(product => (
                               <li
                                 key={product.productId}
-                                className="flex items-center justify-between px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
+                                className="flex items-center justify-between px-4 py-3 border-b border-sz-n-100 last:border-b-0 hover:bg-sz-n-50"
                               >
-                                <span className="text-sm text-gray-800">
-                                  <span className="text-gray-500 mr-2">
+                                <span className="text-sm text-sz-n-900">
+                                  <span className="text-sz-n-500 mr-2">
                                     {product.productNumber}
                                   </span>
                                   {product.name}
@@ -523,7 +523,7 @@ export default function RegisterDirect() {
                                 <Button
                                   type="button"
                                   size="sm"
-                                  className="bg-blue-500 hover:bg-blue-600 px-4"
+                                  className="bg-sz-accent-500 hover:bg-sz-accent-600 px-4"
                                 >
                                   추가
                                 </Button>
@@ -548,7 +548,10 @@ export default function RegisterDirect() {
           >
             취소
           </Button>
-          <Button type="submit" className="px-8 bg-blue-500 hover:bg-blue-600">
+          <Button
+            type="submit"
+            className="px-8 bg-sz-accent-500 hover:bg-sz-accent-600"
+          >
             쿠폰 등록
           </Button>
         </div>

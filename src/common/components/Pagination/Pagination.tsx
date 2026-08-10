@@ -39,7 +39,7 @@ export default function Pagination(props: PaginationProps) {
             "min-w-[30px] min-h-[30px] rounded-[4px] text-[14px] px-[5px] font-medium transition-colors",
             isActive
               ? "bg-[#5468CD] text-white"
-              : "bg-white text-[#666666] hover:bg-gray-50 border border-[#E0E0E0]"
+              : "bg-white text-[#666666] hover:bg-sz-n-50 border border-[#E0E0E0]"
           )}
           onClick={() => handlePageChange(page)}
         >
@@ -137,7 +137,7 @@ export default function Pagination(props: PaginationProps) {
           "w-[30px] h-[30px] rounded-[4px] bg-white border border-[#E0E0E0] flex items-center justify-center transition-colors",
           isPreviousDisabled
             ? "opacity-50 cursor-not-allowed"
-            : "hover:bg-gray-50"
+            : "hover:bg-sz-n-50"
         )}
         onClick={handleClickPrevious}
         disabled={isPreviousDisabled}
@@ -164,7 +164,7 @@ export default function Pagination(props: PaginationProps) {
       <button
         className={cn(
           "w-[30px] h-[30px] rounded-[4px] bg-white border border-[#E0E0E0] flex items-center justify-center transition-colors",
-          isNextDisabled ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"
+          isNextDisabled ? "opacity-50 cursor-not-allowed" : "hover:bg-sz-n-50"
         )}
         onClick={handleClickNext}
         disabled={isNextDisabled}

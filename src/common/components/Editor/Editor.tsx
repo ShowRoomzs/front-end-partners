@@ -34,7 +34,7 @@ export default function Editor(props: EditorProps) {
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: "text-blue-500 underline cursor-pointer",
+          class: "text-sz-accent-500 underline cursor-pointer",
         },
       }),
       Image.configure({

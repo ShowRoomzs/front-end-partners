@@ -1,4 +1,4 @@
-import type { RegisterOptions, FieldValues } from 'react-hook-form'
+import type { RegisterOptions, FieldValues } from "react-hook-form"
 
 type ValidateFn = (value: unknown, formValues: unknown) => unknown
 
@@ -46,18 +46,18 @@ export const createDebouncedValidation = <T extends FieldValues>(
   const debouncedRules = { ...rules }
 
   // validate가 함수인 경우
-  if (typeof rules.validate === 'function') {
+  if (typeof rules.validate === "function") {
     debouncedRules.validate = createDebouncedValidateFn(
       rules.validate as ValidateFn,
       delay
     ) as typeof rules.validate
   }
   // validate가 객체인 경우 (여러 validation이 있는 경우)
-  else if (typeof rules.validate === 'object' && rules.validate !== null) {
+  else if (typeof rules.validate === "object" && rules.validate !== null) {
     const debouncedValidate: Record<string, ValidateFn> = {}
 
     Object.entries(rules.validate).forEach(([key, validateFn]) => {
-      if (typeof validateFn === 'function') {
+      if (typeof validateFn === "function") {
         debouncedValidate[key] = createDebouncedValidateFn(
           validateFn as ValidateFn,
           delay

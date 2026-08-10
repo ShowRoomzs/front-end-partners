@@ -95,7 +95,7 @@ export const PreviewModal = (props: PreviewModalProps) => {
           e.preventDefault()
           onOpenChange(false)
         }}
-        className="absolute top-6 right-6 text-white hover:text-gray-300 transition-colors z-20"
+        className="absolute top-6 right-6 text-white hover:text-sz-n-300 transition-colors z-20"
         aria-label="닫기"
       >
         <svg

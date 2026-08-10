@@ -61,7 +61,9 @@ export default function FormItem(props: FormItemProps) {
       {success && (
         <div className="flex gap-4">
           <div className="w-32 shrink-0" />
-          <p className="text-sm font-medium text-green-600 flex-1">{success}</p>
+          <p className="text-sm font-medium text-sz-success-text flex-1">
+            {success}
+          </p>
         </div>
       )}
     </div>

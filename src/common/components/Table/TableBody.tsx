@@ -72,7 +72,7 @@ export default function TableBody<T>(props: TableBodyProps<T>) {
                   }
                 }}
                 onClick={e => handleCellClick(e, col, index)}
-                className={`px-4 py-[8px] border-b border-gray-200 ${
+                className={`px-4 py-[8px] border-b border-sz-n-200 ${
                   col.fixed ? "bg-white group-hover:bg-[#FFFBF0]" : ""
                 }`}
                 style={{

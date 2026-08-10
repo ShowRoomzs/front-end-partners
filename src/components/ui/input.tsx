@@ -18,7 +18,7 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
         {...props}
       />
       {props?.maxLength && props?.maxLength > 0 && (
-        <span className="text-sm text-gray-500">
+        <span className="text-sm text-sz-n-500">
           {typeof props.value === "string" ? props.value.length : 0}/
           {props.maxLength}
         </span>

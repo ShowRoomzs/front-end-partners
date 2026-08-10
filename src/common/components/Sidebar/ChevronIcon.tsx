@@ -7,7 +7,7 @@ export default function ChevronIcon(props: ChevronIconProps) {
 
   return (
     <svg
-      className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-0' : '-rotate-90'}`}
+      className={`w-4 h-4 transition-transform ${isOpen ? "rotate-0" : "-rotate-90"}`}
       fill="none"
       stroke="currentColor"
       viewBox="0 0 24 24"

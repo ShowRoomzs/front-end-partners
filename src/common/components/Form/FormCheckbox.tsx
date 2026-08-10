@@ -1,6 +1,6 @@
-import { forwardRef } from 'react'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
+import { forwardRef } from "react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
 
 interface FormCheckboxProps {
   label: string
@@ -13,7 +13,7 @@ const FormCheckbox = forwardRef<HTMLButtonElement, FormCheckboxProps>(
   (props, ref) => {
     const { label, checked, onCheckedChange, disabled = false } = props
 
-    const id = `checkbox-${label.replace(/\s+/g, '-')}`
+    const id = `checkbox-${label.replace(/\s+/g, "-")}`
 
     return (
       <div className="flex items-center space-x-2">
@@ -35,6 +35,6 @@ const FormCheckbox = forwardRef<HTMLButtonElement, FormCheckboxProps>(
   }
 )
 
-FormCheckbox.displayName = 'FormCheckbox'
+FormCheckbox.displayName = "FormCheckbox"
 
 export default FormCheckbox

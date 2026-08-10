@@ -63,19 +63,19 @@ export default function RegisterCreatorPage() {
           </div>
           <span className="mt-2 text-sm font-medium text-black">기본 정보</span>
         </div>
-        <div className="w-32 h-px bg-gray-300 mx-4" />
+        <div className="w-32 h-px bg-sz-n-300 mx-4" />
         <div className="flex flex-col items-center">
-          <div className="w-10 h-10 rounded-full border-2 border-gray-300 bg-white text-gray-400 flex items-center justify-center text-sm font-medium">
+          <div className="w-10 h-10 rounded-full border-2 border-sz-n-300 bg-white text-sz-n-400 flex items-center justify-center text-sm font-medium">
             2
           </div>
-          <span className="mt-2 text-sm text-gray-400">사업자 정보</span>
+          <span className="mt-2 text-sm text-sz-n-400">사업자 정보</span>
         </div>
-        <div className="w-32 h-px bg-gray-300 mx-4" />
+        <div className="w-32 h-px bg-sz-n-300 mx-4" />
         <div className="flex flex-col items-center">
-          <div className="w-10 h-10 rounded-full border-2 border-gray-300 bg-white text-gray-400 flex items-center justify-center text-sm font-medium">
+          <div className="w-10 h-10 rounded-full border-2 border-sz-n-300 bg-white text-sz-n-400 flex items-center justify-center text-sm font-medium">
             3
           </div>
-          <span className="mt-2 text-sm text-gray-400">완료</span>
+          <span className="mt-2 text-sm text-sz-n-400">완료</span>
         </div>
       </div>
     </div>
@@ -100,10 +100,10 @@ export default function RegisterCreatorPage() {
                   "email"
                 >
               )}
-              className={errors.email ? "border-red-500" : ""}
+              className={errors.email ? "border-sz-danger-text" : ""}
             />
             {errors.email && (
-              <p className="mt-1 text-sm text-red-500">
+              <p className="mt-1 text-sm text-sz-danger-text">
                 {errors.email.message}
               </p>
             )}
@@ -121,18 +121,20 @@ export default function RegisterCreatorPage() {
                     "password"
                   >
                 )}
-                className={errors.password ? "border-red-500 pr-10" : "pr-10"}
+                className={
+                  errors.password ? "border-sz-danger-text pr-10" : "pr-10"
+                }
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-sz-n-400 hover:text-sz-n-600"
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
             {errors.password && (
-              <p className="mt-1 text-sm text-red-500">
+              <p className="mt-1 text-sm text-sz-danger-text">
                 {errors.password.message}
               </p>
             )}
@@ -151,19 +153,21 @@ export default function RegisterCreatorPage() {
                   >
                 )}
                 className={
-                  errors.passwordConfirm ? "border-red-500 pr-10" : "pr-10"
+                  errors.passwordConfirm
+                    ? "border-sz-danger-text pr-10"
+                    : "pr-10"
                 }
               />
               <button
                 type="button"
                 onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-sz-n-400 hover:text-sz-n-600"
               >
                 {showPasswordConfirm ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
             {errors.passwordConfirm && (
-              <p className="mt-1 text-sm text-red-500">
+              <p className="mt-1 text-sm text-sz-danger-text">
                 {errors.passwordConfirm.message}
               </p>
             )}
@@ -182,10 +186,10 @@ export default function RegisterCreatorPage() {
                   "marketName"
                 >
               )}
-              className={errors.marketName ? "border-red-500" : ""}
+              className={errors.marketName ? "border-sz-danger-text" : ""}
             />
             {errors.marketName && (
-              <p className="mt-1 text-sm text-red-500">
+              <p className="mt-1 text-sm text-sz-danger-text">
                 {errors.marketName.message}
               </p>
             )}
@@ -204,7 +208,7 @@ export default function RegisterCreatorPage() {
               render={({ field }) => (
                 <Select onValueChange={field.onChange} value={field.value}>
                   <SelectTrigger
-                    className={`w-full h-10 ${errors.snsType ? "border-red-500" : ""}`}
+                    className={`w-full h-10 ${errors.snsType ? "border-sz-danger-text" : ""}`}
                   >
                     <SelectValue placeholder="현재 팔로워가 가장 많은 플랫폼을 선택해 주세요" />
                   </SelectTrigger>
@@ -219,7 +223,7 @@ export default function RegisterCreatorPage() {
               )}
             />
             {errors.snsType && (
-              <p className="mt-1 text-sm text-red-500">
+              <p className="mt-1 text-sm text-sz-danger-text">
                 {errors.snsType.message}
               </p>
             )}
@@ -236,10 +240,10 @@ export default function RegisterCreatorPage() {
                   "activityName"
                 >
               )}
-              className={errors.activityName ? "border-red-500" : ""}
+              className={errors.activityName ? "border-sz-danger-text" : ""}
             />
             {errors.activityName && (
-              <p className="mt-1 text-sm text-red-500">
+              <p className="mt-1 text-sm text-sz-danger-text">
                 {errors.activityName.message}
               </p>
             )}
@@ -256,10 +260,10 @@ export default function RegisterCreatorPage() {
                   "snsUrl"
                 >
               )}
-              className={errors.snsUrl ? "border-red-500" : ""}
+              className={errors.snsUrl ? "border-sz-danger-text" : ""}
             />
             {errors.snsUrl && (
-              <p className="mt-1 text-sm text-red-500">
+              <p className="mt-1 text-sm text-sz-danger-text">
                 {errors.snsUrl.message}
               </p>
             )}
@@ -276,10 +280,10 @@ export default function RegisterCreatorPage() {
                   "sellerName"
                 >
               )}
-              className={errors.sellerName ? "border-red-500" : ""}
+              className={errors.sellerName ? "border-sz-danger-text" : ""}
             />
             {errors.sellerName && (
-              <p className="mt-1 text-sm text-red-500">
+              <p className="mt-1 text-sm text-sz-danger-text">
                 {errors.sellerName.message}
               </p>
             )}
@@ -296,10 +300,10 @@ export default function RegisterCreatorPage() {
                   "sellerContact"
                 >
               )}
-              className={errors.sellerContact ? "border-red-500" : ""}
+              className={errors.sellerContact ? "border-sz-danger-text" : ""}
             />
             {errors.sellerContact && (
-              <p className="mt-1 text-sm text-red-500">
+              <p className="mt-1 text-sm text-sz-danger-text">
                 {errors.sellerContact.message}
               </p>
             )}
@@ -317,7 +321,7 @@ export default function RegisterCreatorPage() {
             <Button
               type="submit"
               disabled={Object.keys(errors).length > 0 || isSubmitting}
-              className="flex-1 h-12 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300"
+              className="flex-1 h-12 bg-sz-accent-500 hover:bg-sz-accent-600 disabled:bg-sz-n-300"
             >
               {isSubmitting ? (
                 <>

@@ -136,11 +136,11 @@ export default function ProfileImageUploader(props: ProfileImageUploaderProps) {
                 handleFiles(e.dataTransfer.files)
               }}
               className={`relative cursor-pointer rounded-full transition-all ${
-                isDragging ? "ring-2 ring-blue-500" : ""
+                isDragging ? "ring-2 ring-sz-accent-500" : ""
               }`}
             >
               {required && (
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-medium z-10">
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-sz-danger-text text-white rounded-full flex items-center justify-center text-xs font-medium z-10">
                   필수
                 </div>
               )}
@@ -149,8 +149,8 @@ export default function ProfileImageUploader(props: ProfileImageUploaderProps) {
                   localImage
                     ? "border-transparent"
                     : isDragging
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-300 bg-gray-50 hover:bg-gray-100"
+                      ? "border-sz-accent-500 bg-sz-accent-50"
+                      : "border-sz-n-300 bg-sz-n-50 hover:bg-sz-n-100"
                 }`}
               >
                 {localImage ? (
@@ -177,7 +177,7 @@ export default function ProfileImageUploader(props: ProfileImageUploaderProps) {
                       viewBox="0 0 24 24"
                       strokeWidth={1.5}
                       stroke="currentColor"
-                      className="w-12 h-12 text-gray-400"
+                      className="w-12 h-12 text-sz-n-400"
                     >
                       <path
                         strokeLinecap="round"
@@ -190,9 +190,9 @@ export default function ProfileImageUploader(props: ProfileImageUploaderProps) {
               </div>
             </label>
             <div className="flex-1">
-              <span className="text-xs text-gray-400 block">{infoText}</span>
+              <span className="text-xs text-sz-n-400 block">{infoText}</span>
               {additionalInfoText && (
-                <span className="text-xs text-gray-400 whitespace-pre-line block mt-2">
+                <span className="text-xs text-sz-n-400 whitespace-pre-line block mt-2">
                   {additionalInfoText}
                 </span>
               )}

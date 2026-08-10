@@ -1,4 +1,4 @@
-import type { MenuType } from '@/common/types/role'
+import type { MenuType } from "@/common/types/role"
 
 export interface MenuItem {
   id: string
@@ -8,6 +8,6 @@ export interface MenuItem {
 }
 
 export interface MenuConfig {
-  menuType: MenuType | 'COMMON'
+  menuType: MenuType | "COMMON"
   groups: Array<MenuItem>
 }
