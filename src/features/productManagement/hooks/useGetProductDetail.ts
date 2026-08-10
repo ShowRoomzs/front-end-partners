@@ -1,58 +1,16 @@
 import { PRODUCT_QUERY_KEYS } from "@/features/productManagement/constants/queryKeys"
-import {
-  productService,
-  type DeliveryType,
-  type OptionGroupResponse,
-  type ProductNotice,
-  type VariantResponse,
-} from "@/features/productManagement/services/productService"
+import { productService } from "@/features/productManagement/services/productService"
 import { useQuery } from "@tanstack/react-query"
-import { useCallback } from "react"
 
-export interface ProductDetail {
-  productId: number
-  productNumber: string
-  marketId: number
-  marketName: string
-  categoryId: number
-  categoryName: string
-  name: string
-  sellerProductCode: string
-  representativeImageUrl: string
-  coverImageUrls: Array<string>
-  regularPrice: number
-  salePrice: number
-  purchasePrice: number
-  isDisplay: boolean
-  isOutOfStockForced: boolean
-  isRecommended: boolean
-  productNotice: ProductNotice
-  description: string
-  tags: Array<string>
-  deliveryType: DeliveryType
-  deliveryFee: number
-  deliveryFreeThreshold: number
-  deliveryEstimatedDays: number
-  createdAt: string
-  optionGroups: Array<OptionGroupResponse>
-  variants: Array<VariantResponse>
-}
-
+/**
+ * 상세는 서버 응답(ProductDetailResponse)을 **그대로** 돌려준다.
+ * productNotice는 JSON 문자열이라 화면에서 parseProductNotice()로 판다 —
+ * 훅에서 미리 파싱하면 파싱 실패 시 쿼리 자체가 터진다.
+ */
 export function useGetProductDetail(productId: number) {
-  const queryFn = useCallback(async (): Promise<ProductDetail> => {
-    const res = await productService.getProductDetail(productId)
-    const productDetail = {
-      ...res,
-      productNotice: JSON.parse(res.productNotice) as ProductNotice,
-      tags: JSON.parse(res.tags || "[]") as Array<string>,
-    }
-
-    return productDetail
-  }, [productId])
-
   return useQuery({
     queryKey: [PRODUCT_QUERY_KEYS.PRODUCT_DETAIL, productId],
-    queryFn,
+    queryFn: () => productService.getProductDetail(productId),
     enabled: !!productId,
   })
 }

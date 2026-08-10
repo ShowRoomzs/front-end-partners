@@ -1,6 +1,19 @@
 import type { CategoryValue } from "@/common/components/Form/FormCategorySelector"
 import type { OptionItem } from "@/common/components/Form/FormOptionTable"
 import type { OptionCombination } from "@/common/components/Form/FormOptionCombinationTable"
+import {
+  PRICE_MAX,
+  PRODUCT_NAME_MAX_LENGTH,
+  PRODUCT_NOTICE_FIELDS,
+} from "@/features/productManagement/constants/params"
+
+/** 고시 11필드는 전부 필수라 "정보 누락" 상태가 성립하지 않는다(§11-8) */
+const productNoticeRules = Object.fromEntries(
+  PRODUCT_NOTICE_FIELDS.map(field => [
+    field.key,
+    { required: `${field.label}을(를) 입력해 주세요.` },
+  ])
+) as Record<string, { required: string }>
 
 export const PRODUCT_VALIDATION_RULES = {
   category: {
@@ -10,25 +23,39 @@ export const PRODUCT_VALIDATION_RULES = {
   productName: {
     required: "상품명을 입력해 주세요",
     maxLength: {
-      value: 100,
-      message: "상품명은 최대 100자까지 입력 가능합니다",
+      value: PRODUCT_NAME_MAX_LENGTH,
+      message: `상품명은 최대 ${PRODUCT_NAME_MAX_LENGTH}자까지 입력 가능합니다`,
     },
   },
   regularPrice: {
-    required: "판매가를 입력해 주세요",
-    validate: (value: number) =>
-      value >= 100 || "판매가는 100원 이상이어야 합니다",
+    required: "정가를 입력해 주세요",
+    validate: (value: number) => {
+      if (Number(value) <= 0) {
+        return "정가를 입력해 주세요"
+      }
+      // 상한 초과는 입력 단계에서 이미 거부되지만, 붙여넣기 등 우회 경로를 위해 한 번 더 막는다
+      if (Number(value) > PRICE_MAX) {
+        return `정가는 최대 ${PRICE_MAX.toLocaleString()}원까지 입력 가능합니다`
+      }
+      return true
+    },
   },
   optionCombinations: {
     validate: (
       value: Array<OptionCombination>,
       formValues: {
+        useOptionGroup: boolean
         optionGroups: Array<{
           name: string
           items: Array<OptionItem>
         }>
       }
     ) => {
+      // 옵션 미사용이면 조합 표는 기본 조합 1행뿐이라 검증 대상이 아니다
+      if (!formValues.useOptionGroup) {
+        return true
+      }
+
       const validOptionGroups = formValues.optionGroups.filter(
         group => group.name && group.items.some(item => item.name)
       )
@@ -65,9 +92,6 @@ export const PRODUCT_VALIDATION_RULES = {
   titleImage: {
     required: "대표 이미지를 선택해 주세요.",
   },
-  coverImages: {
-    required: "커버 이미지를 선택해 주세요.",
-  },
   optionGroupName: {
     required: "옵션명을 입력해 주세요",
   },
@@ -83,35 +107,7 @@ export const PRODUCT_VALIDATION_RULES = {
       return true
     },
   },
-  productNotice: {
-    origin: {
-      required: "제조국을 입력해 주세요.",
-    },
-    material: {
-      required: "소재를 입력해 주세요.",
-    },
-    color: {
-      required: "색상을 입력해 주세요.",
-    },
-    size: {
-      required: "치수를 입력해 주세요.",
-    },
-    manufacturer: {
-      required: "제조자를 입력해 주세요.",
-    },
-    washingMethod: {
-      required: "세탁 방법을 입력해 주세요.",
-    },
-    manufactureDate: {
-      required: "제조년월을 입력해 주세요.",
-    },
-    asInfo: {
-      required: "A/S안내 및 연락처를 입력해 주세요.",
-    },
-    qualityAssurance: {
-      required: "품질 보증 기준을 입력해 주세요.",
-    },
-  },
+  productNotice: productNoticeRules,
   description: {
     required: "상세설명을 입력해 주세요.",
   },

@@ -1,9 +1,9 @@
 import FormDisplay from "@/common/components/Form/FormDisplay"
 import FormItem from "@/common/components/Form/FormItem"
-import type { ProductDetail } from "@/features/productManagement/hooks/useGetProductDetail"
+import type { ProductDetailResponse } from "@/features/productManagement/services/productService"
 
 interface ProductNumberFormProps {
-  productDetail: ProductDetail | undefined
+  productDetail: ProductDetailResponse | undefined
 }
 
 export default function ProductNumberForm(props: ProductNumberFormProps) {
