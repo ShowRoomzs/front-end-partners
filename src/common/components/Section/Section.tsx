@@ -10,19 +10,21 @@ interface SectionProps {
 export default function Section(props: SectionProps) {
   const { title, children, required = false, className = "" } = props
 
+  // 제목은 디자인시스템 H3(13px/600) — 카드·모달 제목 등급이다.
+  // 예전엔 text-base(16px)를 썼는데 그건 H2(페이지 안 큰 구획) 등급이라 한 칸 컸다.
   return (
     <section
-      className={`relative bg-white rounded-lg border border-sz-n-200 mb-6 ${className}`}
+      className={`relative mb-5 rounded-[8px] border border-sz-n-200 bg-white ${className}`}
     >
       {title && (
-        <div className="px-6 py-2 border-b border-sz-n-200">
-          <h2 className="text-base font-semibold text-sz-n-900">
+        <div className="border-b border-sz-n-200 px-5 py-3.5">
+          <h2 className="text-[13px] font-semibold text-sz-n-900">
             {title}
-            {required && <span className="text-sz-danger-text ml-1">*</span>}
+            {required && <span className="ml-1 text-sz-danger-text">*</span>}
           </h2>
         </div>
       )}
-      <div className="p-6 flex flex-col gap-6">{children}</div>
+      <div className="flex flex-col gap-5 p-5">{children}</div>
     </section>
   )
 }
