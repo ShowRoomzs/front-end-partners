@@ -1,5 +1,5 @@
-import { useCallback, useMemo } from 'react'
-import { useCookies } from 'react-cookie'
+import { useCallback, useMemo } from "react"
+import { useCookies } from "react-cookie"
 
 export function useCookie<T>(
   key: string

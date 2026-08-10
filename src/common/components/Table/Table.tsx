@@ -10,6 +10,7 @@ import type { TableKey, TableProps } from "@/common/components/Table/types"
 import { Loader2Icon } from "lucide-react"
 import { useSyncHorizontalScroll } from "@/common/hooks/useSyncHorizontalScroll"
 import { getColumnKeyWithLabel } from "@/common/components/Table/config"
+import { cn } from "@/lib/utils"
 
 const MAX_TABLE_WIDTH = 1760 // 최대 테이블 너비
 
@@ -32,6 +33,7 @@ export default function Table<T, K extends keyof T = keyof T>(
     headerClassName = "",
     onSortChange,
     emptyState,
+    fitWidth = false,
   } = props
   const [checkedKeys, setCheckedKeys] = useState<Array<T[K]>>(
     originCheckedKeys as Array<T[K]>
@@ -109,7 +111,13 @@ export default function Table<T, K extends keyof T = keyof T>(
     let columns = originColumns
     const hasAllWidth = columns.every(col => col.width)
 
-    if (hasAllWidth) {
+    /*
+      가상 컬럼은 "모든 컬럼이 고정 폭이라 표가 컨테이너보다 좁을 때 남는 자리를
+      메우는" 용도다. fitWidth 모드에서는 컬럼 폭을 비율(%)로 환산해 표가 이미
+      100%를 채우므로 붙이면 안 된다 — 붙이면 이 빈 칸이 남는 폭을 통째로 가져가
+      실제 컬럼들이 왼쪽으로 몰린다.
+    */
+    if (hasAllWidth && !fitWidth) {
       columns = [
         ...columns,
         {
@@ -159,6 +167,7 @@ export default function Table<T, K extends keyof T = keyof T>(
     originColumns,
     rowKey,
     showCheckbox,
+    fitWidth,
   ])
 
   const getRowWidths = useCallback(
@@ -220,6 +229,21 @@ export default function Table<T, K extends keyof T = keyof T>(
       0
     )
 
+    // 컨테이너 폭에 맞추는 모드: 측정한 자연 너비를 비율(%)로 환산해
+    // 헤더·바디 두 테이블이 같은 비율을 공유하도록 한다(별도 table이라 정렬이 어긋나면 안 됨)
+    if (fitWidth) {
+      if (totalWidth <= 0) {
+        return
+      }
+      const ratios: Record<string, number> = {}
+      columns.forEach(col => {
+        const colKey = getColumnKeyWithLabel(col)
+        ratios[colKey] = (measuredWidths[colKey] / totalWidth) * 100
+      })
+      setColWidths(ratios)
+      return
+    }
+
     // col.width가 있는 컬럼 너비의 합
     const absoluteWidths = columns.reduce(
       (abs, col) => (col.width ? abs + col.width : abs),
@@ -247,7 +271,7 @@ export default function Table<T, K extends keyof T = keyof T>(
       })
     }
     setColWidths(measuredWidths)
-  }, [colWidths, columns, getRowWidths])
+  }, [colWidths, columns, getRowWidths, fitWidth])
 
   useEffect(() => {
     handleMeasureWidths()
@@ -256,23 +280,35 @@ export default function Table<T, K extends keyof T = keyof T>(
     }
   }, [handleMeasureWidths, isMounted])
 
+  // 측정 전에는 auto 레이아웃이어야 컬럼별 자연 너비가 나온다.
+  // 처음부터 table-fixed를 걸면 콜그룹이 비어 있어 균등 분할된 값이 측정된다.
+  const isFitWidthMeasured = fitWidth && Object.keys(colWidths).length > 0
+
+  // fitWidth 모드에서는 최소 너비를 강제하지 않아 가로 스크롤이 생기지 않는다
   const totalTableWidth = useMemo(() => {
+    if (fitWidth) {
+      return undefined
+    }
     const total = Object.values(colWidths).reduce((sum, w) => sum + w, 0)
     return total > 0 ? total : MAX_TABLE_WIDTH
-  }, [colWidths])
+  }, [colWidths, fitWidth])
 
   const renderColGroup = useCallback(() => {
     return (
       <colgroup>
-        {columns.map(col => (
-          <col
-            key={getColumnKeyWithLabel(col)}
-            style={{ width: colWidths[getColumnKeyWithLabel(col)] }}
-          />
-        ))}
+        {columns.map(col => {
+          const colKey = getColumnKeyWithLabel(col)
+          const width = colWidths[colKey]
+          return (
+            <col
+              key={colKey}
+              style={{ width: fitWidth && width != null ? `${width}%` : width }}
+            />
+          )
+        })}
       </colgroup>
     )
-  }, [colWidths, columns])
+  }, [colWidths, columns, fitWidth])
 
   const renderContent = useCallback(() => {
     if (!hasData) {
@@ -293,7 +329,7 @@ export default function Table<T, K extends keyof T = keyof T>(
       return (
         <div className="absolute flex items-center justify-center h-full w-full">
           {emptyState ?? (
-            <div className="text-sm text-gray-500">데이터가 없습니다</div>
+            <div className="text-sm text-sz-n-500">데이터가 없습니다</div>
           )}
         </div>
       )
@@ -301,7 +337,14 @@ export default function Table<T, K extends keyof T = keyof T>(
 
     return (
       <div style={{ minWidth: totalTableWidth }}>
-        <table ref={bodyTableRef} className="border-separate border-spacing-0">
+        <table
+          ref={bodyTableRef}
+          className={cn(
+            "border-separate border-spacing-0",
+            fitWidth && "w-full",
+            isFitWidthMeasured && "table-fixed"
+          )}
+        >
           {renderColGroup()}
           <TableBody<T>
             columns={columns}
@@ -322,6 +365,8 @@ export default function Table<T, K extends keyof T = keyof T>(
     totalTableWidth,
     bodyClassName,
     emptyState,
+    fitWidth,
+    isFitWidthMeasured,
   ])
 
   return (
@@ -329,10 +374,15 @@ export default function Table<T, K extends keyof T = keyof T>(
       className="font-noto flex flex-col flex-1 min-h-0 bg-white transition-opacity duration-200 rounded-lg overflow-hidden"
       style={{ opacity: isMounted ? 1 : 0 }}
     >
+      {/*
+        shrink-0 필수 — 이 래퍼는 세로 flex 아이템이라 기본값(flex-shrink:1)이면
+        본문이 가용 높이를 넘길 때 헤더가 0px까지 눌리고, overflow-y-hidden이
+        눌린 부분을 잘라내 머리글이 통째로 사라진다(행이 적을 땐 멀쩡해 보인다).
+      */}
       <div
         id="table-layout"
         ref={headerScrollRef}
-        className="overflow-x-auto overflow-y-hidden scrollbar-hidden"
+        className="shrink-0 overflow-x-auto overflow-y-hidden scrollbar-hidden"
       >
         <div
           style={{
@@ -343,7 +393,11 @@ export default function Table<T, K extends keyof T = keyof T>(
             style={{
               minWidth: !hasData || isLoading ? totalTableWidth : undefined,
             }}
-            className="border-separate border-spacing-0"
+            className={cn(
+              "border-separate border-spacing-0",
+              fitWidth && "w-full",
+              isFitWidthMeasured && "table-fixed"
+            )}
             ref={headerTableRef}
           >
             {renderColGroup()}
@@ -369,7 +423,7 @@ export default function Table<T, K extends keyof T = keyof T>(
           </div>
         )}
       </div>
-      {hasData && (
+      {hasData && !fitWidth && (
         <ScrollBar direction="horizontal" scrollRef={bodyScrollRef} />
       )}
 

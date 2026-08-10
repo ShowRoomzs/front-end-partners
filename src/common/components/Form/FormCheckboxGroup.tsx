@@ -1,6 +1,6 @@
-import { forwardRef } from 'react'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
+import { forwardRef } from "react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
 
 export interface CheckboxOption {
   label: string
@@ -56,6 +56,6 @@ const FormCheckboxGroup = forwardRef<HTMLDivElement, FormCheckboxGroupProps>(
   }
 )
 
-FormCheckboxGroup.displayName = 'FormCheckboxGroup'
+FormCheckboxGroup.displayName = "FormCheckboxGroup"
 
 export default FormCheckboxGroup

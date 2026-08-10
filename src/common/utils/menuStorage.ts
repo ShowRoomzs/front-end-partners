@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'sidebar-menu-state'
+const STORAGE_KEY = "sidebar-menu-state"
 
 interface MenuState {
   [menuId: string]: boolean

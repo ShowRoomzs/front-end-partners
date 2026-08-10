@@ -44,8 +44,8 @@ const ToolbarButton = (props: ToolbarButtonProps) => {
       onClick={onClick}
       disabled={disabled}
       title={title}
-      className={`p-2 rounded hover:bg-gray-100 transition-colors ${
-        isActive ? "bg-gray-200" : ""
+      className={`p-2 rounded hover:bg-sz-n-100 transition-colors ${
+        isActive ? "bg-sz-n-200" : ""
       } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
     >
       {children}
@@ -96,7 +96,7 @@ export function EditorToolbar(props: EditorToolbarProps) {
   ]
 
   return (
-    <div className="border-b bg-gray-50 p-2 relative overflow-visible">
+    <div className="border-b bg-sz-n-50 p-2 relative overflow-visible">
       <div className="flex flex-wrap gap-1 items-center relative overflow-visible">
         {/* Text Formatting */}
         <div className="flex gap-1 border-r pr-2">
@@ -275,7 +275,7 @@ export function EditorToolbar(props: EditorToolbarProps) {
             onClick={() => setShowColorPicker(!showColorPicker)}
             title="Text Color"
           >
-            <div className="w-4 h-4 border border-gray-300 rounded">
+            <div className="w-4 h-4 border border-sz-n-300 rounded">
               <div
                 className="w-full h-full rounded"
                 style={{
@@ -294,7 +294,7 @@ export function EditorToolbar(props: EditorToolbarProps) {
                     key={color}
                     type="button"
                     onClick={() => setColor(color)}
-                    className="w-6 h-6 rounded border border-gray-300 hover:scale-110 transition-transform"
+                    className="w-6 h-6 rounded border border-sz-n-300 hover:scale-110 transition-transform"
                     style={{ backgroundColor: color }}
                     title={color}
                   />
@@ -306,7 +306,7 @@ export function EditorToolbar(props: EditorToolbarProps) {
                   editor.chain().focus().unsetColor().run()
                   setShowColorPicker(false)
                 }}
-                className="mt-2 w-full text-xs py-1 px-2 border rounded hover:bg-gray-100"
+                className="mt-2 w-full text-xs py-1 px-2 border rounded hover:bg-sz-n-100"
               >
                 기본 색상으로
               </button>

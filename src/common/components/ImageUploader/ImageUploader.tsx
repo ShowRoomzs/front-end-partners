@@ -135,14 +135,14 @@ export default function ImageUploader(props: ImageUploaderProps) {
         return (
           <div
             key={`${image.imageUrl}-${idx}`}
-            className="relative group rounded-lg border border-gray-200 bg-white overflow-hidden shadow-sm w-32 cursor-pointer"
+            className="relative group rounded-lg border border-sz-n-200 bg-white overflow-hidden shadow-sm w-32 cursor-pointer"
             onClick={e => {
               e.stopPropagation()
               e.preventDefault()
               handleImageClick(idx)
             }}
           >
-            <div className="w-32 aspect-square flex items-center justify-center bg-gray-50">
+            <div className="w-32 aspect-square flex items-center justify-center bg-sz-n-50">
               {previewSrc ? (
                 <img
                   src={previewSrc}
@@ -150,7 +150,7 @@ export default function ImageUploader(props: ImageUploaderProps) {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="text-gray-400 text-xs">No preview</div>
+                <div className="text-sz-n-400 text-xs">No preview</div>
               )}
             </div>
 
@@ -233,8 +233,8 @@ export default function ImageUploader(props: ImageUploaderProps) {
               }}
               className={`flex flex-col items-center justify-center w-full min-h-28 cursor-pointer rounded-lg border-[1px] border-[#BCBEC0] transition-colors !m-0 ${
                 isDragging
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-300 hover:bg-gray-50"
+                  ? "border-sz-accent-500 bg-sz-accent-50"
+                  : "border-sz-n-300 hover:bg-sz-n-50"
               }`}
             >
               {localImages.length > 0 ? (
@@ -243,7 +243,7 @@ export default function ImageUploader(props: ImageUploaderProps) {
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center">
-                  <div className="flex items-center gap-2 text-gray-600">
+                  <div className="flex items-center gap-2 text-sz-n-600">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
@@ -260,7 +260,7 @@ export default function ImageUploader(props: ImageUploaderProps) {
                       클릭하여 이미지를 선택하거나 이곳으로 드래그 하세요
                     </span>
                   </div>
-                  <span className="mt-1 text-xs text-gray-400">
+                  <span className="mt-1 text-xs text-sz-n-400">
                     {maxLength > 1 ? "여러 이미지 선택 가능" : "단일 이미지"} ·{" "}
                     {accept || "모든 형식"}
                   </span>
@@ -268,15 +268,15 @@ export default function ImageUploader(props: ImageUploaderProps) {
               )}
             </label>
             {localImages.length > 0 && (
-              <div className="flex items-center justify-between text-xs text-gray-600">
+              <div className="flex items-center justify-between text-xs text-sz-n-600">
                 <span>선택됨: {localImages.length}개 이미지</span>
               </div>
             )}
-            <span className="text-xs text-gray-400">{infoText}</span>
+            <span className="text-xs text-sz-n-400">{infoText}</span>
             {additionalInfoText && (
               <>
                 <br />
-                <span className="text-xs text-gray-400 whitespace-pre-line">
+                <span className="text-xs text-sz-n-400 whitespace-pre-line">
                   {additionalInfoText}
                 </span>
               </>

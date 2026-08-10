@@ -180,7 +180,7 @@ export default function BasicManagement() {
                   onBlur={field.onBlur}
                   placeholder="마켓 소개를 입력하세요"
                 />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-sz-n-400">
                   {marketDescription?.length || 0}/30
                 </div>
               </div>
@@ -245,7 +245,7 @@ export default function BasicManagement() {
                         onChange={snsTypeField.onChange}
                       />
                       {fieldState.error && (
-                        <p className="text-xs text-red-500 mt-1">
+                        <p className="text-xs text-sz-danger-text mt-1">
                           {fieldState.error.message}
                         </p>
                       )}
@@ -272,7 +272,7 @@ export default function BasicManagement() {
                         placeholder="https://"
                       />
                       {fieldState.error && (
-                        <p className="text-xs text-red-500 mt-1">
+                        <p className="text-xs text-sz-danger-text mt-1">
                           {fieldState.error.message}
                         </p>
                       )}

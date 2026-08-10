@@ -5,7 +5,7 @@
  */
 export const formatPhoneNumber = (phoneNumber: string): string => {
   // 숫자만 추출
-  const numbers = phoneNumber.replace(/[^\d]/g, '')
+  const numbers = phoneNumber.replace(/[^\d]/g, "")
 
   // 10자리 (지역번호 02 등)
   if (numbers.length === 10) {

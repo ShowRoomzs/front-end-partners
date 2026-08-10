@@ -251,6 +251,7 @@ export default function ProductListPage() {
           isLoading={isLoading}
           onRowClick={handleClickRow}
           emptyState={emptyState}
+          fitWidth
           bodyClassName="overflow-hidden whitespace-nowrap"
           headerClassName="whitespace-nowrap"
         />

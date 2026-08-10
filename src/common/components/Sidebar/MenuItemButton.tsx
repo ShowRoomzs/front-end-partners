@@ -1,4 +1,4 @@
-import ChevronIcon from './ChevronIcon'
+import ChevronIcon from "./ChevronIcon"
 
 interface MenuItemButtonProps {
   label: string

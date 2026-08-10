@@ -45,4 +45,9 @@ export interface TableProps<T, K extends keyof T = keyof T> {
   headerClassName?: string
   /** 데이터 0건일 때 본문 자리에 넣을 내용. 머리글은 그대로 유지된다 */
   emptyState?: ReactNode
+  /**
+   * 표를 컨테이너 폭에 맞춘다(가로 스크롤 없음).
+   * columns의 고정 폭을 비율로 환산해 남는 공간까지 나눠 갖는다.
+   */
+  fitWidth?: boolean
 }
