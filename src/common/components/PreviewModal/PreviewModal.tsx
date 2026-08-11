@@ -8,6 +8,10 @@ export interface PreviewModalProps {
   currentIndex: number
   fileLength: number
   onIndexChange?: (index: number) => void
+  /** 좌상단에 "보낸 사람 · 시각"을 덧붙인다(연결·소통 스레드에서만 쓴다) */
+  senderLabel?: string
+  /** 넘기면 우상단에 다운로드 버튼이 생긴다 */
+  onDownload?: () => void
 }
 
 export const PreviewModal = (props: PreviewModalProps) => {
@@ -18,6 +22,8 @@ export const PreviewModal = (props: PreviewModalProps) => {
     isOpen,
     onIndexChange,
     onOpenChange,
+    senderLabel,
+    onDownload,
   } = props
 
   const handlePrevious = useCallback(() => {
@@ -88,6 +94,34 @@ export const PreviewModal = (props: PreviewModalProps) => {
         handleBackdropClick(e)
       }}
     >
+      {/* Download button — 넘겨받았을 때만 */}
+      {onDownload && (
+        <button
+          onClick={e => {
+            e.stopPropagation()
+            e.preventDefault()
+            onDownload()
+          }}
+          className="absolute top-6 right-20 z-20 text-white transition-colors hover:text-sz-n-300"
+          aria-label="다운로드"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-7 w-7"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+        </button>
+      )}
+
       {/* Close button */}
       <button
         onClick={e => {
@@ -115,7 +149,8 @@ export const PreviewModal = (props: PreviewModalProps) => {
       </button>
 
       {/* File counter */}
-      <div className="absolute top-6 left-6 text-white text-sm z-20">
+      <div className="absolute top-6 left-6 z-20 text-sm text-white">
+        {senderLabel ? `${senderLabel} · ` : ""}
         {currentIndex + 1} / {fileLength}
       </div>
 

@@ -8,6 +8,11 @@ import { SIDEBAR_WIDTH } from "./config"
 interface SidebarProps {
   menus: Array<MenuConfig>
   isOpen: boolean
+  /**
+   * 메뉴 id → 배지 숫자. 0이거나 없으면 배지를 그리지 않는다.
+   * 메뉴 정의(`menu.ts`)는 정적 상수라 실시간 카운트를 담을 수 없어 밖에서 주입받는다.
+   */
+  badgeCounts?: Record<string, number>
 }
 
 const OPEN_GROUPS_STORAGE_KEY = "partner-sidebar-open-groups"
@@ -29,7 +34,7 @@ function readOpenGroups(): Array<string> {
  * 어드민·스튜디오와 톤이 전혀 맞지 않았다. 하드코딩 헥스를 다시 들이지 말 것.
  */
 export default function Sidebar(props: SidebarProps) {
-  const { menus, isOpen: isSidebarOpen } = props
+  const { menus, isOpen: isSidebarOpen, badgeCounts } = props
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -123,6 +128,7 @@ export default function Sidebar(props: SidebarProps) {
             실제 현재 화면인 하위 항목이 따로 채워지므로 둘 다 칠하면 흐려진다.
           */
           const isFilled = !hasChildren && isActive
+          const badgeCount = badgeCounts?.[group.id] ?? 0
 
           return (
             <div key={group.id}>
@@ -149,6 +155,12 @@ export default function Sidebar(props: SidebarProps) {
                   {index + 1}
                 </span>
                 <span className="flex-1">{group.label}</span>
+                {badgeCount > 0 && (
+                  // 시안 `.gcnt` — 활성 항목(파란 배경) 위에서도 빨간색을 유지한다
+                  <span className="flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-[9px] bg-sz-danger-text px-[5px] text-[10px] font-semibold text-white">
+                    {badgeCount}
+                  </span>
+                )}
                 {hasChildren && (
                   <span
                     className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center transition-transform ${
