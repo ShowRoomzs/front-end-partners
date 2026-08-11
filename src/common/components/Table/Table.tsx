@@ -312,11 +312,18 @@ export default function Table<T, K extends keyof T = keyof T>(
 
   const renderContent = useCallback(() => {
     if (!hasData) {
+      /*
+        ⚠️ absolute + h-full을 쓰면 안 된다.
+        이 영역의 부모는 높이가 콘텐츠로 정해지는데, 행이 0건이면 그 콘텐츠가 곧
+        이 블록 자신이다. absolute로 흐름에서 빼면 부모 높이가 0이 되고 h-full도
+        0이라 빈 상태가 통째로 안 보인다(머리글만 덩그러니 남는다).
+        일반 흐름 요소로 두고 자체 여백으로 높이를 만든다.
+      */
       // 데이터 없음 and 로딩 중 : Spinner
       if (isLoading) {
         return (
           <div
-            className="w-full h-full flex items-center justify-center"
+            className="flex w-full items-center justify-center py-12"
             style={{
               animation: "spin 1s linear infinite",
             }}
@@ -327,9 +334,9 @@ export default function Table<T, K extends keyof T = keyof T>(
       }
       // 데이터 없음 and 로딩 완료 : EmptyView (머리글은 위에서 항상 렌더된다)
       return (
-        <div className="absolute flex items-center justify-center h-full w-full">
+        <div className="flex w-full items-center justify-center">
           {emptyState ?? (
-            <div className="text-sm text-sz-n-500">데이터가 없습니다</div>
+            <div className="py-12 text-sm text-sz-n-500">데이터가 없습니다</div>
           )}
         </div>
       )

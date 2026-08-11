@@ -28,6 +28,8 @@ export const SELLER_MENU: MenuConfig = {
       id: "product",
       label: "상품 관리",
       path: "/product/list",
+      // 등록·수정 화면에서도 이 메뉴가 활성으로 남아야 한다
+      matchPaths: ["/product"],
     },
     {
       id: "sales",

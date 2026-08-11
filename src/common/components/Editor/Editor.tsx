@@ -99,7 +99,8 @@ export default function Editor(props: EditorProps) {
   }
 
   return (
-    <div className="border rounded-lg overflow-hidden">
+    // 시안 `.editor-wrap` — 6px 라운드 + n-300 테두리
+    <div className="overflow-hidden rounded-[6px] border border-sz-n-300">
       <EditorToolbar
         editor={editor}
         isHtmlMode={isHtmlMode}

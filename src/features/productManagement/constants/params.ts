@@ -44,6 +44,9 @@ export const PRODUCT_NAME_MAX_LENGTH = 100
 export const OPTION_GROUP_MAX = 3
 export const OPTION_ITEM_MAX = 30
 
+/** 커버 이미지 최대 4개 — 대표 이미지 1개와 별개(§11-6) */
+export const COVER_IMAGE_MAX = 4
+
 /**
  * 공구 상태가 이 값들이면 상품을 삭제할 수 없다(§11-10).
  * **진열 상태와 무관하다** — 판단 축이 잠금(진열 기준)과 다르다.

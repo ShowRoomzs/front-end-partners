@@ -12,10 +12,10 @@ import type { ReactNode } from "react"
  * 마크업은 시안 ui-partner-04의 `.card` / `.sec` / `.frow` / `.flab` / `.hint` 구조를 그대로 옮겼다.
  */
 
-/** 시안 `.card` — 폼 전체를 감싸는 흰 카드. 섹션들이 구분선으로 나뉜다 */
+/** 시안 `.card{max-width:820px}` — 폼 전체를 감싸는 흰 카드. 섹션들이 구분선으로 나뉜다 */
 export function ProductFormCard({ children }: { children: ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-[8px] border border-sz-n-200 bg-white">
+    <div className="max-w-[820px] overflow-hidden rounded-[8px] border border-sz-n-200 bg-white">
       {children}
     </div>
   )
@@ -32,12 +32,19 @@ interface ProductSectionProps {
   children: ReactNode
 }
 
-/** 시안 `.sec` — 20px 패딩 + 하단 구분선. 마지막 섹션은 구분선이 없다 */
+/**
+ * 시안 `.sec` — 20px 패딩 + 하단 구분선. 마지막 섹션은 구분선이 없다.
+ *
+ * `last:`(=`:last-child`)가 아니라 `last-of-type:`(=`:last-of-type`)이어야 한다 —
+ * 카드 안에서 마지막 섹션 **뒤에 버튼 행 `<div>`가 형제로 하나 더** 붙기 때문에
+ * `:last-child`로는 어떤 섹션도 매치되지 않아 구분선이 그대로 남는다.
+ * 버튼 행은 `<div>`라 `:last-of-type`(section 기준) 계산에서 자동으로 빠진다.
+ */
 export function ProductSection(props: ProductSectionProps) {
   const { title, required = false, note, description, children } = props
 
   return (
-    <section className="border-b border-sz-n-100 p-5 last:border-b-0">
+    <section className="border-b border-sz-n-100 p-5 last-of-type:border-b-0">
       <div className="mb-4 flex items-baseline gap-2">
         <h2 className="text-[13px] font-semibold text-sz-n-900">
           {required && <span className="mr-0.5 text-sz-danger-text">*</span>}
@@ -71,9 +78,10 @@ export function ProductField(props: ProductFieldProps) {
 
   return (
     <div className="mb-3 flex items-start gap-3 last:mb-0">
+      {/* 필수 표시(*)는 언제나 라벨 왼쪽 — 시안 `.flab`의 `<span class="req">*</span> 상품명` */}
       <div className="w-[118px] shrink-0 pt-[9px] text-[12px] text-sz-n-600">
+        {required && <span className="mr-0.5 text-sz-danger-text">*</span>}
         {label}
-        {required && <span className="ml-0.5 text-sz-danger-text">*</span>}
         {sub && (
           <span className="mt-0.5 block text-[11px] text-sz-n-500">{sub}</span>
         )}
@@ -125,8 +133,8 @@ export function ImageSubLabel({
 }) {
   return (
     <div className={cn("mb-2 text-[12px] text-sz-n-700", className)}>
+      {required && <span className="mr-0.5 text-sz-danger-text">*</span>}
       {children}
-      {required && <span className="ml-0.5 text-sz-danger-text">*</span>}
       {note && <span className="ml-1 text-sz-n-400">{note}</span>}
     </div>
   )

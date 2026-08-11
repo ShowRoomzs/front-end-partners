@@ -50,7 +50,7 @@ import {
 } from "@/features/productManagement/utils/productPermission"
 import { cn } from "@/lib/utils"
 import type { AxiosError } from "axios"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import toast from "react-hot-toast"
 import { useNavigate, useParams } from "react-router-dom"
@@ -88,6 +88,15 @@ export default function RegisterProductPage() {
   const { categoryMap } = useGetCategory()
   const { data: marketInfo } = useGetMarketInfo()
   const isEdit = !!productId
+
+  /**
+   * 이미 사용자에게 물어본 이탈은 블로커가 다시 붙잡지 않도록 표시한다.
+   *
+   * 취소·삭제는 자체 confirm()을 띄운 뒤 navigate()를 부르는데, 그 이동을
+   * useCustomBlocker가 또 가로채 같은 확인창을 한 번 더 띄우고 있었다
+   * (그래서 취소를 두 번 눌러야 나가졌다).
+   */
+  const bypassBlockerRef = useRef(false)
 
   /**
    * 진행중 공구 잠금 — "진열 AND 진행중"일 때만. 나머지 3종 진열 상태는
@@ -255,6 +264,8 @@ export default function RegisterProductPage() {
     const result = await confirm(getDefaultCancelConfirmOptions(isEdit))
 
     if (result) {
+      // 방금 물어봤으니 블로커는 건너뛴다
+      bypassBlockerRef.current = true
       navigate("/product/list")
     }
   }, [formState.isDirty, getDefaultCancelConfirmOptions, isEdit, navigate])
@@ -277,6 +288,8 @@ export default function RegisterProductPage() {
     queryClient.invalidateQueries({
       queryKey: [PRODUCT_QUERY_KEYS.PRODUCT_LIST],
     })
+    // 삭제 확인창을 이미 거쳤으니 이탈 확인창을 또 띄우지 않는다
+    bypassBlockerRef.current = true
     navigate("/product/list")
   }, [navigate, productDetail])
 
@@ -308,6 +321,7 @@ export default function RegisterProductPage() {
   useCustomBlocker({
     condition: formState.isDirty,
     confirmOption: getDefaultCancelConfirmOptions(isEdit),
+    bypassRef: bypassBlockerRef,
   })
 
   const pageDescription = isEdit
@@ -406,12 +420,18 @@ export default function RegisterProductPage() {
                 <ProductNoticeForm control={control} disabled={isLocked} />
               </ProductSection>
 
-              <div className="flex items-center justify-end gap-2 p-5">
+              {/* 시안 `.btn-row` — 삭제는 좌측 끝, 취소·저장은 우측. 버튼 높이 32px */}
+              <div className="flex items-center justify-end gap-2.5 p-5">
                 {isEdit && (
                   <Button
                     type="button"
                     variant="outline"
-                    className="mr-auto text-sz-danger-text"
+                    size="sm"
+                    /*
+                      시안 `.btn-danger`는 흰 배경 + 빨간 테두리·글자다(solid 아님).
+                      solid 빨강인 destructive variant와는 다른 물건이라 여기서만 덧칠한다.
+                    */
+                    className="mr-auto border-sz-danger-bg text-sz-danger-text hover:bg-sz-danger-bg hover:text-sz-danger-text"
                     disabled={deleteBlocked}
                     title={deleteBlocked ? DELETE_BLOCKED_TOOLTIP : undefined}
                     onClick={handleClickDelete}
@@ -422,11 +442,12 @@ export default function RegisterProductPage() {
                 <Button
                   type="button"
                   variant="outline"
+                  size="sm"
                   onClick={handleClickCancel}
                 >
                   취소
                 </Button>
-                <Button isLoading={isLoading} type="submit">
+                <Button isLoading={isLoading} size="sm" type="submit">
                   저장
                 </Button>
               </div>

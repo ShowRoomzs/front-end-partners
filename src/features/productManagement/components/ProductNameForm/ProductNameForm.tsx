@@ -65,6 +65,8 @@ export default function ProductNameForm(props: ProductNameFormProps) {
                 value={field.value}
                 placeholder="상품명을 입력하세요 (특수문자 입력은 피해주세요)"
                 maxLength={PRODUCT_NAME_MAX_LENGTH}
+                // 카운터는 아래에서 입력창 안쪽에 직접 그린다(시안 `.char-count`)
+                hideBuiltInCounter
                 disabled={disabled}
                 className="pr-[52px]"
                 onChange={event =>

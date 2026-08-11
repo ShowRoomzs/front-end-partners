@@ -83,10 +83,11 @@ const FormCategorySelector = forwardRef<
     )
   }
 
+  // 시안 `.two-col` — 셀렉트 3개가 12px 간격으로 나란히 놓일 뿐, 사이에 구분자가 없다
   return (
     <div className="flex items-center gap-3">
       <Select value={value?.main?.toString()} onValueChange={handleChangeMain}>
-        <SelectTrigger ref={ref} className="flex-1">
+        <SelectTrigger ref={ref} className="max-w-[150px] flex-1">
           <SelectValue placeholder="대분류 선택" />
         </SelectTrigger>
         <SelectContent position="popper" sideOffset={4}>
@@ -101,14 +102,12 @@ const FormCategorySelector = forwardRef<
         </SelectContent>
       </Select>
 
-      <span className="text-muted-foreground">&gt;</span>
-
       <Select
         value={value?.sub?.toString()}
         onValueChange={handleChangeSub}
         disabled={!value?.main}
       >
-        <SelectTrigger className="flex-1">
+        <SelectTrigger className="max-w-[150px] flex-1">
           <SelectValue placeholder="중분류 선택" />
         </SelectTrigger>
         <SelectContent position="popper" sideOffset={4}>
@@ -123,14 +122,12 @@ const FormCategorySelector = forwardRef<
         </SelectContent>
       </Select>
 
-      <span className="text-muted-foreground">&gt;</span>
-
       <Select
         value={value?.detail?.toString() ?? ""}
         onValueChange={handleChangeDetail}
         disabled={!value?.sub}
       >
-        <SelectTrigger className="flex-1">
+        <SelectTrigger className="max-w-[150px] flex-1">
           <SelectValue placeholder="소분류 선택" />
         </SelectTrigger>
         <SelectContent position="popper" sideOffset={4}>

@@ -6,15 +6,20 @@ import { cn } from "@/lib/utils"
 import { Loader2 } from "lucide-react"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:border disabled:border-sz-n-200 disabled:bg-sz-n-100 disabled:text-sz-n-400 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
   {
     variants: {
       variant: {
-        default: "bg-sz-accent-600 text-white hover:bg-sz-accent-600",
-        destructive:
-          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+        /*
+          디자인시스템 `.btn-primary` / `.btn-secondary` / `.btn-danger-solid`.
+          예전엔 shadcn 기본 토큰(--accent/--border/--destructive)을 그대로 썼는데
+          그 값들은 --sz-* 와 별개(회색 oklch·다른 빨강)라 실제 색이 어긋났다.
+          여기 색을 다시 제네릭 토큰으로 되돌리지 말 것.
+        */
+        default: "bg-sz-accent-500 text-white hover:bg-sz-accent-600",
+        destructive: "bg-sz-danger-text text-white hover:bg-[#8f2828]",
         outline:
-          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
+          "border border-sz-n-300 bg-white text-sz-n-900 shadow-xs hover:bg-sz-n-100",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost:
