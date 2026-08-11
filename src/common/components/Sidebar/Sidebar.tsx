@@ -42,18 +42,26 @@ export default function Sidebar(props: SidebarProps) {
     )
   }, [openGroupIds])
 
-  // 상세 화면(`/product/edit/12`)에서도 해당 메뉴가 활성으로 보여야 한다
-  const isPathActive = useCallback(
+  const matchesPrefix = useCallback(
     (path?: string) =>
       Boolean(path) &&
       (location.pathname === path || location.pathname.startsWith(`${path}/`)),
     [location.pathname]
   )
 
+  /**
+   * 활성 판정 — `matchPaths`가 있으면 그 목록으로, 없으면 `path` 하나로 본다.
+   * "상품 관리"처럼 목록으로 이동하지만 등록·수정 화면까지 대표하는 메뉴가 있어서
+   * 이동 목적지(`path`)와 활성 범위(`matchPaths`)를 분리해 둔다.
+   */
+  const isItemActive = useCallback(
+    (item: MenuItem) => (item.matchPaths ?? [item.path]).some(matchesPrefix),
+    [matchesPrefix]
+  )
+
   const isChildActive = useCallback(
-    (item: MenuItem) =>
-      item.children?.some(child => isPathActive(child.path)) ?? false,
-    [isPathActive]
+    (item: MenuItem) => item.children?.some(isItemActive) ?? false,
+    [isItemActive]
   )
 
   const groups = menus.flatMap(menu => menu.groups)
@@ -93,7 +101,7 @@ export default function Sidebar(props: SidebarProps) {
           const isOpen = openGroupIds.includes(group.id)
           const isActive = hasChildren
             ? isChildActive(group)
-            : isPathActive(group.path)
+            : isItemActive(group)
 
           /*
             디자인시스템 `.gnb-item.active` — 현재 화면인 항목을 액센트로 채운다.
@@ -153,7 +161,7 @@ export default function Sidebar(props: SidebarProps) {
               {hasChildren && isOpen && (
                 <div>
                   {group.children!.map(child => {
-                    const isCurrent = isPathActive(child.path)
+                    const isCurrent = isItemActive(child)
 
                     return (
                       <Link

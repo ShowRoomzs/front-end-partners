@@ -66,8 +66,13 @@ export const PRODUCT_VALIDATION_RULES = {
         return true
       }
 
+      /*
+        조합은 그룹·항목을 입력하는 즉시 자동 생성된다(OptionGroupsForm의 effect).
+        그래도 0건이면 그룹명이나 항목이 아직 안 채워진 상태다 — 조합을 만들라고
+        시키는 대신 무엇이 비었는지 알려준다.
+      */
       if (value.length === 0) {
-        return "「옵션 조합 생성·갱신」을 눌러주세요"
+        return "옵션 그룹의 그룹명과 항목을 모두 입력해 주세요"
       }
 
       const currentOptionNames = validOptionGroups.map(group =>
@@ -77,13 +82,13 @@ export const PRODUCT_VALIDATION_RULES = {
       )
       for (const combination of value) {
         if (combination.combination.length !== currentOptionNames.length) {
-          return "옵션 설정이 변경되었습니다. 「옵션 조합 생성·갱신」을 눌러주세요"
+          return "옵션 설정이 변경되었습니다. 옵션 그룹을 다시 확인해 주세요"
         }
 
         for (let i = 0; i < combination.combination.length; i++) {
           const comboItem = combination.combination[i].trim()
           if (!currentOptionNames[i].includes(comboItem)) {
-            return "옵션 설정이 변경되었습니다. 「옵션 조합 생성·갱신」을 눌러주세요"
+            return "옵션 설정이 변경되었습니다. 옵션 그룹을 다시 확인해 주세요"
           }
         }
       }

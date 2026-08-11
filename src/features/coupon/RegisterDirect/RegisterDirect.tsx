@@ -146,6 +146,8 @@ export default function RegisterDirect() {
                     id="coupon-name"
                     placeholder="쿠폰명을 입력해주세요"
                     maxLength={20}
+                    // 카운터를 입력창 안쪽에 직접 그리고 있어 내장 카운터는 끈다
+                    hideBuiltInCounter
                     value={field.value}
                     onChange={field.onChange}
                     onBlur={field.onBlur}

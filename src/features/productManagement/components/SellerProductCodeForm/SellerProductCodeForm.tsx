@@ -25,7 +25,8 @@ export default function SellerProductCodeForm(
           sub="(선택)"
           hint="브랜드 자체 재고·ERP 매칭용 · 소비자에게 노출되지 않습니다"
         >
-          <div className="max-w-[240px]">
+          {/* 시안 `.inp.sm{max-width:200px}` — 정가 입력과 같은 폭 */}
+          <div className="max-w-[200px]">
             <FormInput
               value={field.value}
               placeholder="브랜드 내부 관리 코드"

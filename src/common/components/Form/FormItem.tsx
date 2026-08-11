@@ -38,8 +38,9 @@ export default function FormItem(props: FormItemProps) {
             htmlFor={htmlFor}
             className="text-[12px] font-medium text-sz-n-600"
           >
+            {/* 필수 표시(*)는 언제나 라벨 왼쪽 */}
+            {required && <span className="mr-0.5 text-sz-danger-text">*</span>}
             {label}
-            {required && <span className="ml-1 text-sz-danger-text">*</span>}
           </Label>
           {tooltipInfo && (
             <TooltipProvider>

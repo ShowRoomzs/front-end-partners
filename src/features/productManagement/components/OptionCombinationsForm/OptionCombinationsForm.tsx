@@ -69,6 +69,15 @@ export default function OptionCombinationsForm(
 ) {
   const { control, isLocked = false } = props
   const useOptionGroup = useWatch({ control, name: "useOptionGroup" })
+  const optionGroups = useWatch({ control, name: "optionGroups" })
+
+  /*
+    조합 표의 앞쪽 컬럼은 그룹 하나당 하나다(예: "용량" | "색상").
+    조합명을 "50ml / 레드"처럼 한 칸에 합치면 시안과 달라진다.
+  */
+  const groupNames = (optionGroups ?? [])
+    .filter(group => group.name.trim())
+    .map(group => group.name)
 
   if (!useOptionGroup) {
     return (
@@ -172,8 +181,8 @@ export default function OptionCombinationsForm(
             return (
               <div>
                 <div className="rounded-[6px] border border-dashed border-sz-n-300 px-4 py-8 text-center text-[12px] text-sz-n-500">
-                  위 옵션 그룹을 입력한 뒤 「옵션 조합 생성·갱신」을 누르면
-                  조합이 만들어집니다.
+                  위 옵션 그룹의 그룹명과 항목을 입력하면 조합이 자동으로
+                  생성됩니다.
                 </div>
                 {fieldState.error?.message && (
                   <p className="mt-1.5 text-[11px] font-medium text-sz-danger-text">
@@ -189,7 +198,12 @@ export default function OptionCombinationsForm(
               <table className="w-full border-collapse overflow-hidden rounded-[6px] border border-sz-n-200">
                 <thead>
                   <tr>
-                    <th className={cn(HEAD_CLASS, "text-left")}>조합명</th>
+                    {/* 그룹마다 컬럼 하나 — 시안 스크립트의 head 생성과 동일 */}
+                    {groupNames.map(name => (
+                      <th key={name} className={cn(HEAD_CLASS, "text-left")}>
+                        {name}
+                      </th>
+                    ))}
                     <th className={cn(HEAD_CLASS, "w-[56px]")}>대표</th>
                     <th className={cn(HEAD_CLASS, "w-[110px]")}>옵션가</th>
                     <StockHead isLocked={isLocked} />
@@ -202,15 +216,19 @@ export default function OptionCombinationsForm(
 
                     return (
                       <tr key={combo.id}>
-                        <td
-                          className={cn(
-                            CELL_CLASS,
-                            "text-left text-sz-n-900",
-                            isLast && "border-b-0"
-                          )}
-                        >
-                          {combo.combination.join(" / ")}
-                        </td>
+                        {/* 그룹 순서대로 항목명을 한 칸씩 — 헤더의 그룹 컬럼과 1:1 */}
+                        {combo.combination.map((name, nameIndex) => (
+                          <td
+                            key={`${combo.id}-${nameIndex}`}
+                            className={cn(
+                              CELL_CLASS,
+                              "text-left text-sz-n-900",
+                              isLast && "border-b-0"
+                            )}
+                          >
+                            {name}
+                          </td>
+                        ))}
                         <td className={cn(CELL_CLASS, isLast && "border-b-0")}>
                           <input
                             type="radio"
