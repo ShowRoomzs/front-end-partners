@@ -172,18 +172,43 @@ export default function RegisterProductPage() {
     // 옵션 그룹이 없으면 옵션 미사용 상품이다 — 조합 표 대신 단일 재고만 쓴다
     const hasOptionGroups = optionGroups.length > 0
 
+    /*
+      조합 구성은 `variant.name` 문자열을 쪼개지 않고 **optionIds로 되짚는다.**
+
+      두 가지 이유다:
+      1) 옵션 미사용 상품의 variant는 서버가 name을 null로 저장한다
+         (ProductService: 옵션 없는 경우 name 자리에 null). 문자열을 쪼개면 터진다.
+      2) 서버는 이름을 " / "로 이어 붙이는데(`joining(" / ")`) 예전 코드는 ","로
+         쪼개고 있었다. 그래서 그룹이 2개 이상인 상품을 수정 화면에서 열면
+         "50ml / 레드"가 통째로 한 칸이 돼 그룹 수와 안 맞았다.
+         게다가 옵션명 자체에 "/"가 들어가면(예: S/M) 어떤 구분자를 쓰든 갈라진다.
+
+      그룹 순서대로 훑으면서 그 그룹의 옵션 중 이 조합에 속한 것을 찾는다 —
+      optionIds의 정렬 순서에 기대지 않아도 그룹 순서가 보장된다.
+    */
     const optionCombinations: Array<OptionCombination> = variants.map(
-      variant => ({
-        id: variant.variantId.toString(),
-        combination: variant.name.split(",").map(v => v.trim()),
-        // 서버는 옵션가가 더해진 절대 판매가를 준다 — 폼은 추가금으로 다룬다
-        extraPrice: Math.max(
-          0,
-          variant.regularPrice - productDetail.regularPrice
-        ),
-        stock: variant.stock,
-        isRepresentative: variant.isRepresentative,
-      })
+      variant => {
+        const variantOptionIds = new Set(variant.optionIds ?? [])
+
+        return {
+          id: variant.variantId.toString(),
+          combination: (productDetail.optionGroups ?? [])
+            .map(
+              group =>
+                group.options.find(option =>
+                  variantOptionIds.has(option.optionId)
+                )?.name
+            )
+            .filter((name): name is string => Boolean(name)),
+          // 서버는 옵션가가 더해진 절대 판매가를 준다 — 폼은 추가금으로 다룬다
+          extraPrice: Math.max(
+            0,
+            variant.regularPrice - productDetail.regularPrice
+          ),
+          stock: variant.stock,
+          isRepresentative: variant.isRepresentative,
+        }
+      }
     )
 
     reset({
@@ -207,42 +232,60 @@ export default function RegisterProductPage() {
       try {
         setIsLoading(true)
 
-        const apiData: AddProductRequest = {
-          categoryId: data.category.detail as number,
-          name: data.productName,
-          sellerProductCode: data.sellerProductCode || undefined,
-          regularPrice: Number(data.regularPrice),
-          representativeImageUrl: data.titleImage,
-          coverImageUrls: data.coverImages,
-          description: data.description,
-          productNotice: data.productNotice,
-          ...(data.useOptionGroup
-            ? {
-                optionGroups: data.optionGroups.map(group => ({
-                  name: group.name,
-                  options: group.items
-                    .filter(item => item.name)
-                    // 옵션 항목 단위 가격은 쓰지 않는다 — 가격은 조합(SKU) 단위다
-                    .map(item => ({ name: item.name, price: 0 })),
-                })),
-                variants: data.optionCombinations.map(combo => ({
-                  optionNames: combo.combination,
-                  // 폼의 옵션가(추가금)를 서버 계약인 절대 판매가로 되돌린다
-                  regularPrice:
-                    Number(data.regularPrice) + Number(combo.extraPrice),
-                  stock: Number(combo.stock),
-                  isRepresentative: combo.isRepresentative,
-                })),
-              }
-            : // 옵션 미사용 — variants를 안 보내면 서버가 stock으로 단일 상품을 만든다
-              { stock: Number(data.stock) }),
+        const buildVariants = () =>
+          data.optionCombinations.map(combo => ({
+            optionNames: combo.combination,
+            // 폼의 옵션가(추가금)를 서버 계약인 절대 판매가로 되돌린다
+            regularPrice: Number(data.regularPrice) + Number(combo.extraPrice),
+            stock: Number(combo.stock),
+            isRepresentative: combo.isRepresentative,
+          }))
+
+        /*
+          ⚠️ 잠금(진열 + 공구 진행중) 상태에서는 **재고만** 보낸다.
+
+          서버 validateSellerProductEdit()는 이 상태에서 "상품 정보 항목이
+          하나라도 담겨 있으면" PRODUCT_EDIT_RESTRICTED로 거절한다. 그리고
+          hasProductInfoChange()는 값이 바뀌었는지가 아니라 **필드가 null이
+          아닌지**만 본다 — 값이 그대로여도 담아 보내면 거절이다.
+          그래서 화면에서 잠갔다고 안심하고 전체 payload를 보내면 저장이 항상 실패한다.
+
+          optionGroups 없이 variants만 보내면 서버가 재고만 갱신하는 경로를 탄다.
+        */
+        if (isEdit && isLocked) {
+          await productService.updateProduct(Number(productId), {
+            variants: buildVariants(),
+          })
+        } else {
+          const apiData: AddProductRequest = {
+            categoryId: data.category.detail as number,
+            name: data.productName,
+            sellerProductCode: data.sellerProductCode || undefined,
+            regularPrice: Number(data.regularPrice),
+            representativeImageUrl: data.titleImage,
+            coverImageUrls: data.coverImages,
+            description: data.description,
+            productNotice: data.productNotice,
+            ...(data.useOptionGroup
+              ? {
+                  optionGroups: data.optionGroups.map(group => ({
+                    name: group.name,
+                    options: group.items
+                      .filter(item => item.name)
+                      // 옵션 항목 단위 가격은 쓰지 않는다 — 가격은 조합(SKU) 단위다
+                      .map(item => ({ name: item.name, price: 0 })),
+                  })),
+                  variants: buildVariants(),
+                }
+              : // 옵션 미사용 — variants를 안 보내면 서버가 stock으로 단일 상품을 만든다
+                { stock: Number(data.stock) }),
+          }
+
+          await (isEdit
+            ? productService.updateProduct(Number(productId), apiData)
+            : productService.addProduct(apiData))
         }
 
-        const apiCall = isEdit
-          ? productService.updateProduct(Number(productId), apiData)
-          : productService.addProduct(apiData)
-
-        await apiCall
         toast.success(
           isEdit ? "상품 정보를 수정했습니다." : "상품 정보를 등록했습니다."
         )
@@ -259,7 +302,7 @@ export default function RegisterProductPage() {
         setIsLoading(false)
       }
     },
-    [isEdit, navigate, productId, reset]
+    [isEdit, isLocked, navigate, productId, reset]
   )
 
   const handleClickCancel = useCallback(async () => {

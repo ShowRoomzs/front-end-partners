@@ -5,7 +5,10 @@ import {
   ProductField,
 } from "@/features/productManagement/components/ProductFormLayout/ProductFormLayout"
 import { SoldOutBadge } from "@/features/productManagement/components/StatusBadge/StatusBadge"
-import { PRICE_MAX } from "@/features/productManagement/constants/params"
+import {
+  PRICE_MAX,
+  STOCK_MAX,
+} from "@/features/productManagement/constants/params"
 import { PRODUCT_VALIDATION_RULES } from "@/features/productManagement/constants/validationRules"
 import type { ProductFormData } from "@/features/productManagement/pages/RegisterProductPage"
 import type { OptionCombination } from "@/features/productManagement/types"
@@ -117,7 +120,7 @@ export default function OptionCombinationsForm(
                           onChange={event => {
                             const next = parseDigits(
                               event.target.value,
-                              Number.MAX_SAFE_INTEGER
+                              STOCK_MAX
                             )
                             if (next !== null) {
                               field.onChange(next)
@@ -273,7 +276,7 @@ export default function OptionCombinationsForm(
                             onChange={event => {
                               const next = parseDigits(
                                 event.target.value,
-                                Number.MAX_SAFE_INTEGER
+                                STOCK_MAX
                               )
                               if (next !== null) {
                                 update(combo.id, { stock: next })

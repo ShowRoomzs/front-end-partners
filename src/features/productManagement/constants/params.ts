@@ -37,6 +37,12 @@ export const PRODUCT_SORT_OPTIONS: Array<{
 /** 정가·옵션가 상한 — 초과 입력은 스냅이 아니라 **거부**한다(§11-5) */
 export const PRICE_MAX = 9_999_999
 
+/**
+ * 재고 상한. 서버 stock이 `Integer`라 2,147,483,647을 넘기면 저장 단계에서 터진다.
+ * 화면에서 미리 막아 그 지경까지 안 가게 한다.
+ */
+export const STOCK_MAX = 9_999_999
+
 /** 상품명 최대 길이 — 카운터·maxLength 양쪽에서 쓴다 */
 export const PRODUCT_NAME_MAX_LENGTH = 100
 
