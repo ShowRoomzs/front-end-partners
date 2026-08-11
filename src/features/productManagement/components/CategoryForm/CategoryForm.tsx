@@ -31,18 +31,21 @@ export default function CategoryForm(props: CategoryFormProps) {
           error={fieldState.error?.message}
           hint="대분류를 선택해야 중분류를, 중분류를 선택해야 소분류를 선택할 수 있습니다."
         >
-          {/* 셀렉트는 div 기반 컨트롤이라 disabled가 안 먹는다 — 포인터를 막는다 */}
-          <div className={disabled ? "pointer-events-none opacity-60" : ""}>
-            <FormCategorySelector
-              categoryMap={categoryMap}
-              value={{
-                main: field.value?.main ?? null,
-                sub: field.value?.sub ?? null,
-                detail: field.value?.detail ?? null,
-              }}
-              onChange={field.onChange}
-            />
-          </div>
+          {/*
+            disabled를 셀렉트까지 내려보낸다. 예전엔 감싼 div에 pointer-events-none만
+            걸었는데, 그러면 마우스로만 막히고 Tab·키보드로는 그대로 바뀐다
+            (잠금 상태에서 값이 수정될 수 있는 구멍이었다).
+          */}
+          <FormCategorySelector
+            categoryMap={categoryMap}
+            disabled={disabled}
+            value={{
+              main: field.value?.main ?? null,
+              sub: field.value?.sub ?? null,
+              detail: field.value?.detail ?? null,
+            }}
+            onChange={field.onChange}
+          />
         </ProductField>
       )}
     />

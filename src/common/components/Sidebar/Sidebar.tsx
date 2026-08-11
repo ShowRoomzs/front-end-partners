@@ -1,3 +1,4 @@
+import logo from "@/common/assets/logo.svg"
 import type { MenuConfig, MenuItem } from "@/common/types/menu"
 import { useCallback, useEffect, useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
@@ -87,14 +88,27 @@ export default function Sidebar(props: SidebarProps) {
 
   return (
     <aside
-      className={`flex shrink-0 flex-col border-r border-sz-n-200 bg-sz-n-100 transition-transform duration-300 ${
+      className={`flex h-screen shrink-0 flex-col border-r border-sz-n-200 bg-sz-n-100 transition-transform duration-300 ${
         isSidebarOpen ? "translate-x-0" : "-translate-x-full"
       }`}
-      style={{
-        width: `${SIDEBAR_WIDTH}px`,
-        height: `calc(100vh - ${HEADER_HEIGHT}px)`,
-      }}
+      style={{ width: `${SIDEBAR_WIDTH}px` }}
     >
+      {/* 시안 `.side-brand` — 탑바와 같은 높이(56px)라야 구분선이 한 줄로 이어진다 */}
+      <div
+        className="flex shrink-0 items-center gap-2 border-b border-sz-n-200 px-4"
+        style={{ height: `${HEADER_HEIGHT}px` }}
+      >
+        <img
+          src={logo}
+          alt="SHOWROOMZ"
+          className="h-3.5 cursor-pointer"
+          onClick={() => navigate("/")}
+        />
+        <span className="ml-0.5 border-l border-sz-n-300 pl-2 text-[11px] font-medium text-sz-n-500">
+          파트너센터
+        </span>
+      </div>
+
       <nav className="flex-1 overflow-y-auto p-2">
         {groups.map((group, index) => {
           const hasChildren = Boolean(group.children?.length)

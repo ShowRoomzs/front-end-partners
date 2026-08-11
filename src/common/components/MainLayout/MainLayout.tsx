@@ -12,6 +12,17 @@ import { cookie } from "@/common/lib/cookie"
 import { COOKIE_NAME } from "@/common/constants/cookie"
 import { useMarketStore } from "@/common/stores/useMarketStore"
 
+/**
+ * 메뉴에는 없지만 브레드크럼 하위 이름이 필요한 화면들.
+ *
+ * 목록에서만 들어갈 수 있는 화면(상품 등록·수정 등)은 GNB 항목이 아니라서
+ * 메뉴 탐색으로는 이름을 못 찾는다. 접두사가 긴 것부터 검사한다.
+ */
+const SUB_PAGE_LABELS: Array<{ prefix: string; label: string }> = [
+  { prefix: "/product/register", label: "상품 등록" },
+  { prefix: "/product/edit", label: "상품 수정" },
+]
+
 export default function MainLayout() {
   const navigate = useNavigate()
   const { role, clear } = useMarketStore()
@@ -33,7 +44,7 @@ export default function MainLayout() {
     return [roleMenu, COMMON_MENU]
   }, [menuType])
 
-  const flattenMenus = menus.flatMap(m => m.groups)
+  const flattenMenus = useMemo(() => menus.flatMap(m => m.groups), [menus])
 
   const handleLogout = useCallback(() => {
     cookie.remove(COOKIE_NAME.ACCESS_TOKEN)
@@ -42,46 +53,67 @@ export default function MainLayout() {
     navigate("/")
   }, [clear, navigate])
 
-  const title = useMemo(() => {
-    const find = (menus: Array<MenuItem>): string | undefined => {
-      for (const menu of menus) {
-        if (menu.path === location.pathname) {
-          return menu.label
-        }
-        if (menu.children && menu.children.length > 0) {
-          const result = find(menu.children)
+  /** 시안 `.crumb` — "상위 메뉴 › 하위 화면" */
+  const breadcrumb = useMemo(() => {
+    const matches = (item: MenuItem) =>
+      (item.matchPaths ?? [item.path]).some(
+        path =>
+          Boolean(path) &&
+          (location.pathname === path ||
+            location.pathname.startsWith(`${path}/`))
+      )
 
-          if (result) {
-            return result
+    const findLabel = (items: Array<MenuItem>): string | undefined => {
+      for (const item of items) {
+        if (item.children?.length) {
+          const childLabel = findLabel(item.children)
+          if (childLabel) {
+            return childLabel
           }
+          continue
+        }
+        if (matches(item)) {
+          return item.label
         }
       }
     }
-    return find(flattenMenus)
+
+    return {
+      title: findLabel(flattenMenus),
+      subtitle: SUB_PAGE_LABELS.find(entry =>
+        location.pathname.startsWith(entry.prefix)
+      )?.label,
+    }
   }, [flattenMenus, location.pathname])
 
-  return (
-    <div className="flex h-screen flex-col bg-sz-n-50">
-      <Header
-        onLogout={handleLogout}
-        isSidebarOpen={isSidebarOpen}
-        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-      />
+  /**
+   * 본문 제목(H1)은 메뉴에 있는 화면에서만 셸이 그린다.
+   * 등록·수정처럼 자기 제목을 직접 그리는 화면은 여기서 비운다 —
+   * 빈 h1을 남기면 태그만 비어 있고 여백은 그대로 먹는다.
+   */
+  const pageTitle = breadcrumb.subtitle ? undefined : breadcrumb.title
 
-      <div className="flex flex-1 overflow-hidden bg-sz-n-50">
-        <Sidebar menus={menus} isOpen={isSidebarOpen} />
-        <main
-          className="flex flex-1 flex-col overflow-auto bg-sz-n-50 p-6 transition-[margin] duration-300"
-          style={{ marginLeft: isSidebarOpen ? 0 : `-${SIDEBAR_WIDTH}px` }}
-        >
-          {/*
-            디자인시스템 H1 — 20px/600(bold 아님).
-            메뉴에 없는 화면(상품 등록·수정 등)은 페이지가 제 제목을 직접 그리므로
-            여기서 빈 h1을 렌더하지 않는다(빈 태그도 여백은 그대로 먹는다).
-          */}
-          {title && (
+  return (
+    <div className="flex h-screen bg-sz-n-50">
+      <Sidebar menus={menus} isOpen={isSidebarOpen} />
+
+      <div
+        className="flex min-w-0 flex-1 flex-col transition-[margin] duration-300"
+        style={{ marginLeft: isSidebarOpen ? 0 : `-${SIDEBAR_WIDTH}px` }}
+      >
+        <Header
+          title={breadcrumb.title}
+          subtitle={breadcrumb.subtitle}
+          onLogout={handleLogout}
+          isSidebarOpen={isSidebarOpen}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        />
+
+        <main className="flex min-h-0 flex-1 flex-col overflow-auto p-6">
+          {/* 디자인시스템 H1 — 20px/600(bold 아님) */}
+          {pageTitle && (
             <h1 className="mb-4 shrink-0 text-[20px] font-semibold text-sz-n-900">
-              {title}
+              {pageTitle}
             </h1>
           )}
           <Outlet />

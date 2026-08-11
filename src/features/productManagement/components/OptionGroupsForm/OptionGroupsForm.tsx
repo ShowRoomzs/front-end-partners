@@ -287,6 +287,9 @@ export default function OptionGroupsForm(props: OptionGroupsFormProps) {
                               onChange={nameField.onChange}
                               onBlur={nameField.onBlur}
                               placeholder="예: 용량"
+                              // 감싼 div의 pointer-events-none은 마우스만 막는다 —
+                              // 입력 자체를 막으려면 disabled가 필요하다
+                              disabled={disabled}
                               className="h-[30px] flex-1"
                             />
                             {fields.length > 1 && (
@@ -331,6 +334,7 @@ export default function OptionGroupsForm(props: OptionGroupsFormProps) {
                                     changeItem(item.id, event.target.value)
                                   }
                                   placeholder="예: 50ml"
+                                  disabled={disabled}
                                   className="h-[30px] flex-1"
                                 />
                                 <button
