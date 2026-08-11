@@ -74,8 +74,17 @@ export interface AddProductRequest {
   variants?: Array<VariantItem>
 }
 
-/** 수정은 등록과 같은 필드 구성이다(백엔드 UpdateProductRequest) */
-export type UpdateProductRequest = AddProductRequest
+/**
+ * 수정은 **부분 갱신**이다 — 보낸 필드만 반영되고 안 보낸 필드는 그대로 남는다.
+ *
+ * 그래서 잠금 상태에서는 재고(variants)만 담아 보낼 수 있다. 전체를 담아 보내면
+ * 서버가 "정보 수정 시도"로 보고 거절한다(ProductService.validateSellerProductEdit).
+ *
+ * ⚠️ `stock`은 **등록에서만** 동작한다. 백엔드 UpdateProductRequest에는 stock 필드가
+ * 없어서 수정 요청에 담아도 조용히 버려진다 — 옵션 미사용 상품의 재고 수정이
+ * 반영되지 않는 원인이다(백엔드 수정 필요).
+ */
+export type UpdateProductRequest = Partial<AddProductRequest>
 
 export interface OptionGroupResponse {
   optionGroupId: number
@@ -85,7 +94,14 @@ export interface OptionGroupResponse {
 
 export interface VariantResponse {
   variantId: number
-  name: string
+  /**
+   * 조합명 — 서버가 옵션명을 `" / "`로 이어 붙인 문자열.
+   *
+   * ⚠️ 옵션 미사용 상품의 단일 조합은 **null**이다(서버가 name 자리에 null을 넣는다).
+   * 표시용으로만 쓰고, 조합 구성을 알아내야 하면 이 문자열을 쪼개지 말고
+   * `optionIds`로 되짚을 것 — 옵션명에 "/"가 들어가면 어떤 구분자로도 못 가른다.
+   */
+  name: string | null
   regularPrice: number
   stock: number
   isRepresentative: boolean

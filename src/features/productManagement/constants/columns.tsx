@@ -73,8 +73,9 @@ export const PRODUCT_LIST_COLUMNS: Columns<ProductItem> = [
     width: 80,
     // 재고 0이면 숫자 없이 품절 배지만 — 별도 필터 카테고리가 아니라 재고 열의 부가 표시다
     render: value => {
-      const stock = value as number | null
-      if (stock === null) {
+      const stock = value as number | null | undefined
+      // == 로 null·undefined를 함께 걸러야 한다 — 조합이 없는 상품은 서버가 값을 안 준다
+      if (stock == null) {
         return "—"
       }
       return stock === 0 ? <SoldOutBadge /> : stock.toLocaleString()
