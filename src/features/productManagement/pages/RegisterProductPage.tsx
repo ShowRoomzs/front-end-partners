@@ -23,6 +23,7 @@ import {
 } from "@/features/productManagement/components/ProductFormLayout/ProductFormLayout"
 import ProductStatusRail from "@/features/productManagement/components/ProductStatusRail/ProductStatusRail"
 import RegularPriceForm from "@/features/productManagement/components/RegularPriceForm/RegularPriceForm"
+import SaveButton from "@/features/productManagement/components/SaveButton/SaveButton"
 import SellerProductCodeForm from "@/features/productManagement/components/SellerProductCodeForm/SellerProductCodeForm"
 import TitleImageForm from "@/features/productManagement/components/TitleImageForm/TitleImageForm"
 import {
@@ -45,6 +46,7 @@ import type {
 } from "@/features/productManagement/types"
 import {
   getProductBanner,
+  getSaveHint,
   isDeleteBlocked,
   isProductLocked,
 } from "@/features/productManagement/utils/productPermission"
@@ -108,6 +110,11 @@ export default function RegisterProductPage() {
   )
   const deleteBlocked = isDeleteBlocked(productDetail?.groupBuyStatus)
   const banner = getProductBanner(
+    productDetail?.displayStatus,
+    productDetail?.groupBuyStatus,
+    productDetail?.latestHideInfo?.hideReasonType
+  )
+  const saveHint = getSaveHint(
     productDetail?.displayStatus,
     productDetail?.groupBuyStatus,
     productDetail?.latestHideInfo?.hideReasonType
@@ -352,8 +359,13 @@ export default function RegisterProductPage() {
         )}
       </div>
 
-      <div className="flex items-start gap-4">
-        <div className="min-w-0 flex-1">
+      {/*
+        시안 `.form-layout` — 폼 카드 + 300px 우측 레일.
+        레일이 없는 등록 화면에서도 같은 격자를 쓴다. 등록·수정이 같은 화면인데
+        카드 폭이 300px씩 달라지면 오가는 동안 레이아웃이 튄다.
+      */}
+      <div className="grid grid-cols-[minmax(0,1fr)_300px] items-start gap-4">
+        <div className="min-w-0">
           {/* 배너는 좌측 컬럼 안에 둔다 — 우측 레일까지 덮으면 카드와 좌우가 어긋난다 */}
           {banner && (
             <div
@@ -424,21 +436,31 @@ export default function RegisterProductPage() {
               {/* 시안 `.btn-row` — 삭제는 좌측 끝, 취소·저장은 우측. 버튼 높이 32px */}
               <div className="flex items-center justify-end gap-2.5 p-5">
                 {isEdit && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    /*
-                      시안 `.btn-danger`는 흰 배경 + 빨간 테두리·글자다(solid 아님).
-                      solid 빨강인 destructive variant와는 다른 물건이라 여기서만 덧칠한다.
-                    */
-                    className="mr-auto border-sz-danger-bg text-sz-danger-text hover:bg-sz-danger-bg hover:text-sz-danger-text"
-                    disabled={deleteBlocked}
+                  /*
+                    툴팁은 버튼이 아니라 감싼 span에 건다.
+                    Button은 disabled일 때 pointer-events-none이라 버튼 자신에
+                    title을 걸면 hover가 잡히지 않아 "왜 삭제가 막혔는지"가
+                    영영 안 보인다 — 차단 이유를 알려주는 게 이 툴팁의 전부다.
+                  */
+                  <span
+                    className="mr-auto"
                     title={deleteBlocked ? DELETE_BLOCKED_TOOLTIP : undefined}
-                    onClick={handleClickDelete}
                   >
-                    상품 삭제
-                  </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      /*
+                        시안 `.btn-danger`는 흰 배경 + 빨간 테두리·글자다(solid 아님).
+                        solid 빨강인 destructive variant와는 다른 물건이라 여기서만 덧칠한다.
+                      */
+                      className="border-sz-danger-bg text-sz-danger-text hover:bg-sz-danger-bg hover:text-sz-danger-text"
+                      disabled={deleteBlocked}
+                      onClick={handleClickDelete}
+                    >
+                      상품 삭제
+                    </Button>
+                  </span>
                 )}
                 <Button
                   type="button"
@@ -448,24 +470,25 @@ export default function RegisterProductPage() {
                 >
                   취소
                 </Button>
-                <Button isLoading={isLoading} size="sm" type="submit">
-                  저장
-                </Button>
+                <SaveButton control={control} isLoading={isLoading} />
               </div>
             </ProductFormCard>
 
-            {isLocked && (
+            {/* 시안 `.save-hint` — 저장을 누르면 무슨 일이 생기는지 경우별 예고 */}
+            {saveHint && (
               <p className="mt-3 text-right text-[11px] text-sz-n-600">
-                저장해도 <b className="text-sz-n-900">재고 수량만</b> 반영됩니다
+                {saveHint}
               </p>
             )}
           </Form>
         </div>
 
-        {/* 우측 레일은 수정 화면에서만 — 신규 등록은 아직 상태·이력이 없다 */}
-        {isEdit && productDetail && (
-          <ProductStatusRail detail={productDetail} />
-        )}
+        {/* 우측 레일 자리 — 내용은 수정 화면에서만(신규 등록은 아직 상태·이력이 없다) */}
+        <div>
+          {isEdit && productDetail && (
+            <ProductStatusRail detail={productDetail} />
+          )}
+        </div>
       </div>
     </div>
   )

@@ -18,13 +18,15 @@ interface FormCategorySelectorProps {
   categoryMap: CategoryMap | null
   onChange?: (data: CategoryValue) => void
   value?: CategoryValue
+  /** 전체 잠금 — 상위 선택 여부와 무관하게 3단 모두 막는다 */
+  disabled?: boolean
 }
 
 const FormCategorySelector = forwardRef<
   HTMLButtonElement,
   FormCategorySelectorProps
 >((props, ref) => {
-  const { onChange, value, categoryMap } = props
+  const { onChange, value, categoryMap, disabled = false } = props
 
   const mainCategoryId = value?.main
   const subCategoryId = value?.sub
@@ -86,7 +88,11 @@ const FormCategorySelector = forwardRef<
   // 시안 `.two-col` — 셀렉트 3개가 12px 간격으로 나란히 놓일 뿐, 사이에 구분자가 없다
   return (
     <div className="flex items-center gap-3">
-      <Select value={value?.main?.toString()} onValueChange={handleChangeMain}>
+      <Select
+        value={value?.main?.toString()}
+        onValueChange={handleChangeMain}
+        disabled={disabled}
+      >
         <SelectTrigger ref={ref} className="max-w-[150px] flex-1">
           <SelectValue placeholder="대분류 선택" />
         </SelectTrigger>
@@ -105,7 +111,7 @@ const FormCategorySelector = forwardRef<
       <Select
         value={value?.sub?.toString()}
         onValueChange={handleChangeSub}
-        disabled={!value?.main}
+        disabled={disabled || !value?.main}
       >
         <SelectTrigger className="max-w-[150px] flex-1">
           <SelectValue placeholder="중분류 선택" />
@@ -125,7 +131,7 @@ const FormCategorySelector = forwardRef<
       <Select
         value={value?.detail?.toString() ?? ""}
         onValueChange={handleChangeDetail}
-        disabled={!value?.sub}
+        disabled={disabled || !value?.sub}
       >
         <SelectTrigger className="max-w-[150px] flex-1">
           <SelectValue placeholder="소분류 선택" />

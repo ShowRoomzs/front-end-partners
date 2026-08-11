@@ -131,7 +131,8 @@ export default function ProductStatusRail({ detail }: ProductStatusRailProps) {
   const isBrandRequest = hideReason?.reasonType === "BRAND_REQUEST"
 
   return (
-    <div className="flex w-[300px] shrink-0 flex-col gap-4">
+    // 폭은 부모 격자의 300px 컬럼이 정한다
+    <div className="flex flex-col gap-4">
       {hideReason && (
         <Card title="미진열 사유" tone={isBrandRequest ? "neutral" : "danger"}>
           <div className="mb-3">

@@ -6,6 +6,7 @@ interface FormEditorProps {
   onChange?: (html: string) => void
   imageUploadType: FileType
   placeholder?: string
+  disabled?: boolean
 }
 
 export default function FormEditor(props: FormEditorProps) {

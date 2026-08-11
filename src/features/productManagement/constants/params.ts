@@ -59,8 +59,9 @@ export const DELETE_BLOCKED_GROUP_BUY_STATUSES: Array<ProductGroupBuyStatus> = [
   "IN_PROGRESS",
 ]
 
+/** "진열 상태와 무관"을 덧붙인다 — 삭제만 판단 축이 다르다는 게 이 화면에서 가장 헷갈리는 지점이다 */
 export const DELETE_BLOCKED_TOOLTIP =
-  "공구 준비~진행 구간에 연결된 상품은 삭제할 수 없습니다"
+  "공구 준비~진행 구간에 연결된 상품은 삭제할 수 없습니다(진열 상태와 무관)"
 
 /** 기능성 화장품 심사필 여부 — 자유 입력이 아니라 2지 선택이다(시안 `select`) */
 export const FUNCTIONAL_COSMETIC_OPTIONS = [

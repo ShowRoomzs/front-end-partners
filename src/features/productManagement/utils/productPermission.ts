@@ -69,56 +69,134 @@ export interface ProductBanner {
 }
 
 /**
- * 상태별 안내 배너 (§11-13 "상태별 안내 배너 문구 기준" 표 그대로).
- * 진열 + 공구 진행 아님(경우 1)은 배너가 없다.
+ * 시안이 정의한 7경우(§11-13). 배너·저장 안내가 모두 이 값에서 갈린다.
+ *
+ * 경우별로 문구가 미묘하게 다르다 — 특히 공구 진행 여부에 따라
+ * "진행중 공구에 연결되어 있지만…"이라는 문맥이 붙고 안 붙고가 갈린다.
+ * 그래서 상태 조합을 먼저 하나의 경우 번호로 좁힌 뒤 문구를 고른다.
  */
+export type ProductEditCase = 1 | 2 | 3 | 4 | 5 | 6 | 7
+
+export function getProductEditCase(
+  displayStatus: ProductDisplayStatus | undefined,
+  groupBuyStatus: ProductGroupBuyStatus | undefined,
+  hideReasonType: ProductHideReasonType | undefined
+): ProductEditCase | null {
+  if (!displayStatus) {
+    return null
+  }
+
+  const isGroupBuyRunning = groupBuyStatus === "IN_PROGRESS"
+
+  // 경우 7 — 재검토 대기는 공구 상태와 무관하게 하나로 묶인다
+  if (displayStatus === "PENDING_REVIEW") {
+    return 7
+  }
+
+  /*
+    진열 여부를 사유보다 **먼저** 본다.
+    다시 진열된 뒤에도 hideReasonType이 남아 있으면(서버가 지우지 못한 경우 등)
+    사유부터 검사할 때 진열 중인 상품이 "미진열(요청)"로 잘못 분류된다.
+  */
+  if (displayStatus === "DISPLAY") {
+    return isGroupBuyRunning ? 2 : 1
+  }
+
+  /*
+    "미진열"과 "미진열(요청)"은 진열 상태값으로는 같은 미진열이고
+    차이는 사유뿐이다(rev.31). HIDDEN + 브랜드요청도 요청 계열로 본다.
+  */
+  const isBrandRequested =
+    displayStatus === "HIDE_REQUEST" || hideReasonType === "BRAND_REQUEST"
+
+  if (isBrandRequested) {
+    return isGroupBuyRunning ? 6 : 5
+  }
+
+  // 남은 건 미진열(그 외 사유)
+  return isGroupBuyRunning ? 4 : 3
+}
+
+/**
+ * 상태별 안내 배너 (§11-13 표 문구 그대로).
+ *
+ * ⚠️ 미진열 계열(경우 3~6)은 전부 **info(파랑)**다. 소비자 노출이 막혀 있어
+ * 오히려 자유롭게 고칠 수 있다는 안내이지 경고가 아니다. warn(노랑)은
+ * 실제로 제약이 걸리는 경우 2(잠금)와 경우 7(재검토 대기) 둘뿐이다.
+ */
+const CASE_BANNERS: Record<ProductEditCase, ProductBanner | null> = {
+  // 경우 1 — 진열 + 공구 진행 아님: 배너 없음
+  1: null,
+  2: {
+    tone: "warn",
+    message:
+      "진행중 공구에 연결된 진열 상품입니다. 정보 변경 시 진행 중인 공구·계약 내용과 어긋날 수 있어 재고 수량을 제외한 모든 항목이 잠깁니다. 옵션 그룹·항목·옵션가·대표 옵션도 변경할 수 없습니다.",
+  },
+  3: {
+    tone: "info",
+    message:
+      "미진열 상태입니다. 소비자에게 노출되지 않으므로 전체 항목을 수정할 수 있습니다. 저장하면 재검토 요청 상태로 전환되고, 운영자 검토 후 다시 진열됩니다.",
+  },
+  4: {
+    tone: "info",
+    message:
+      '진행중 공구에 연결되어 있지만 진열 상태가 "진열"이 아니므로 소비자에게 노출되지 않아 전체 항목을 수정할 수 있습니다. 저장하면 재검토 요청 상태로 전환됩니다.',
+  },
+  5: {
+    tone: "info",
+    message:
+      "브랜드 요청으로 미진열 처리된 상품입니다. 전체 항목을 수정할 수 있으며, 저장해도 재검토 요청으로 전환되지 않습니다. 다시 진열하려면 연결·소통 스레드에서 담당 운영자에게 진열 요청을 보내주세요.",
+  },
+  6: {
+    tone: "info",
+    message:
+      "진행중 공구에 연결되어 있지만 브랜드 요청으로 미진열 처리되어 소비자에게 노출되지 않으므로 전체 항목을 수정할 수 있습니다. 저장해도 재검토로 전환되지 않으며, 다시 진열하려면 연결·소통 스레드에서 진열 요청을 보내주세요.",
+  },
+  7: {
+    tone: "warn",
+    message:
+      "상품 정보 수정 내용이 운영자 재검토 대기 중입니다. 검토가 끝날 때까지 소비자에게 노출되지 않으며, 검토 중에도 계속 수정할 수 있습니다.",
+  },
+}
+
 export function getProductBanner(
   displayStatus: ProductDisplayStatus | undefined,
   groupBuyStatus: ProductGroupBuyStatus | undefined,
   hideReasonType: ProductHideReasonType | undefined
 ): ProductBanner | null {
-  if (!displayStatus) {
-    return null
-  }
+  const editCase = getProductEditCase(
+    displayStatus,
+    groupBuyStatus,
+    hideReasonType
+  )
+  return editCase ? CASE_BANNERS[editCase] : null
+}
 
-  // 경우 7 — 재검토 대기(공구 상태 무관)
-  if (displayStatus === "PENDING_REVIEW") {
-    return {
-      tone: "warn",
-      message:
-        "상품 정보 수정 내용이 운영자 재검토 대기 중입니다. 검토가 끝날 때까지 소비자에게 노출되지 않으며, 검토 중에도 계속 수정할 수 있습니다.",
-    }
-  }
+/**
+ * 저장 버튼 위에 붙는 한 줄 안내 (시안 `.save-hint`).
+ * 저장을 눌렀을 때 무슨 일이 생기는지 — 경우 1만 예고할 게 없다.
+ */
+const CASE_SAVE_HINTS: Record<ProductEditCase, string | null> = {
+  1: null,
+  2: "저장해도 재고 수량만 반영됩니다",
+  3: "저장하면 재검토 요청 상태로 전환됩니다 · 운영자 검토 후 다시 진열",
+  4: "저장하면 재검토 요청 상태로 전환됩니다 · 운영자 검토 후 다시 진열",
+  5: "저장해도 재검토로 전환되지 않습니다 · 다시 진열은 소통 스레드에서 요청",
+  6: "저장해도 재검토로 전환되지 않습니다 · 다시 진열은 소통 스레드에서 요청",
+  7: "이미 재검토 대기 상태입니다 · 저장하면 검토 대상 내용이 갱신됩니다",
+}
 
-  // 경우 5·6 — 미진열(브랜드 요청). 저장해도 재검토로 전환되지 않는다
-  if (displayStatus === "HIDE_REQUEST" || hideReasonType === "BRAND_REQUEST") {
-    return {
-      tone: "info",
-      message:
-        "브랜드 요청으로 미진열 처리된 상품입니다. 전체 항목을 수정할 수 있으며, 저장해도 재검토 요청으로 전환되지 않습니다. 다시 진열하려면 연결·소통 스레드에서 담당 운영자에게 진열 요청을 보내주세요.",
-    }
-  }
-
-  // 경우 3·4 — 미진열(그 외 사유). 저장 시 재검토 요청으로 전환된다
-  if (displayStatus === "HIDDEN") {
-    return {
-      tone: "warn",
-      message:
-        "미진열 상태입니다. 소비자에게 노출되지 않으므로 전체 항목을 수정할 수 있습니다. 저장하면 재검토 요청 상태로 전환되고, 운영자 검토 후 다시 진열됩니다.",
-    }
-  }
-
-  // 경우 2 — 진열 + 공구 진행중
-  if (groupBuyStatus === "IN_PROGRESS") {
-    return {
-      tone: "warn",
-      message:
-        "진행중 공구에 연결된 진열 상품입니다. 정보 변경 시 진행 중인 공구·계약 내용과 어긋날 수 있어 재고 수량을 제외한 모든 항목이 잠깁니다. 옵션 그룹·항목·옵션가·대표 옵션도 변경할 수 없습니다.",
-    }
-  }
-
-  // 경우 1 — 진열 + 공구 진행 아님: 배너 없음
-  return null
+export function getSaveHint(
+  displayStatus: ProductDisplayStatus | undefined,
+  groupBuyStatus: ProductGroupBuyStatus | undefined,
+  hideReasonType: ProductHideReasonType | undefined
+): string | null {
+  const editCase = getProductEditCase(
+    displayStatus,
+    groupBuyStatus,
+    hideReasonType
+  )
+  return editCase ? CASE_SAVE_HINTS[editCase] : null
 }
 
 /** 미진열 사유 패널에 쓸 라벨. 알 수 없는 코드는 코드 그대로 보여준다. */

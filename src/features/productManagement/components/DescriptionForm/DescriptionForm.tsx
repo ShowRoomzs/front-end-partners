@@ -21,15 +21,17 @@ export default function DescriptionForm(props: DescriptionFormProps) {
       rules={PRODUCT_VALIDATION_RULES.description}
       render={({ field, formState }) => (
         <div>
-          {/* 에디터 툴바는 클릭 컨트롤이라 disabled가 안 먹는다 — 포인터를 막는다 */}
-          <div className={disabled ? "pointer-events-none opacity-60" : ""}>
-            <FormEditor
-              value={field.value}
-              onChange={field.onChange}
-              imageUploadType="PRODUCT"
-              placeholder="상품 설명을 입력하세요"
-            />
-          </div>
+          {/*
+            잠금은 에디터 안쪽까지 내려보낸다. 감싼 div에 pointer-events-none만
+            걸면 본문이 contenteditable이라 Tab으로 들어가 그대로 타이핑된다.
+          */}
+          <FormEditor
+            value={field.value}
+            onChange={field.onChange}
+            imageUploadType="PRODUCT"
+            placeholder="상품 설명을 입력하세요"
+            disabled={disabled}
+          />
           {formState.errors.description?.message && (
             <p className="mt-1.5 text-[11px] font-medium text-sz-danger-text">
               {formState.errors.description.message}

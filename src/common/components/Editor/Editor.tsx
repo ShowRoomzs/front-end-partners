@@ -15,10 +15,12 @@ interface EditorProps {
   value?: string
   onChange?: (html: string) => void
   imageUploadType: FileType
+  /** 읽기 전용 — 본문 편집·툴바·HTML 모드 전부 막는다 */
+  disabled?: boolean
 }
 
 export default function Editor(props: EditorProps) {
-  const { value = "", onChange, imageUploadType } = props
+  const { value = "", onChange, imageUploadType, disabled = false } = props
   const [isHtmlMode, setIsHtmlMode] = useState(false)
   const [htmlValue, setHtmlValue] = useState(value)
 
@@ -48,6 +50,7 @@ export default function Editor(props: EditorProps) {
       Color,
     ],
     content: value,
+    editable: !disabled,
     editorProps: {
       attributes: {
         class: "prose prose-sm max-w-none min-h-[300px] p-4 focus:outline-none",
@@ -66,6 +69,15 @@ export default function Editor(props: EditorProps) {
       setHtmlValue(value)
     }
   }, [editor, value])
+
+  /*
+    잠금은 CSS(pointer-events)로 못 막는다 — 본문이 contenteditable이라
+    마우스만 막히고 Tab으로 들어가면 그대로 타이핑된다.
+    Tiptap의 editable을 직접 꺼야 실제로 입력이 차단된다.
+  */
+  useEffect(() => {
+    editor?.setEditable(!disabled)
+  }, [editor, disabled])
 
   const handleHtmlChange = (newHtml: string) => {
     setHtmlValue(newHtml)
@@ -99,20 +111,28 @@ export default function Editor(props: EditorProps) {
   }
 
   return (
-    // 시안 `.editor-wrap` — 6px 라운드 + n-300 테두리
-    <div className="overflow-hidden rounded-[6px] border border-sz-n-300">
-      <EditorToolbar
-        editor={editor}
-        isHtmlMode={isHtmlMode}
-        onToggleHtmlMode={() => setIsHtmlMode(!isHtmlMode)}
-        onImageUpload={handleImageUpload}
-      />
+    // 시안 `.editor-wrap` / `.editor-wrap.disabled` — 6px 라운드 + n-300 테두리
+    <div
+      className={`overflow-hidden rounded-[6px] border border-sz-n-300 ${
+        disabled ? "bg-sz-n-50" : ""
+      }`}
+    >
+      {/* 툴바는 잠금 시 클릭만 막으면 된다(포커스 대상이 아니라 버튼뿐) */}
+      <div className={disabled ? "pointer-events-none opacity-60" : ""}>
+        <EditorToolbar
+          editor={editor}
+          isHtmlMode={isHtmlMode}
+          onToggleHtmlMode={() => setIsHtmlMode(!isHtmlMode)}
+          onImageUpload={handleImageUpload}
+        />
+      </div>
 
       {isHtmlMode ? (
         <textarea
           value={htmlValue}
           onChange={e => handleHtmlChange(e.target.value)}
-          className="w-full min-h-[300px] p-4 font-mono text-sm focus:outline-none border-t"
+          disabled={disabled}
+          className="w-full min-h-[300px] p-4 font-mono text-sm focus:outline-none border-t disabled:bg-sz-n-50 disabled:text-sz-n-500"
           placeholder="HTML 코드를 입력하세요..."
         />
       ) : (
