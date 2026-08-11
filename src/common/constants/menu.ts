@@ -32,6 +32,11 @@ export const SELLER_MENU: MenuConfig = {
       matchPaths: ["/product"],
     },
     {
+      id: "connections",
+      label: "연결·소통",
+      path: "/connections",
+    },
+    {
       id: "sales",
       label: "판매관리",
       children: [

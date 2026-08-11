@@ -11,6 +11,7 @@ import BasicManagement from "@/features/storeManagement/pages/BasicManagement"
 import RegisterDirect from "@/features/coupon/RegisterDirect/RegisterDirect"
 import AnswerTemplateListPage from "@/features/inquiry/pages/AnswerTemplateListPage"
 import AnswerTemplateWritePage from "@/features/inquiry/pages/AnswerTemplateWritePage"
+import ConnectionsPage from "@/features/connections/pages/ConnectionsPage"
 
 export const authRoutes: Array<RouteObject> = [
   {
@@ -86,6 +87,11 @@ export const mainRoutes: Array<RouteObject> = [
             element: <div>aasdf</div>,
           },
         ],
+      },
+      // Seller - 연결·소통
+      {
+        path: "connections",
+        element: <ConnectionsPage />,
       },
       // Creator - 쇼룸 관리
       {

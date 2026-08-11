@@ -11,6 +11,7 @@ import type { MenuItem } from "@/common/types/menu"
 import { cookie } from "@/common/lib/cookie"
 import { COOKIE_NAME } from "@/common/constants/cookie"
 import { useMarketStore } from "@/common/stores/useMarketStore"
+import { useGetThreadSummary } from "@/features/connections/hooks/useGetThreadSummary"
 
 /**
  * 메뉴에는 없지만 브레드크럼 하위 이름이 필요한 화면들.
@@ -22,6 +23,14 @@ const SUB_PAGE_LABELS: Array<{ prefix: string; label: string }> = [
   { prefix: "/product/register", label: "상품 등록" },
   { prefix: "/product/edit", label: "상품 수정" },
 ]
+
+/**
+ * 셸의 여백·제목·스크롤을 화면이 직접 가져가는 경로들.
+ *
+ * 연결·소통처럼 좌우 2패널이 화면 끝까지 꽉 차고 **내부 영역만 각자 스크롤**되는
+ * 화면은 셸이 `p-6`·`overflow-auto`를 걸면 구조가 깨진다.
+ */
+const FULL_BLEED_PREFIXES = ["/connections"]
 
 export default function MainLayout() {
   const navigate = useNavigate()
@@ -91,11 +100,23 @@ export default function MainLayout() {
    * 등록·수정처럼 자기 제목을 직접 그리는 화면은 여기서 비운다 —
    * 빈 h1을 남기면 태그만 비어 있고 여백은 그대로 먹는다.
    */
-  const pageTitle = breadcrumb.subtitle ? undefined : breadcrumb.title
+  const isFullBleed = FULL_BLEED_PREFIXES.some(
+    prefix =>
+      location.pathname === prefix || location.pathname.startsWith(`${prefix}/`)
+  )
+
+  const pageTitle =
+    breadcrumb.subtitle || isFullBleed ? undefined : breadcrumb.title
+
+  const { data: threadSummary } = useGetThreadSummary(menuType === "SELLER")
 
   return (
     <div className="flex h-screen bg-sz-n-50">
-      <Sidebar menus={menus} isOpen={isSidebarOpen} />
+      <Sidebar
+        menus={menus}
+        isOpen={isSidebarOpen}
+        badgeCounts={{ connections: threadSummary?.unreadCount ?? 0 }}
+      />
 
       <div
         className="flex min-w-0 flex-1 flex-col transition-[margin] duration-300"
@@ -109,7 +130,11 @@ export default function MainLayout() {
           onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
 
-        <main className="flex min-h-0 flex-1 flex-col overflow-auto p-6">
+        <main
+          className={`flex min-h-0 flex-1 flex-col ${
+            isFullBleed ? "overflow-hidden" : "overflow-auto p-6"
+          }`}
+        >
           {/* 디자인시스템 H1 — 20px/600(bold 아님) */}
           {pageTitle && (
             <h1 className="mb-4 shrink-0 text-[20px] font-semibold text-sz-n-900">
