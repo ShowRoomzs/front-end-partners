@@ -12,10 +12,17 @@ import type { ReactNode } from "react"
  * 마크업은 시안 ui-partner-04의 `.card` / `.sec` / `.frow` / `.flab` / `.hint` 구조를 그대로 옮겼다.
  */
 
-/** 시안 `.card{max-width:820px}` — 폼 전체를 감싸는 흰 카드. 섹션들이 구분선으로 나뉜다 */
+/**
+ * 시안 `.card` — 폼 전체를 감싸는 흰 카드. 섹션들이 구분선으로 나뉜다.
+ *
+ * 시안의 `max-width:820px`는 넣지 않는다. 그 값은 1440px 캔버스에서
+ * 카드 820 + 우측 레일 300 + 여백이 딱 맞아떨어지도록 잡은 수치라,
+ * 실제 1920px 화면에 그대로 옮기면 오른쪽이 크게 비어 보인다.
+ * 어드민 상세와 동일하게 남는 폭을 채우도록 둔다.
+ */
 export function ProductFormCard({ children }: { children: ReactNode }) {
   return (
-    <div className="max-w-[820px] overflow-hidden rounded-[8px] border border-sz-n-200 bg-white">
+    <div className="overflow-hidden rounded-[8px] border border-sz-n-200 bg-white">
       {children}
     </div>
   )

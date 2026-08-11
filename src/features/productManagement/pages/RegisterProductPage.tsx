@@ -352,22 +352,23 @@ export default function RegisterProductPage() {
         )}
       </div>
 
-      {banner && (
-        <div
-          className={cn(
-            "mb-4 flex max-w-[820px] gap-2 rounded-[6px] px-3.5 py-3 text-[11px] leading-relaxed",
-            banner.tone === "warn"
-              ? "bg-sz-warning-bg text-[#6b4d16]"
-              : "bg-sz-info-bg text-sz-info-text"
-          )}
-        >
-          <span>{banner.tone === "warn" ? "⚠" : "ⓘ"}</span>
-          <span>{banner.message}</span>
-        </div>
-      )}
-
       <div className="flex items-start gap-4">
         <div className="min-w-0 flex-1">
+          {/* 배너는 좌측 컬럼 안에 둔다 — 우측 레일까지 덮으면 카드와 좌우가 어긋난다 */}
+          {banner && (
+            <div
+              className={cn(
+                "mb-4 flex gap-2 rounded-[6px] px-3.5 py-3 text-[11px] leading-relaxed",
+                banner.tone === "warn"
+                  ? "bg-sz-warning-bg text-[#6b4d16]"
+                  : "bg-sz-info-bg text-sz-info-text"
+              )}
+            >
+              <span>{banner.tone === "warn" ? "⚠" : "ⓘ"}</span>
+              <span>{banner.message}</span>
+            </div>
+          )}
+
           <Form
             handleSubmit={handleSubmit}
             onSubmit={onSubmit}
