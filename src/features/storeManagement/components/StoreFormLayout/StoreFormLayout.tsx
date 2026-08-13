@@ -52,15 +52,15 @@ interface StoreFieldProps {
   children: ReactNode
 }
 
-/** 시안 `.frow` — 150px 라벨 + 컨트롤. 필수 표시(*)는 항상 라벨 왼쪽 */
+/** 시안 `.frow` — 150px 라벨 + 컨트롤. 필수 표시(*)는 시안 `.flab .req`대로 라벨 **뒤**에 붙는다 */
 export function StoreField(props: StoreFieldProps) {
   const { label, required = false, hint, error, children } = props
 
   return (
     <div className="mb-3 flex items-start gap-3 last:mb-0">
       <div className="w-[150px] shrink-0 pt-[7px] text-[12px] text-sz-n-600">
-        {required && <span className="mr-0.5 text-sz-danger-text">*</span>}
         {label}
+        {required && <span className="ml-0.5 text-sz-danger-text">*</span>}
       </div>
       <div className="min-w-0 flex-1">
         {children}
