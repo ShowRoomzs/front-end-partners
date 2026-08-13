@@ -14,12 +14,12 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <CookiesProvider>
       <QueryClientProvider client={queryClient}>
-          <ConfirmProvider>
-            <ErrorBoundary>
-              <Toaster position="top-right" toastOptions={TOAST_OPTIONS} />
-              <App />
-            </ErrorBoundary>
-          </ConfirmProvider>
+        <ConfirmProvider>
+          <ErrorBoundary>
+            <Toaster position="top-right" toastOptions={TOAST_OPTIONS} />
+            <App />
+          </ErrorBoundary>
+        </ConfirmProvider>
       </QueryClientProvider>
     </CookiesProvider>
   </StrictMode>

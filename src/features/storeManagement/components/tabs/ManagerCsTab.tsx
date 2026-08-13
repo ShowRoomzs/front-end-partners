@@ -59,16 +59,19 @@ export default function ManagerCsTab() {
   >({})
   const [isSaving, setIsSaving] = useState(false)
 
+  // 담당자 연락처와 반품 수취 주소 4필드는 승인 후 온보딩에서 채워지는 값이라
+  // 그 전 계정은 null이 내려온다. 폼 상태에 담기 전 여기서 한 번만 ""로 정규화하면
+  // 아래 검증·렌더는 전부 문자열만 다루면 된다(사용처마다 감싸지 않는다).
   useEffect(() => {
     if (data) {
       setForm({
-        managerName: data.managerName,
-        managerContact: data.managerContact,
-        csNumber: data.csNumber,
-        recipientName: data.returnAddress.recipientName,
-        recipientContact: data.returnAddress.recipientContact,
-        address: data.returnAddress.address,
-        detailAddress: data.returnAddress.detailAddress,
+        managerName: data.managerName ?? "",
+        managerContact: data.managerContact ?? "",
+        csNumber: data.csNumber ?? "",
+        recipientName: data.returnAddress.recipientName ?? "",
+        recipientContact: data.returnAddress.recipientContact ?? "",
+        address: data.returnAddress.address ?? "",
+        detailAddress: data.returnAddress.detailAddress ?? "",
       })
     }
   }, [data])
@@ -79,31 +82,31 @@ export default function ManagerCsTab() {
     setTouched(prev => ({ ...prev, [key]: true }))
 
   const errors: Partial<Record<keyof FormState, string>> = {
-    managerName: String(form.managerName ?? "").trim()
+    managerName: form.managerName.trim()
       ? undefined
       : "판매 담당자 이름을 입력해 주세요.",
     managerContact:
       (validateMobilePhone(form.managerContact) !== true &&
         (validateMobilePhone(form.managerContact) as string)) ||
-      (!String(form.managerContact ?? "").trim()
+      (!form.managerContact.trim()
         ? "판매 담당자 연락처는 필수입니다."
         : undefined),
     csNumber:
       (validateCsNumber(form.csNumber) !== true &&
         (validateCsNumber(form.csNumber) as string)) ||
-      (!String(form.csNumber ?? "").trim() ? "고객센터 전화번호는 필수입니다." : undefined),
+      (!form.csNumber.trim() ? "고객센터 전화번호는 필수입니다." : undefined),
     recipientName:
       (validateRecipientName(form.recipientName) !== true &&
         (validateRecipientName(form.recipientName) as string)) ||
-      (!String(form.recipientName ?? "").trim() ? "수취인 이름은 필수입니다." : undefined),
+      (!form.recipientName.trim() ? "수취인 이름은 필수입니다." : undefined),
     recipientContact:
       (validateRecipientContact(form.recipientContact) !== true &&
         (validateRecipientContact(form.recipientContact) as string)) ||
-      (!String(form.recipientContact ?? "").trim()
+      (!form.recipientContact.trim()
         ? "수취인 연락처는 필수입니다."
         : undefined),
-    address: String(form.address ?? "").trim() ? undefined : "주소를 검색해 입력해 주세요.",
-    detailAddress: String(form.detailAddress ?? "").trim()
+    address: form.address.trim() ? undefined : "주소를 검색해 입력해 주세요.",
+    detailAddress: form.detailAddress.trim()
       ? undefined
       : "상세 주소를 입력해 주세요.",
   }

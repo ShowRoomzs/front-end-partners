@@ -26,7 +26,8 @@ export type ChangeRequestField =
 export interface ChangeRequestFieldOption {
   fieldKey: ChangeRequestField
   label: string
-  currentValue: string
+  /** 아직 값이 없는 항목은 null — 서버가 엔티티 값을 그대로 내려준다 */
+  currentValue: string | null
 }
 
 export interface ChangeRequestBannerResponse {
@@ -43,9 +44,10 @@ export interface ChangeRequestBannerResponse {
   rejectReason: string | null
   /** 상세 반려 사유. 미입력이면 null — 행 자체를 렌더링하지 않는다(§15-8) */
   rejectReasonDetail: string | null
+  /** SETTLEMENT_ACCOUNT 요청일 때만 채워진다. 항목 값 자체는 서버에서 null일 수 있다 */
   requestedAccount: {
-    bankName: string
-    maskedAccountNumber: string
+    bankName: string | null
+    maskedAccountNumber: string | null
   } | null
 }
 

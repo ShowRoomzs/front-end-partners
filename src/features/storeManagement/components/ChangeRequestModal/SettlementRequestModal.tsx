@@ -35,6 +35,18 @@ function digitsOnly(value: string) {
 }
 
 /**
+ * 계좌가 아직 등록되지 않은 계정은 세 값이 전부 null이라 그냥 이어붙이면
+ * "null null · null"이 찍힌다. 채워진 값만 모으고, 하나도 없으면 안내 문구로 대체한다.
+ */
+function formatCurrentAccount(current: SettlementInfoResponse) {
+  const account = [current.bankName, current.maskedAccountNumber]
+    .filter(Boolean)
+    .join(" ")
+  const parts = [account, current.accountHolder].filter(Boolean)
+  return parts.length > 0 ? parts.join(" · ") : "등록된 계좌 없음"
+}
+
+/**
  * M2 — 정산 계좌 변경 요청.
  *
  * 셀프 변경이 없는 민감정보라 은행·계좌번호·예금주 3개가 고정 항목이다(체크박스 없음,
@@ -70,7 +82,7 @@ export function SettlementRequestModal(props: SettlementRequestModalProps) {
   const canSubmit =
     !!bankCode &&
     accountNumberValid &&
-    String(accountHolder ?? "").trim().length > 0 &&
+    accountHolder.trim().length > 0 &&
     !!evidence
 
   const handleSubmit = async () => {
@@ -144,7 +156,7 @@ export function SettlementRequestModal(props: SettlementRequestModalProps) {
         </label>
         <input
           disabled
-          value={`${current.bankName} ${current.maskedAccountNumber} · ${current.accountHolder}`}
+          value={formatCurrentAccount(current)}
           className={cn(
             "w-full rounded-[6px] border border-sz-n-200 bg-sz-n-100 text-[13px] text-sz-n-500",
             STORE_INPUT_CLASS
@@ -217,7 +229,7 @@ export function SettlementRequestModal(props: SettlementRequestModalProps) {
           className={cn(
             "w-full rounded-[6px] border bg-white text-[13px] text-sz-n-900 focus:border-sz-accent-500 focus:outline-none",
             STORE_INPUT_CLASS,
-            interacted && !String(accountHolder ?? "").trim()
+            interacted && !accountHolder.trim()
               ? "border-sz-danger-text"
               : "border-sz-n-300"
           )}

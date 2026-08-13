@@ -38,8 +38,8 @@ export function EmailChangeModal(props: EmailChangeModalProps) {
   }
 
   const emailValidation = validateEmailFormat(newEmail)
-  const isEmailValid = emailValidation === true && String(newEmail ?? "").trim().length > 0
-  const canSubmit = String(currentPassword ?? "").trim().length > 0 && isEmailValid
+  const isEmailValid = emailValidation === true && newEmail.trim().length > 0
+  const canSubmit = currentPassword.trim().length > 0 && isEmailValid
 
   const handleSubmit = async () => {
     setInteracted(true)
@@ -129,7 +129,7 @@ export function EmailChangeModal(props: EmailChangeModalProps) {
             value={currentPassword}
             onChange={e => setCurrentPassword(e.target.value)}
             placeholder="현재 비밀번호"
-            hasError={interacted && !String(currentPassword ?? "").trim()}
+            hasError={interacted && !currentPassword.trim()}
             className={STORE_INPUT_CLASS}
           />
         </div>

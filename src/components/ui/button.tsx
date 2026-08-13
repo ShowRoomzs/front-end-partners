@@ -71,4 +71,7 @@ function Button({
   )
 }
 
+// shadcn 생성 파일의 기본 형태 — 컴포넌트와 variants를 같은 파일에서 내보낸다.
+// 파일을 쪼개면 shadcn 재생성 시 매번 어긋나므로 이 규칙만 끈다(HMR 편의 규칙일 뿐 런타임 영향 없음).
+// eslint-disable-next-line react-refresh/only-export-components
 export { Button, buttonVariants }

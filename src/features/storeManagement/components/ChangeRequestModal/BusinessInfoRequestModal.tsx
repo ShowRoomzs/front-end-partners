@@ -72,13 +72,14 @@ export function BusinessInfoRequestModal(props: BusinessInfoRequestModalProps) {
   }
 
   const checkedList = fields?.filter(f => checked.has(f.fieldKey)) ?? []
+  // 체크는 했지만 아직 입력하지 않은 항목 — values에 키 자체가 없을 수 있다
   const hasEmptyValue = checkedList.some(
-    f => !String(values[f.fieldKey] ?? "").trim()
+    f => !(values[f.fieldKey] ?? "").trim()
   )
   const canSubmit =
     checkedList.length > 0 &&
     !hasEmptyValue &&
-    String(reason ?? "").trim().length > 0 &&
+    reason.trim().length > 0 &&
     !!evidence
 
   const handleSubmit = async () => {
@@ -181,7 +182,8 @@ export function BusinessInfoRequestModal(props: BusinessInfoRequestModalProps) {
                   {f.label}
                 </div>
                 <div className="mb-1.5 text-[11px] text-sz-n-500">
-                  현재 · {f.currentValue}
+                  {/* 아직 값이 없는 항목은 서버가 null을 내려준다 */}
+                  현재 · {f.currentValue ?? "—"}
                 </div>
                 <input
                   type="text"
@@ -193,7 +195,7 @@ export function BusinessInfoRequestModal(props: BusinessInfoRequestModalProps) {
                   className={cn(
                     "w-full rounded-[6px] border bg-white text-[13px] text-sz-n-900 focus:border-sz-accent-500 focus:outline-none",
                     STORE_INPUT_CLASS,
-                    interacted && !String(values[f.fieldKey] ?? "").trim()
+                    interacted && !(values[f.fieldKey] ?? "").trim()
                       ? "border-sz-danger-text"
                       : "border-sz-n-300"
                   )}
@@ -220,7 +222,7 @@ export function BusinessInfoRequestModal(props: BusinessInfoRequestModalProps) {
           rows={3}
           className={cn(
             "w-full resize-y rounded-[6px] border px-2.5 py-1.5 text-[13px] leading-[1.6] text-sz-n-900 focus:border-sz-accent-500 focus:outline-none",
-            interacted && !String(reason ?? "").trim()
+            interacted && !reason.trim()
               ? "border-sz-danger-text"
               : "border-sz-n-300"
           )}

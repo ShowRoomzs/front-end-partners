@@ -1,23 +1,26 @@
 import type { MenuConfig } from "@/common/types/menu"
 
+/**
+ * 시안 GNB — 번호 매겨진 flat 9항목이다. 아코디언(그룹 + 펼침 하위메뉴)을 쓰지 않는다.
+ *
+ * 하위 화면이 여러 개인 메뉴(판매·정산·문의)도 여기서는 항목 하나로 두고, 누르면
+ * 대표 화면으로 바로 이동한다(`path`). 그 안의 나머지 화면들은 GNB가 아니라 각 화면
+ * 안의 SubNav가 담당한다 — 기본정보 관리·상품 관리·연결·소통이 이미 쓰는 방식이다.
+ * 아직 그 SubNav들이 없으므로 지금은 대표 화면 하나로만 진입한다.
+ *
+ * `matchPaths`는 "누르면 갈 곳"과 "활성으로 칠할 범위"를 분리한다 — 예를 들어 판매 관리는
+ * 전체 주문 내역으로 이동하지만 `/sales/*` 어디에 있든 활성이어야 한다.
+ *
+ * 번호는 Sidebar가 배열 순서로 매기므로(`index + 1`) 이 배열의 순서가 곧 시안의 #1~#9다.
+ */
 export const SELLER_MENU: MenuConfig = {
   menuType: "SELLER",
   groups: [
-    /*
-      하위 메뉴 없는 단일 항목 — 시안(ui-partner-06 rev.8) GNB #9가 "기본정보 관리"
-      하나뿐이고, 그 아래 4개 탭(사업자 정보·정산 계좌·담당자·CS·계정)은 GNB가 아니라
-      화면 안의 SubNav가 담당한다("상품 관리"가 이미 같은 이유로 flat인 것과 동일 패턴).
-    */
     {
-      id: "store",
-      label: "기본정보 관리",
-      path: "/store/basic",
+      id: "home",
+      label: "홈",
+      path: "/",
     },
-    /*
-      하위 메뉴 없는 단일 항목 — "상품 관리"를 누르면 바로 상품 목록이다.
-      상품 등록(/product/register)·수정(/product/edit/:id)은 목록 안에서 진입하므로
-      메뉴에 따로 두지 않는다.
-    */
     {
       id: "product",
       label: "상품 관리",
@@ -30,114 +33,41 @@ export const SELLER_MENU: MenuConfig = {
       label: "연결·소통",
       path: "/connections",
     },
+    // 계약 관리·공구 관리는 아직 기능 자체가 없다 — 시안 번호(#4·#5)를 맞추기 위해
+    // 자리만 잡아둔 플레이스홀더 화면으로 연결된다.
     {
-      id: "sales",
-      label: "판매관리",
-      children: [
-        {
-          id: "sales-all-orders",
-          label: "전체 주문 내역",
-          path: "/sales/orders",
-        },
-        {
-          id: "sales-purchase-orders",
-          label: "발주 관리",
-          path: "/sales/purchase-orders",
-        },
-        {
-          id: "sales-shipping-out",
-          label: "발송 관리",
-          path: "/sales/shipping-out",
-        },
-        {
-          id: "sales-delivery",
-          label: "배송 관리",
-          path: "/sales/delivery",
-        },
-        {
-          id: "sales-confirmed",
-          label: "구매 확정 내역",
-          path: "/sales/confirmed",
-        },
-        {
-          id: "sales-cancel",
-          label: "취소 관리",
-          path: "/sales/cancel",
-        },
-        {
-          id: "sales-return",
-          label: "반품 관리",
-          path: "/sales/return",
-        },
-        {
-          id: "sales-exchange",
-          label: "교환 관리",
-          path: "/sales/exchange",
-        },
-      ],
+      id: "contract",
+      label: "계약 관리",
+      path: "/contract",
     },
     {
-      id: "coupon",
-      label: "쿠폰 관리",
-      children: [
-        {
-          id: "coupon-list",
-          label: "쿠폰 목록",
-          path: "/coupon/list",
-        },
-        {
-          id: "coupon-register-direct",
-          label: "쿠폰 등록",
-          path: "/coupon/register-direct",
-        },
-      ],
+      id: "groupbuy",
+      label: "공구 관리",
+      path: "/group-buy",
+    },
+    {
+      id: "sales",
+      label: "판매 관리",
+      path: "/sales/orders",
+      matchPaths: ["/sales"],
     },
     {
       id: "settlement",
       label: "정산 관리",
-      children: [
-        {
-          id: "settlement-history",
-          label: "정산 내역",
-          path: "/settlement/history",
-        },
-        {
-          id: "settlement-by-product",
-          label: "상품별 정산 내역",
-          path: "/settlement/by-product",
-        },
-        {
-          id: "settlement-vat",
-          label: "부가세 신고 내역",
-          path: "/settlement/vat",
-        },
-      ],
+      path: "/settlement/history",
+      matchPaths: ["/settlement"],
     },
     {
       id: "inquiry",
       label: "문의 관리",
-      children: [
-        {
-          id: "inquiry-respond",
-          label: "문의 확인 / 답변",
-          path: "/inquiry/respond",
-        },
-        {
-          id: "inquiry-product",
-          label: "상품 문의 정보",
-          path: "/inquiry/product",
-        },
-        {
-          id: "inquiry-order",
-          label: "주문 문의 정보",
-          path: "/inquiry/order",
-        },
-        {
-          id: "inquiry-template",
-          label: "답변 템플릿",
-          path: "/inquiry/template",
-        },
-      ],
+      path: "/inquiry/respond",
+      // 답변 템플릿(/inquiry/template)까지 이 메뉴가 대표한다
+      matchPaths: ["/inquiry"],
+    },
+    {
+      id: "store",
+      label: "기본정보 관리",
+      path: "/store/basic",
     },
   ],
 }
