@@ -74,9 +74,18 @@ export default function SettlementAccountTab() {
 
   const banner = data.changeRequest
   const isRequestPending = banner?.status === "PENDING"
-  const accountClause = banner?.requestedAccount
-    ? `${banner.requestedAccount.bankName} ${banner.requestedAccount.maskedAccountNumber}`
-    : (banner?.changedFieldLabels.join(", ") ?? "")
+  // 요청한 계좌 정보가 통째로 비어 있을 수 있어(항목 값이 서버에서 null) 빈 문자열이면
+  // 항목 라벨 나열로 되돌린다 — "null null"이 배너에 찍히는 걸 막는다.
+  const requestedAccountText = banner?.requestedAccount
+    ? [
+        banner.requestedAccount.bankName,
+        banner.requestedAccount.maskedAccountNumber,
+      ]
+        .filter(Boolean)
+        .join(" ")
+    : ""
+  const accountClause =
+    requestedAccountText || (banner?.changedFieldLabels.join(", ") ?? "")
 
   return (
     <>
@@ -122,7 +131,7 @@ export default function SettlementAccountTab() {
           <StoreField label="은행">
             <input
               disabled
-              value={data.bankName}
+              value={data.bankName ?? ""}
               className={cn(
                 "w-full max-w-[240px] rounded-[6px] border border-sz-n-200 bg-sz-n-100 text-[13px] text-sz-n-500",
                 STORE_INPUT_CLASS
@@ -135,7 +144,7 @@ export default function SettlementAccountTab() {
           >
             <input
               disabled
-              value={data.maskedAccountNumber}
+              value={data.maskedAccountNumber ?? ""}
               className={cn(
                 "w-full max-w-[240px] rounded-[6px] border border-sz-n-200 bg-sz-n-100 text-[13px] text-sz-n-500",
                 STORE_INPUT_CLASS
@@ -145,7 +154,7 @@ export default function SettlementAccountTab() {
           <StoreField label="예금주">
             <input
               disabled
-              value={data.accountHolder}
+              value={data.accountHolder ?? ""}
               className={cn(
                 "w-full rounded-[6px] border border-sz-n-200 bg-sz-n-100 text-[13px] text-sz-n-500",
                 STORE_INPUT_CLASS

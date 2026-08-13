@@ -13,7 +13,10 @@ import {
 } from "@/features/storeManagement/components/StoreFormLayout/StoreFormLayout"
 import { BASIC_INFO_QUERY_KEYS } from "@/features/storeManagement/constants/queryKeys"
 import { useGetBusinessInfo } from "@/features/storeManagement/hooks/useGetBusinessInfo"
-import { basicInfoService } from "@/features/storeManagement/services/basicInfoService"
+import {
+  basicInfoService,
+  type BusinessInfoResponse,
+} from "@/features/storeManagement/services/basicInfoService"
 import type { ChangeRequestCreateResponse } from "@/features/storeManagement/services/changeRequestService"
 import {
   getBannerActionLabel,
@@ -29,8 +32,25 @@ import toast from "react-hot-toast"
 
 const SITE_URL_PATTERN = /^$|^https?:\/\/.+$/
 
+/**
+ * 조회 전용으로 값만 그대로 뿌리는 문자열 필드들. 전부 `string | null`이라
+ * 렌더 시 `?? ""`로 대체한다 — Extract를 쓰는 건 이름이 응답 스키마와 어긋나면
+ * 여기서 바로 컴파일 에러가 나게 하기 위해서다.
+ */
+type ReadonlyFieldKey = Extract<
+  keyof BusinessInfoResponse,
+  | "businessType"
+  | "marketName"
+  | "representativeName"
+  | "companyName"
+  | "businessRegistrationNumber"
+  | "businessCondition"
+  | "businessAddress"
+  | "mailOrderRegNumber"
+>
+
 const READONLY_FIELDS: Array<{
-  key: keyof NonNullable<ReturnType<typeof useGetBusinessInfo>["data"]>
+  key: ReadonlyFieldKey
   label: string
 }> = [
   { key: "businessType", label: "사업자 유형" },
@@ -62,9 +82,11 @@ export default function BusinessInfoTab() {
     useState<ChangeRequestCreateResponse | null>(null)
   const [isBannerActionLoading, setIsBannerActionLoading] = useState(false)
 
+  // 서버는 두 필드 모두 null을 내려줄 수 있다(가입 심사 중·미입력 계정).
+  // 상태에 담기 전 여기서 한 번만 ""로 정규화하고, 이후 로직은 문자열만 다룬다.
   useEffect(() => {
     if (data) {
-      setTaxEmail(data.taxEmail)
+      setTaxEmail(data.taxEmail ?? "")
       setBrandSiteUrl(data.brandSiteUrl ?? "")
     }
   }, [data])
@@ -84,9 +106,12 @@ export default function BusinessInfoTab() {
       ? "올바른 주소 형식이 아닙니다. (예: https://example.com)"
       : undefined
 
+  // 비교 대상도 같은 방식으로 정규화해야 한다 — null과 ""를 다르게 보면
+  // 값이 비어 있는 계정은 아무것도 안 건드려도 항상 dirty로 잡힌다.
   const isDirty =
     !!data &&
-    (taxEmail !== data.taxEmail || brandSiteUrl !== (data.brandSiteUrl ?? ""))
+    (taxEmail !== (data.taxEmail ?? "") ||
+      brandSiteUrl !== (data.brandSiteUrl ?? ""))
   const isValid = isTaxEmailValid && isSiteUrlValid
 
   const invalidateBusiness = () =>
@@ -187,7 +212,7 @@ export default function BusinessInfoTab() {
             <StoreField key={key} label={label}>
               <input
                 disabled
-                value={String(data[key] ?? "")}
+                value={data[key] ?? ""}
                 className={cn(
                   "w-full rounded-[6px] border border-sz-n-200 bg-sz-n-100 text-[13px] text-sz-n-500",
                   STORE_INPUT_CLASS

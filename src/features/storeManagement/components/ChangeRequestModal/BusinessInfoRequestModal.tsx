@@ -72,7 +72,10 @@ export function BusinessInfoRequestModal(props: BusinessInfoRequestModalProps) {
   }
 
   const checkedList = fields?.filter(f => checked.has(f.fieldKey)) ?? []
-  const hasEmptyValue = checkedList.some(f => !values[f.fieldKey]?.trim())
+  // 체크는 했지만 아직 입력하지 않은 항목 — values에 키 자체가 없을 수 있다
+  const hasEmptyValue = checkedList.some(
+    f => !(values[f.fieldKey] ?? "").trim()
+  )
   const canSubmit =
     checkedList.length > 0 &&
     !hasEmptyValue &&
@@ -179,7 +182,8 @@ export function BusinessInfoRequestModal(props: BusinessInfoRequestModalProps) {
                   {f.label}
                 </div>
                 <div className="mb-1.5 text-[11px] text-sz-n-500">
-                  현재 · {f.currentValue}
+                  {/* 아직 값이 없는 항목은 서버가 null을 내려준다 */}
+                  현재 · {f.currentValue ?? "—"}
                 </div>
                 <input
                   type="text"
@@ -191,7 +195,7 @@ export function BusinessInfoRequestModal(props: BusinessInfoRequestModalProps) {
                   className={cn(
                     "w-full rounded-[6px] border bg-white text-[13px] text-sz-n-900 focus:border-sz-accent-500 focus:outline-none",
                     STORE_INPUT_CLASS,
-                    interacted && !values[f.fieldKey]?.trim()
+                    interacted && !(values[f.fieldKey] ?? "").trim()
                       ? "border-sz-danger-text"
                       : "border-sz-n-300"
                   )}

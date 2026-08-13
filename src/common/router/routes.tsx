@@ -1,5 +1,7 @@
 import { Outlet, type RouteObject } from "react-router-dom"
 import MainLayout from "@/common/components/MainLayout/MainLayout"
+import ErrorPage from "@/common/components/ErrorBoundary/ErrorPage"
+import ComingSoonPage from "@/common/components/ComingSoon/ComingSoonPage"
 import RegisterProductPage from "@/features/productManagement/pages/RegisterProductPage"
 import LoginPage from "@/features/auth/pages/LoginPage"
 import RegisterPage from "@/features/auth/pages/RegisterPage"
@@ -46,10 +48,18 @@ export const mainRoutes: Array<RouteObject> = [
   {
     path: "/",
     element: <MainLayout />,
+    errorElement: <ErrorPage />,
     children: [
+      // GNB #1 "홈" — 대시보드가 생기기 전까지의 자리표시 화면.
+      // 메뉴 항목이 실제로 클릭되는 경로라 빈 div로 둘 수 없다.
       {
         index: true,
-        element: <div>aasdf</div>,
+        element: (
+          <ComingSoonPage
+            title="홈"
+            description="파트너센터 대시보드는 아직 준비 중입니다."
+          />
+        ),
       },
       // Seller - 기본정보 관리(§15) — 사업자 정보·정산 계좌·담당자·CS·계정 4탭이
       // 전부 한 페이지 안에서 쿼리파라미터(?tab=)로 전환되므로 하위 라우트가 필요 없다.
@@ -89,6 +99,26 @@ export const mainRoutes: Array<RouteObject> = [
       {
         path: "connections",
         element: <ConnectionsPage />,
+      },
+      // Seller - 계약 관리 / 공구 관리 — 시안 GNB #4·#5의 자리만 확보한 플레이스홀더.
+      // 기능이 생기면 이 element를 실제 화면으로 갈아끼우면 된다.
+      {
+        path: "contract",
+        element: (
+          <ComingSoonPage
+            title="계약 관리"
+            description="브랜드·인플루언서 계약 관리 화면은 아직 준비 중입니다."
+          />
+        ),
+      },
+      {
+        path: "group-buy",
+        element: (
+          <ComingSoonPage
+            title="공구 관리"
+            description="공동구매 등록·진행 관리 화면은 아직 준비 중입니다."
+          />
+        ),
       },
       // Creator - 쇼룸 관리
       {

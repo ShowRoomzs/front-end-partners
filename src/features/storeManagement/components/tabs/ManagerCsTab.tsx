@@ -59,16 +59,19 @@ export default function ManagerCsTab() {
   >({})
   const [isSaving, setIsSaving] = useState(false)
 
+  // 담당자 연락처와 반품 수취 주소 4필드는 승인 후 온보딩에서 채워지는 값이라
+  // 그 전 계정은 null이 내려온다. 폼 상태에 담기 전 여기서 한 번만 ""로 정규화하면
+  // 아래 검증·렌더는 전부 문자열만 다루면 된다(사용처마다 감싸지 않는다).
   useEffect(() => {
     if (data) {
       setForm({
-        managerName: data.managerName,
-        managerContact: data.managerContact,
-        csNumber: data.csNumber,
-        recipientName: data.returnAddress.recipientName,
-        recipientContact: data.returnAddress.recipientContact,
-        address: data.returnAddress.address,
-        detailAddress: data.returnAddress.detailAddress,
+        managerName: data.managerName ?? "",
+        managerContact: data.managerContact ?? "",
+        csNumber: data.csNumber ?? "",
+        recipientName: data.returnAddress.recipientName ?? "",
+        recipientContact: data.returnAddress.recipientContact ?? "",
+        address: data.returnAddress.address ?? "",
+        detailAddress: data.returnAddress.detailAddress ?? "",
       })
     }
   }, [data])
