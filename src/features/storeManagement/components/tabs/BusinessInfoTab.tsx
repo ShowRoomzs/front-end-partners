@@ -71,11 +71,11 @@ export default function BusinessInfoTab() {
 
   const taxEmailValidation = validateEmailFormat(taxEmail)
   const isTaxEmailValid =
-    taxEmailValidation === true && taxEmail.trim().length > 0
+    taxEmailValidation === true && String(taxEmail ?? "").trim().length > 0
   const isSiteUrlValid = SITE_URL_PATTERN.test(brandSiteUrl)
   const taxEmailError =
     touched.taxEmail && !isTaxEmailValid
-      ? taxEmail.trim().length === 0
+      ? String(taxEmail ?? "").trim().length === 0
         ? "tax 확인용 이메일은 필수입니다."
         : (taxEmailValidation as string)
       : undefined

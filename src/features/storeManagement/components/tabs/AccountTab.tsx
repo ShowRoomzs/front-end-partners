@@ -46,11 +46,11 @@ export default function AccountTab() {
 
   const newPasswordValidation = validatePasswordStrength(newPassword)
   const isNewPasswordValid =
-    newPasswordValidation === true && newPassword.trim().length > 0
+    newPasswordValidation === true && String(newPassword ?? "").trim().length > 0
   const isConfirmValid =
-    newPasswordConfirm.trim().length > 0 && newPasswordConfirm === newPassword
+    String(newPasswordConfirm ?? "").trim().length > 0 && newPasswordConfirm === newPassword
   const canSubmit =
-    currentPassword.trim().length > 0 && isNewPasswordValid && isConfirmValid
+    String(currentPassword ?? "").trim().length > 0 && isNewPasswordValid && isConfirmValid
 
   const handleChangePassword = async () => {
     setTouched(true)
@@ -124,7 +124,7 @@ export default function AccountTab() {
             label="현재 비밀번호"
             required
             error={
-              touched && !currentPassword.trim()
+              touched && !String(currentPassword ?? "").trim()
                 ? "현재 비밀번호를 입력해 주세요."
                 : undefined
             }
@@ -134,7 +134,7 @@ export default function AccountTab() {
                 value={currentPassword}
                 onChange={e => setCurrentPassword(e.target.value)}
                 placeholder="현재 비밀번호"
-                hasError={touched && !currentPassword.trim()}
+                hasError={touched && !String(currentPassword ?? "").trim()}
                 className={STORE_INPUT_CLASS}
               />
             </div>
@@ -143,8 +143,8 @@ export default function AccountTab() {
             label="새 비밀번호"
             required
             error={
-              touched && !isNewPasswordValid
-                ? newPassword.trim().length === 0
+                touched && !isNewPasswordValid
+                ? String(newPassword ?? "").trim().length === 0
                   ? "새 비밀번호를 입력해 주세요."
                   : (newPasswordValidation as string)
                 : undefined
@@ -164,8 +164,8 @@ export default function AccountTab() {
             label="새 비밀번호 재입력"
             required
             error={
-              touched && !isConfirmValid
-                ? newPasswordConfirm.trim().length === 0
+                touched && !isConfirmValid
+                ? String(newPasswordConfirm ?? "").trim().length === 0
                   ? "새 비밀번호 확인을 입력해 주세요."
                   : "비밀번호가 일치하지 않습니다."
                 : undefined

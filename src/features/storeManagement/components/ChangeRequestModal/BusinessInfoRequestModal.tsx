@@ -72,11 +72,13 @@ export function BusinessInfoRequestModal(props: BusinessInfoRequestModalProps) {
   }
 
   const checkedList = fields?.filter(f => checked.has(f.fieldKey)) ?? []
-  const hasEmptyValue = checkedList.some(f => !values[f.fieldKey]?.trim())
+  const hasEmptyValue = checkedList.some(
+    f => !String(values[f.fieldKey] ?? "").trim()
+  )
   const canSubmit =
     checkedList.length > 0 &&
     !hasEmptyValue &&
-    reason.trim().length > 0 &&
+    String(reason ?? "").trim().length > 0 &&
     !!evidence
 
   const handleSubmit = async () => {
@@ -191,7 +193,7 @@ export function BusinessInfoRequestModal(props: BusinessInfoRequestModalProps) {
                   className={cn(
                     "w-full rounded-[6px] border bg-white text-[13px] text-sz-n-900 focus:border-sz-accent-500 focus:outline-none",
                     STORE_INPUT_CLASS,
-                    interacted && !values[f.fieldKey]?.trim()
+                    interacted && !String(values[f.fieldKey] ?? "").trim()
                       ? "border-sz-danger-text"
                       : "border-sz-n-300"
                   )}
@@ -218,7 +220,7 @@ export function BusinessInfoRequestModal(props: BusinessInfoRequestModalProps) {
           rows={3}
           className={cn(
             "w-full resize-y rounded-[6px] border px-2.5 py-1.5 text-[13px] leading-[1.6] text-sz-n-900 focus:border-sz-accent-500 focus:outline-none",
-            interacted && !reason.trim()
+            interacted && !String(reason ?? "").trim()
               ? "border-sz-danger-text"
               : "border-sz-n-300"
           )}

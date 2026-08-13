@@ -1,5 +1,6 @@
 import { Outlet, type RouteObject } from "react-router-dom"
 import MainLayout from "@/common/components/MainLayout/MainLayout"
+import ErrorPage from "@/common/components/ErrorBoundary/ErrorPage"
 import RegisterProductPage from "@/features/productManagement/pages/RegisterProductPage"
 import LoginPage from "@/features/auth/pages/LoginPage"
 import RegisterPage from "@/features/auth/pages/RegisterPage"
@@ -46,6 +47,7 @@ export const mainRoutes: Array<RouteObject> = [
   {
     path: "/",
     element: <MainLayout />,
+    errorElement: <ErrorPage />,
     children: [
       {
         index: true,

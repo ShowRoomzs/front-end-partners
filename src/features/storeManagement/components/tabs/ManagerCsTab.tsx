@@ -79,31 +79,31 @@ export default function ManagerCsTab() {
     setTouched(prev => ({ ...prev, [key]: true }))
 
   const errors: Partial<Record<keyof FormState, string>> = {
-    managerName: form.managerName.trim()
+    managerName: String(form.managerName ?? "").trim()
       ? undefined
       : "판매 담당자 이름을 입력해 주세요.",
     managerContact:
       (validateMobilePhone(form.managerContact) !== true &&
         (validateMobilePhone(form.managerContact) as string)) ||
-      (!form.managerContact.trim()
+      (!String(form.managerContact ?? "").trim()
         ? "판매 담당자 연락처는 필수입니다."
         : undefined),
     csNumber:
       (validateCsNumber(form.csNumber) !== true &&
         (validateCsNumber(form.csNumber) as string)) ||
-      (!form.csNumber.trim() ? "고객센터 전화번호는 필수입니다." : undefined),
+      (!String(form.csNumber ?? "").trim() ? "고객센터 전화번호는 필수입니다." : undefined),
     recipientName:
       (validateRecipientName(form.recipientName) !== true &&
         (validateRecipientName(form.recipientName) as string)) ||
-      (!form.recipientName.trim() ? "수취인 이름은 필수입니다." : undefined),
+      (!String(form.recipientName ?? "").trim() ? "수취인 이름은 필수입니다." : undefined),
     recipientContact:
       (validateRecipientContact(form.recipientContact) !== true &&
         (validateRecipientContact(form.recipientContact) as string)) ||
-      (!form.recipientContact.trim()
+      (!String(form.recipientContact ?? "").trim()
         ? "수취인 연락처는 필수입니다."
         : undefined),
-    address: form.address.trim() ? undefined : "주소를 검색해 입력해 주세요.",
-    detailAddress: form.detailAddress.trim()
+    address: String(form.address ?? "").trim() ? undefined : "주소를 검색해 입력해 주세요.",
+    detailAddress: String(form.detailAddress ?? "").trim()
       ? undefined
       : "상세 주소를 입력해 주세요.",
   }

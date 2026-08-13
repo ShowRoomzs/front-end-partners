@@ -70,7 +70,7 @@ export function SettlementRequestModal(props: SettlementRequestModalProps) {
   const canSubmit =
     !!bankCode &&
     accountNumberValid &&
-    accountHolder.trim().length > 0 &&
+    String(accountHolder ?? "").trim().length > 0 &&
     !!evidence
 
   const handleSubmit = async () => {
@@ -217,7 +217,7 @@ export function SettlementRequestModal(props: SettlementRequestModalProps) {
           className={cn(
             "w-full rounded-[6px] border bg-white text-[13px] text-sz-n-900 focus:border-sz-accent-500 focus:outline-none",
             STORE_INPUT_CLASS,
-            interacted && !accountHolder.trim()
+            interacted && !String(accountHolder ?? "").trim()
               ? "border-sz-danger-text"
               : "border-sz-n-300"
           )}
