@@ -7,7 +7,7 @@ import RegisterIntroPage from "@/features/auth/pages/RegisterIntroPage"
 import RegisterCreatorPage from "@/features/auth/pages/RegisterCreatorPage"
 import OnboardingGatePage from "@/features/auth/pages/OnboardingGatePage"
 import ProductListPage from "@/features/productManagement/pages/ProductListPage"
-import BasicManagement from "@/features/storeManagement/pages/BasicManagement"
+import BasicInfoPage from "@/features/storeManagement/pages/BasicInfoPage"
 import RegisterDirect from "@/features/coupon/RegisterDirect/RegisterDirect"
 import AnswerTemplateListPage from "@/features/inquiry/pages/AnswerTemplateListPage"
 import AnswerTemplateWritePage from "@/features/inquiry/pages/AnswerTemplateWritePage"
@@ -51,17 +51,14 @@ export const mainRoutes: Array<RouteObject> = [
         index: true,
         element: <div>aasdf</div>,
       },
-      // Seller - 스토어 관리
+      // Seller - 기본정보 관리(§15) — 사업자 정보·정산 계좌·담당자·CS·계정 4탭이
+      // 전부 한 페이지 안에서 쿼리파라미터(?tab=)로 전환되므로 하위 라우트가 필요 없다.
       {
         path: "store",
         children: [
           {
             path: "basic",
-            element: <BasicManagement />,
-          },
-          {
-            path: "settlement-account",
-            element: <div>aasdf</div>,
+            element: <BasicInfoPage />,
           },
         ],
       },
