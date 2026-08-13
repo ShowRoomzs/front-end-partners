@@ -285,9 +285,11 @@ export default function ManagerCsTab() {
       </StoreSection>
 
       <StoreButtonRow>
+        {/* 시안 3-B — 오류가 남아 있으면 [저장]은 비활성. 다른 탭(1-B·4-A)과 같은 규칙 */}
         <Button
           type="button"
           size="sm"
+          disabled={!isValid}
           isLoading={isSaving}
           onClick={handleSave}
         >

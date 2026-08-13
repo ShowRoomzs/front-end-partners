@@ -36,8 +36,9 @@ interface RequestBannerProps {
   rejectReason?: string | null
   /** 미입력이면 null — 행 자체를 렌더링하지 않는다(§15-8, 빈칸으로 두지 않는다) */
   rejectReasonDetail?: string | null
-  actionLabel: string
-  onAction: () => void
+  /** 생략하면 버튼 없는 안내 전용 배너가 된다(예: 계정 탭의 이메일 월 1회 소진 안내) */
+  actionLabel?: string
+  onAction?: () => void
   isSubmitting?: boolean
 }
 
@@ -100,16 +101,18 @@ export default function RequestBanner(props: RequestBannerProps) {
           )}
         </div>
       </div>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="shrink-0"
-        disabled={isSubmitting}
-        onClick={onAction}
-      >
-        {actionLabel}
-      </Button>
+      {actionLabel && onAction && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="shrink-0"
+          disabled={isSubmitting}
+          onClick={onAction}
+        >
+          {actionLabel}
+        </Button>
+      )}
     </div>
   )
 }

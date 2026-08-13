@@ -4,7 +4,13 @@ import {
   EvidenceUpload,
   type EvidenceFile,
 } from "@/features/storeManagement/components/ChangeRequestModal/EvidenceUpload"
-import { ModalShell } from "@/features/storeManagement/components/ChangeRequestModal/ModalShell"
+import {
+  ModalFieldError,
+  ModalLabel,
+  ModalNotice,
+  ModalShell,
+} from "@/features/storeManagement/components/ChangeRequestModal/ModalShell"
+import { withObjectParticle } from "@/common/utils/korean"
 import { useChangeRequestFields } from "@/features/storeManagement/hooks/useChangeRequestFields"
 import {
   changeRequestService,
@@ -137,10 +143,15 @@ export function BusinessInfoRequestModal(props: BusinessInfoRequestModalProps) {
         </>
       }
     >
+      <ModalNotice>
+        법정 신원정보는 브랜드가 직접 수정할 수 없어요. 변경할 항목을 고르고{" "}
+        <b className="text-sz-n-900">바꿀 값</b>과{" "}
+        <b className="text-sz-n-900">증빙 서류</b>를 함께 남기면 운영자가 서류와
+        대조해 반영해요. 결과는 이메일로 안내드려요.
+      </ModalNotice>
+
       <div className="mb-4">
-        <label className="mb-1 block text-[12px] font-medium text-sz-n-600">
-          변경 항목<span className="ml-0.5 text-sz-danger-text">*</span>
-        </label>
+        <ModalLabel required>변경 항목</ModalLabel>
         <div
           className={cn(
             "grid grid-cols-2 gap-x-3 gap-y-2 rounded-[6px] border p-3.5",
@@ -164,6 +175,9 @@ export function BusinessInfoRequestModal(props: BusinessInfoRequestModalProps) {
             </label>
           ))}
         </div>
+        {interacted && checkedList.length === 0 && (
+          <ModalFieldError>변경할 항목을 선택해 주세요.</ModalFieldError>
+        )}
         <p className="mt-1.5 text-[11px] leading-[1.55] text-sz-n-500">
           사업자등록번호는 변경 대상이 아닙니다 — 번호가 바뀌면 정보 변경이
           아니라 신규 입점 신청 대상입니다.
@@ -172,36 +186,44 @@ export function BusinessInfoRequestModal(props: BusinessInfoRequestModalProps) {
 
       {checkedList.length > 0 && (
         <div className="mb-4">
-          <label className="mb-1 block text-[12px] font-medium text-sz-n-600">
-            변경할 값<span className="ml-0.5 text-sz-danger-text">*</span>
-          </label>
+          <ModalLabel required>변경할 값</ModalLabel>
           <div className="rounded-[6px] border border-sz-n-300 bg-sz-n-50 p-3.5">
-            {checkedList.map((f, index) => (
-              <div key={f.fieldKey} className={cn(index > 0 && "mt-3.5")}>
-                <div className="mb-0.5 text-[12px] font-semibold text-sz-n-900">
-                  {f.label}
-                </div>
-                <div className="mb-1.5 text-[11px] text-sz-n-500">
-                  {/* 아직 값이 없는 항목은 서버가 null을 내려준다 */}
-                  현재 · {f.currentValue ?? "—"}
-                </div>
-                <input
-                  type="text"
-                  value={values[f.fieldKey] ?? ""}
-                  onChange={e =>
-                    setValues(v => ({ ...v, [f.fieldKey]: e.target.value }))
-                  }
-                  placeholder="변경할 값을 입력하세요"
-                  className={cn(
-                    "w-full rounded-[6px] border bg-white text-[13px] text-sz-n-900 focus:border-sz-accent-500 focus:outline-none",
-                    STORE_INPUT_CLASS,
-                    interacted && !(values[f.fieldKey] ?? "").trim()
-                      ? "border-sz-danger-text"
-                      : "border-sz-n-300"
+            {checkedList.map((f, index) => {
+              const isEmpty = !(values[f.fieldKey] ?? "").trim()
+
+              return (
+                <div key={f.fieldKey} className={cn(index > 0 && "mt-3.5")}>
+                  <div className="mb-0.5 text-[12px] font-semibold text-sz-n-900">
+                    {f.label}
+                  </div>
+                  <div className="mb-1.5 text-[11px] text-sz-n-500">
+                    {/* 아직 값이 없는 항목은 서버가 null을 내려준다 */}
+                    현재 · {f.currentValue ?? "—"}
+                  </div>
+                  <input
+                    type="text"
+                    value={values[f.fieldKey] ?? ""}
+                    onChange={e =>
+                      setValues(v => ({ ...v, [f.fieldKey]: e.target.value }))
+                    }
+                    placeholder="변경할 값을 입력하세요"
+                    className={cn(
+                      "w-full rounded-[6px] border bg-white text-[13px] text-sz-n-900 focus:border-sz-accent-500 focus:outline-none",
+                      STORE_INPUT_CLASS,
+                      interacted && isEmpty
+                        ? "border-sz-danger-text"
+                        : "border-sz-n-300"
+                    )}
+                  />
+                  {interacted && isEmpty && (
+                    // 항목 라벨은 서버가 내려주므로 문구를 통째로 하드코딩할 수 없다
+                    <ModalFieldError>
+                      {withObjectParticle(f.label)} 입력해 주세요.
+                    </ModalFieldError>
                   )}
-                />
-              </div>
-            ))}
+                </div>
+              )
+            })}
           </div>
           <p className="mt-1.5 text-[11px] leading-[1.55] text-sz-n-500">
             증빙 서류에 적힌 값과 <b className="text-sz-n-900">똑같이</b> 입력해
@@ -211,9 +233,7 @@ export function BusinessInfoRequestModal(props: BusinessInfoRequestModalProps) {
       )}
 
       <div className="mb-4">
-        <label className="mb-1 block text-[12px] font-medium text-sz-n-600">
-          변경 사유<span className="ml-0.5 text-sz-danger-text">*</span>
-        </label>
+        <ModalLabel required>변경 사유</ModalLabel>
         <textarea
           value={reason}
           maxLength={REASON_MAX}
@@ -227,12 +247,13 @@ export function BusinessInfoRequestModal(props: BusinessInfoRequestModalProps) {
               : "border-sz-n-300"
           )}
         />
+        {interacted && !reason.trim() && (
+          <ModalFieldError>변경 사유를 입력해 주세요.</ModalFieldError>
+        )}
       </div>
 
       <div>
-        <label className="mb-1 block text-[12px] font-medium text-sz-n-600">
-          변경 증빙 파일<span className="ml-0.5 text-sz-danger-text">*</span>
-        </label>
+        <ModalLabel required>변경 증빙 파일</ModalLabel>
         <EvidenceUpload
           label="변경 증빙 파일"
           value={evidence}

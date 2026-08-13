@@ -11,7 +11,12 @@ import {
   EvidenceUpload,
   type EvidenceFile,
 } from "@/features/storeManagement/components/ChangeRequestModal/EvidenceUpload"
-import { ModalShell } from "@/features/storeManagement/components/ChangeRequestModal/ModalShell"
+import {
+  ModalFieldError,
+  ModalLabel,
+  ModalNotice,
+  ModalShell,
+} from "@/features/storeManagement/components/ChangeRequestModal/ModalShell"
 import { STORE_INPUT_CLASS } from "@/features/storeManagement/components/StoreFormLayout/StoreFormLayout"
 import {
   changeRequestService,
@@ -140,20 +145,15 @@ export function SettlementRequestModal(props: SettlementRequestModalProps) {
         </>
       }
     >
-      <div className="mb-4 flex gap-2 rounded-[6px] bg-sz-info-bg p-3.5 text-[11px] leading-[1.65] text-sz-n-700">
-        <span className="mt-px flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-sz-info-text text-[10px] font-bold text-white">
-          i
-        </span>
-        <span>
-          정산 계좌는 <b>통장 사본 대조 후 운영자가 직접 반영</b>해요. 정산 예정
-          금액이 있으면 반영 완료 이전 회차는 기존 계좌로 지급됩니다.
-        </span>
-      </div>
+      <ModalNotice>
+        정산 계좌는{" "}
+        <b className="text-sz-n-900">통장 사본 대조 후 운영자가 직접 반영</b>
+        해요. 정산 예정 금액이 있으면 반영 완료 이전 회차는 기존 계좌로
+        지급됩니다.
+      </ModalNotice>
 
       <div className="mb-4">
-        <label className="mb-1 block text-[12px] font-medium text-sz-n-600">
-          현재 계좌
-        </label>
+        <ModalLabel>현재 계좌</ModalLabel>
         <input
           disabled
           value={formatCurrentAccount(current)}
@@ -167,9 +167,7 @@ export function SettlementRequestModal(props: SettlementRequestModalProps) {
       <div className="mb-4 h-px bg-sz-n-200" />
 
       <div className="mb-4">
-        <label className="mb-1 block text-[12px] font-medium text-sz-n-600">
-          변경할 은행<span className="ml-0.5 text-sz-danger-text">*</span>
-        </label>
+        <ModalLabel required>변경할 은행</ModalLabel>
         <Select value={bankCode || undefined} onValueChange={setBankCode}>
           <SelectTrigger
             className={cn(
@@ -189,12 +187,13 @@ export function SettlementRequestModal(props: SettlementRequestModalProps) {
             ))}
           </SelectContent>
         </Select>
+        {interacted && !bankCode && (
+          <ModalFieldError>은행명을 선택해 주세요.</ModalFieldError>
+        )}
       </div>
 
       <div className="mb-4">
-        <label className="mb-1 block text-[12px] font-medium text-sz-n-600">
-          변경할 계좌번호<span className="ml-0.5 text-sz-danger-text">*</span>
-        </label>
+        <ModalLabel required>변경할 계좌번호</ModalLabel>
         <input
           type="text"
           inputMode="numeric"
@@ -211,16 +210,14 @@ export function SettlementRequestModal(props: SettlementRequestModalProps) {
           )}
         />
         {interacted && !accountNumberValid && (
-          <p className="mt-1.5 text-[12px] text-sz-danger-text">
+          <ModalFieldError>
             계좌번호는 10~16자리 숫자로 입력해 주세요.
-          </p>
+          </ModalFieldError>
         )}
       </div>
 
       <div className="mb-4">
-        <label className="mb-1 block text-[12px] font-medium text-sz-n-600">
-          예금주명<span className="ml-0.5 text-sz-danger-text">*</span>
-        </label>
+        <ModalLabel required>예금주명</ModalLabel>
         <input
           type="text"
           value={accountHolder}
@@ -234,12 +231,13 @@ export function SettlementRequestModal(props: SettlementRequestModalProps) {
               : "border-sz-n-300"
           )}
         />
+        {interacted && !accountHolder.trim() && (
+          <ModalFieldError>예금주명을 입력해 주세요.</ModalFieldError>
+        )}
       </div>
 
       <div>
-        <label className="mb-1 block text-[12px] font-medium text-sz-n-600">
-          통장 사본<span className="ml-0.5 text-sz-danger-text">*</span>
-        </label>
+        <ModalLabel required>통장 사본</ModalLabel>
         <EvidenceUpload
           label="통장 사본"
           value={evidence}
