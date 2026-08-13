@@ -3,21 +3,15 @@ import type { MenuConfig } from "@/common/types/menu"
 export const SELLER_MENU: MenuConfig = {
   menuType: "SELLER",
   groups: [
+    /*
+      하위 메뉴 없는 단일 항목 — 시안(ui-partner-06 rev.8) GNB #9가 "기본정보 관리"
+      하나뿐이고, 그 아래 4개 탭(사업자 정보·정산 계좌·담당자·CS·계정)은 GNB가 아니라
+      화면 안의 SubNav가 담당한다("상품 관리"가 이미 같은 이유로 flat인 것과 동일 패턴).
+    */
     {
       id: "store",
-      label: "마켓관리",
-      children: [
-        {
-          id: "store-basic",
-          label: "기본정보 관리",
-          path: "/store/basic",
-        },
-        {
-          id: "store-settlement-account",
-          label: "정산 계좌 관리",
-          path: "/store/settlement-account",
-        },
-      ],
+      label: "기본정보 관리",
+      path: "/store/basic",
     },
     /*
       하위 메뉴 없는 단일 항목 — "상품 관리"를 누르면 바로 상품 목록이다.
