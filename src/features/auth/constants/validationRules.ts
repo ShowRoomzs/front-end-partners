@@ -148,10 +148,10 @@ const RAW_BUSINESS_VALIDATION_RULES = {
     required: "은행명을 선택해 주세요.",
   },
   accountHolder: {
-    // 법인 사업자면 문구 분기(2-E)
+    // 법인사업자면 문구 분기(2-E)
     validate: (value: unknown, formValues: unknown) => {
       if (value) return true
-      return (formValues as FullSignupData).businessType === "법인 사업자"
+      return (formValues as FullSignupData).businessType === "법인사업자"
         ? "법인 명의 예금주명을 입력해 주세요."
         : "예금주명을 입력해 주세요."
     },

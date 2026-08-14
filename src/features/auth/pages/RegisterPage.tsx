@@ -47,8 +47,7 @@ type FieldName = FieldPath<SignupFormValues>
 const BUSINESS_TYPES: BusinessType[] = [
   "일반과세자",
   "간이과세자",
-  "면세사업자",
-  "법인 사업자",
+  "법인사업자",
 ]
 
 // 셀렉트의 "미선택" 표시 옵션 값 — 고르면 빈 값("")으로 처리되어 required 오류가 뜬다.
@@ -224,7 +223,7 @@ export default function RegisterPage() {
 
   const businessType = watch("businessType")
   const isSimplified = businessType === "간이과세자"
-  const isCorporate = businessType === "법인 사업자"
+  const isCorporate = businessType === "법인사업자"
 
   const markInteracted = (name: string) =>
     setInteracted(prev => {
@@ -791,7 +790,7 @@ export default function RegisterPage() {
               <div className="mb-4 flex gap-2 rounded-[6px] bg-sz-warning-bg px-3 py-2.5 text-[11px] font-medium leading-relaxed text-sz-warning-text">
                 <span>⚠</span>
                 <span>
-                  법인 사업자는 반드시 <b>법인 명의 계좌</b>만 등록 가능합니다.
+                  법인사업자는 반드시 <b>법인 명의 계좌</b>만 등록 가능합니다.
                 </span>
               </div>
             )}

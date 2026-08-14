@@ -12,12 +12,11 @@ export interface RegisterData {
   csNumber: string
 }
 
-// 사업자 구분 — 백엔드는 free string이지만 프론트에서는 4종으로 제한(스펙 기준)
-export type BusinessType =
-  | "일반과세자"
-  | "간이과세자"
-  | "면세사업자"
-  | "법인 사업자"
+// 사업자 구분 — 백엔드는 free string이지만 프론트에서는 3종으로 제한(스펙 기준).
+// 면세사업자는 선택지에서 제외됐고, 법인사업자는 붙여 쓴다.
+// 이미 옛 표기("면세사업자" · "법인 사업자")로 가입한 셀러의 저장값은 그대로 두므로,
+// 조회 화면들은 이 유니온이 아니라 자유 문자열로 받아 표시한다.
+export type BusinessType = "일반과세자" | "간이과세자" | "법인사업자"
 
 // 회원가입 Step2(사업자·정산 정보). 필드명은 백엔드 SellerSignUpRequest와 1:1 일치.
 export interface BusinessInfoData {
