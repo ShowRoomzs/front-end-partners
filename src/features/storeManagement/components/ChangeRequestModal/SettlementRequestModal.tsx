@@ -17,7 +17,10 @@ import {
   ModalNotice,
   ModalShell,
 } from "@/features/storeManagement/components/ChangeRequestModal/ModalShell"
-import { STORE_INPUT_CLASS } from "@/features/storeManagement/components/StoreFormLayout/StoreFormLayout"
+import {
+  STORE_BUTTON_CLASS,
+  STORE_INPUT_CLASS,
+} from "@/features/storeManagement/components/StoreFormLayout/StoreFormLayout"
 import {
   changeRequestService,
   type ChangeRequestCreateResponse,
@@ -129,6 +132,7 @@ export function SettlementRequestModal(props: SettlementRequestModalProps) {
             type="button"
             variant="outline"
             size="sm"
+            className={STORE_BUTTON_CLASS}
             onClick={handleClose}
           >
             취소
@@ -136,6 +140,7 @@ export function SettlementRequestModal(props: SettlementRequestModalProps) {
           <Button
             type="button"
             size="sm"
+            className={STORE_BUTTON_CLASS}
             disabled={interacted && !canSubmit}
             onClick={handleSubmit}
             isLoading={isSubmitting}

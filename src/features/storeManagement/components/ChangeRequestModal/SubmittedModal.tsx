@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { ModalShell } from "@/features/storeManagement/components/ChangeRequestModal/ModalShell"
+import { STORE_BUTTON_CLASS } from "@/features/storeManagement/components/StoreFormLayout/StoreFormLayout"
 import type { ChangeRequestCreateResponse } from "@/features/storeManagement/services/changeRequestService"
 
 interface SubmittedModalProps {
@@ -18,7 +19,12 @@ export function SubmittedModal(props: SubmittedModalProps) {
       width={420}
       onClose={onClose}
       footer={
-        <Button type="button" size="sm" onClick={onClose}>
+        <Button
+          type="button"
+          size="sm"
+          className={STORE_BUTTON_CLASS}
+          onClick={onClose}
+        >
           확인
         </Button>
       }
