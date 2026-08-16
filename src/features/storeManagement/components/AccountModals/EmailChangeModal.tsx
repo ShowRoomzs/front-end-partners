@@ -6,7 +6,10 @@ import {
   ModalNotice,
   ModalShell,
 } from "@/features/storeManagement/components/ChangeRequestModal/ModalShell"
-import { STORE_INPUT_CLASS } from "@/features/storeManagement/components/StoreFormLayout/StoreFormLayout"
+import {
+  STORE_BUTTON_CLASS,
+  STORE_INPUT_CLASS,
+} from "@/features/storeManagement/components/StoreFormLayout/StoreFormLayout"
 import { validateEmailFormat } from "@/features/auth/utils/validationHelpers"
 import { basicInfoService } from "@/features/storeManagement/services/basicInfoService"
 import {
@@ -128,6 +131,7 @@ export function EmailChangeModal(props: EmailChangeModalProps) {
             type="button"
             variant="outline"
             size="sm"
+            className={STORE_BUTTON_CLASS}
             onClick={handleClose}
           >
             취소
@@ -135,6 +139,7 @@ export function EmailChangeModal(props: EmailChangeModalProps) {
           <Button
             type="button"
             size="sm"
+            className={STORE_BUTTON_CLASS}
             disabled={!isFormValid}
             isLoading={isSubmitting}
             onClick={handleSubmit}

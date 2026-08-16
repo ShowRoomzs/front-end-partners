@@ -8,6 +8,7 @@ import {
   StoreField,
   StoreFormCard,
   StoreSection,
+  STORE_BUTTON_CLASS,
   STORE_INPUT_CLASS,
 } from "@/features/storeManagement/components/StoreFormLayout/StoreFormLayout"
 import { BASIC_INFO_QUERY_KEYS } from "@/features/storeManagement/constants/queryKeys"
@@ -168,6 +169,7 @@ export default function SettlementAccountTab() {
             type="button"
             variant="outline"
             size="sm"
+            className={STORE_BUTTON_CLASS}
             disabled={isRequestPending}
             onClick={() => setIsRequestModalOpen(true)}
           >

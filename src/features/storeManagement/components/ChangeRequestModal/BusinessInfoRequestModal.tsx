@@ -1,5 +1,8 @@
 import { Button } from "@/components/ui/button"
-import { STORE_INPUT_CLASS } from "@/features/storeManagement/components/StoreFormLayout/StoreFormLayout"
+import {
+  STORE_BUTTON_CLASS,
+  STORE_INPUT_CLASS,
+} from "@/features/storeManagement/components/StoreFormLayout/StoreFormLayout"
 import {
   EvidenceUpload,
   type EvidenceFile,
@@ -127,6 +130,7 @@ export function BusinessInfoRequestModal(props: BusinessInfoRequestModalProps) {
             type="button"
             variant="outline"
             size="sm"
+            className={STORE_BUTTON_CLASS}
             onClick={handleClose}
           >
             취소
@@ -134,6 +138,7 @@ export function BusinessInfoRequestModal(props: BusinessInfoRequestModalProps) {
           <Button
             type="button"
             size="sm"
+            className={STORE_BUTTON_CLASS}
             disabled={interacted && !canSubmit}
             onClick={handleSubmit}
             isLoading={isSubmitting}

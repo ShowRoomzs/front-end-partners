@@ -16,6 +16,7 @@ import {
   StoreField,
   StoreFormCard,
   StoreSection,
+  STORE_BUTTON_CLASS,
   STORE_INPUT_CLASS,
 } from "@/features/storeManagement/components/StoreFormLayout/StoreFormLayout"
 import { useGetAccountInfo } from "@/features/storeManagement/hooks/useGetAccountInfo"
@@ -179,7 +180,7 @@ export default function AccountTab() {
                 type="button"
                 variant="outline"
                 size="sm"
-                className="shrink-0"
+                className={cn("shrink-0", STORE_BUTTON_CLASS)}
                 disabled={!data.emailChangeable}
                 onClick={() => setIsEmailModalOpen(true)}
               >
@@ -257,6 +258,7 @@ export default function AccountTab() {
           <Button
             type="button"
             size="sm"
+            className={STORE_BUTTON_CLASS}
             disabled={!isFormValid}
             isLoading={isSaving}
             onClick={handleChangePassword}

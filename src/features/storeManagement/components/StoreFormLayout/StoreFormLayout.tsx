@@ -13,6 +13,19 @@ import type { ReactNode } from "react"
 /** 시안 `.inp`/`.sel` — rev.8 컴팩트 규격(높이 32px, 패딩 6px 10px). 모든 필드 컨트롤에 붙인다 */
 export const STORE_INPUT_CLASS = "h-8 px-2.5 py-1.5"
 
+/**
+ * 시안 `.btn` — 12px(--fs-caption) / 500 / 높이 32px / 패딩 0 14px.
+ *
+ * 공용 `Button`(shadcn)의 베이스는 `text-sm`(14px)이고 `size="sm"`은 `px-3`(12px)이라
+ * 시안과 어긋난다. 이 화면은 라벨 12px·인풋 13px·섹션 제목 13px로 짜인 컴팩트 화면이라
+ * 14px 버튼이 화면에서 가장 큰 글씨가 돼 버린다. 공용 Button을 통째로 바꾸면 이 화면을
+ * 벗어난 곳(상품 등록·답변 템플릿·연결·소통·쿠폰)까지 전부 흔들리므로, 이 화면 안에서만
+ * 덧칠한다. 이 파일 밖으로 가져가지 말 것.
+ *
+ * 높이(h-8)는 `size="sm"`이 이미 맞으므로 `size="sm"`과 함께 쓴다.
+ */
+export const STORE_BUTTON_CLASS = "px-3.5 text-[12px]"
+
 /** 시안 `.card` — 폼 전체를 감싸는 흰 카드. max-width:820px는 넣지 않는다(1440 캔버스 전용 수치). */
 export function StoreFormCard({ children }: { children: ReactNode }) {
   return (

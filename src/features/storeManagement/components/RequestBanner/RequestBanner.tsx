@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import { STORE_BUTTON_CLASS } from "@/features/storeManagement/components/StoreFormLayout/StoreFormLayout"
 import { cn } from "@/lib/utils"
 import type { ReactNode } from "react"
 
@@ -106,7 +107,7 @@ export default function RequestBanner(props: RequestBannerProps) {
           type="button"
           variant="outline"
           size="sm"
-          className="shrink-0"
+          className={cn("shrink-0", STORE_BUTTON_CLASS)}
           disabled={isSubmitting}
           onClick={onAction}
         >
