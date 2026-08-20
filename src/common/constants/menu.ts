@@ -60,7 +60,8 @@ export const SELLER_MENU: MenuConfig = {
     {
       id: "inquiry",
       label: "문의 관리",
-      path: "/inquiry/respond",
+      // 하위 화면 중 유일하게 구현된 상품 문의 목록이 대표 화면이다
+      path: "/inquiry/product",
       // 답변 템플릿(/inquiry/template)까지 이 메뉴가 대표한다
       matchPaths: ["/inquiry"],
     },

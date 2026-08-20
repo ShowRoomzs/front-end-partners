@@ -14,6 +14,8 @@ import RegisterDirect from "@/features/coupon/RegisterDirect/RegisterDirect"
 import AnswerTemplateListPage from "@/features/inquiry/pages/AnswerTemplateListPage"
 import AnswerTemplateWritePage from "@/features/inquiry/pages/AnswerTemplateWritePage"
 import ConnectionsPage from "@/features/connections/pages/ConnectionsPage"
+import ProductInquiryListPage from "@/features/productInquiry/pages/ProductInquiryListPage"
+import ProductInquiryDetailPage from "@/features/productInquiry/pages/ProductInquiryDetailPage"
 
 export const authRoutes: Array<RouteObject> = [
   {
@@ -128,9 +130,17 @@ export const mainRoutes: Array<RouteObject> = [
             path: "basic",
             element: <div>aasdf</div>,
           },
+          /*
+            상품 문의 관리 (§23) — 목록 · 상세.
+            상세는 행 클릭으로만 들어가므로 GNB에 올리지 않는다.
+          */
           {
             path: "product",
-            element: <div>aasdf</div>,
+            element: <ProductInquiryListPage />,
+          },
+          {
+            path: "product/:inquiryId",
+            element: <ProductInquiryDetailPage />,
           },
           {
             path: "post",

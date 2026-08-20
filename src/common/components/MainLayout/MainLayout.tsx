@@ -22,6 +22,8 @@ import { useGetThreadSummary } from "@/features/connections/hooks/useGetThreadSu
 const SUB_PAGE_LABELS: Array<{ prefix: string; label: string }> = [
   { prefix: "/product/register", label: "상품 등록" },
   { prefix: "/product/edit", label: "상품 수정" },
+  // 목록(/inquiry/product)은 걸리지 않게 끝에 슬래시를 둔다
+  { prefix: "/inquiry/product/", label: "문의 상세" },
 ]
 
 /**
