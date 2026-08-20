@@ -23,7 +23,7 @@ interface HistoryListProps {
 const DOT_CLASS: Record<HistoryDotTone, string> = {
   accent: "bg-sz-accent-500",
   success: "bg-sz-success-text",
-  muted: "bg-sz-n-500",
+  muted: "bg-sz-n-300",
   warn: "bg-sz-warning-text",
   danger: "bg-sz-danger-text",
 }
@@ -43,7 +43,7 @@ export default function HistoryList(props: HistoryListProps) {
       {items.map((item, index) => (
         <div
           key={`${item.label}-${item.processedAt}-${index}`}
-          className="flex gap-2.5 border-b border-sz-n-100 py-[9px] last:border-b-0"
+          className="flex gap-2.5 py-[9px]"
         >
           <span
             className={cn(

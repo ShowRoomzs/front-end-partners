@@ -23,9 +23,7 @@ export default function DetailCard(props: DetailCardProps) {
         <h2 className="text-[13px] font-semibold text-sz-n-900">{title}</h2>
         {note && <span className="text-[11px] text-sz-n-500">{note}</span>}
       </div>
-      <div className={flushBody ? "px-4 py-2" : "px-4 pb-3 pt-1"}>
-        {children}
-      </div>
+      <div className={flushBody ? "px-4 pb-3 pt-2" : "p-4"}>{children}</div>
     </section>
   )
 }
@@ -40,7 +38,7 @@ export function FieldRow(props: FieldRowProps) {
   const { label, children } = props
 
   return (
-    <div className="flex items-baseline gap-3 border-b border-sz-n-100 py-[9px] text-[12px] last:border-b-0">
+    <div className="flex gap-3 border-b border-sz-n-100 py-[9px] text-[12px] first:pt-0 last:border-b-0">
       <span className="w-[140px] shrink-0 text-sz-n-500">{label}</span>
       <span className="flex-1 text-sz-n-900">{children}</span>
     </div>
