@@ -12,6 +12,7 @@ import { useMarketStore } from "@/common/stores/useMarketStore"
 import { formatDateTimeShort } from "@/common/utils/formatDate"
 import AnswerForm from "@/features/productInquiry/components/AnswerForm/AnswerForm"
 import DeleteRequestModal from "@/features/productInquiry/components/DeleteRequestModal/DeleteRequestModal"
+import Notice from "@/features/productInquiry/components/Notice/Notice"
 import { INQUIRY_INITIAL_PARAMS } from "@/features/productInquiry/constants/params"
 import { useGetProductInquiryDetail } from "@/features/productInquiry/hooks/useGetProductInquiryDetail"
 import {
@@ -39,22 +40,23 @@ import {
 } from "react-router-dom"
 
 /**
- * 이력 점 색 — 라벨은 서버가 내려주므로 여기서는 톤만 정한다.
+ * 이력 점 색 — 라벨은 서버가 내려주므로 여기서는 톤만 정한다(시안 `.hdot`).
  *
- * 삭제 집행만 위험색이다. 소비자 노출이 실제로 막힌 사건이라 이력에서도 즉시 눈에
- * 띄어야 한다. 서버가 새 이벤트 코드를 늘려도 화면이 죽지 않게 기본값을 둔다.
+ * 소비자가 남긴 사건은 무채색, 브랜드 답변은 성공색, 삭제 요청은 정보색, 운영자의
+ * 반려는 경고, 삭제 집행만 위험색이다. 서버가 새 이벤트 코드를 늘려도 화면이 죽지
+ * 않게 기본값을 둔다.
  */
 const HISTORY_TONE: Record<string, HistoryItem["tone"]> = {
-  REGISTERED: "accent",
+  REGISTERED: "muted",
   ANSWERED: "success",
-  ANSWER_MODIFIED: "muted",
-  DELETE_REQUESTED: "warn",
-  DELETE_REJECTED: "accent",
+  ANSWER_MODIFIED: "success",
+  DELETE_REQUESTED: "accent",
+  DELETE_REJECTED: "warn",
   DELETE_EXECUTED: "danger",
 }
 
 /**
- * A2 — 상품 문의 상세(파트너센터).
+ * B1~B8 — 상품 문의 상세(파트너센터).
  *
  * 브랜드가 할 수 있는 일은 **답변 등록·수정**과 **삭제 요청** 셋뿐이다. 삭제 집행도,
  * 요청 취소도 여기에 없다. 어떤 버튼을 보일지는 전부 서버 플래그가 정한다 —
@@ -166,10 +168,17 @@ export default function ProductInquiryDetailPage() {
 
   const { deleteRequest } = detail
   const isDeleted = detail.exposureStatus === "DELETED"
+  const isUnderReview = !!deleteRequest?.underReview
+  const isRejected = !!deleteRequest?.rejected
   const variant = getInquiryStatusVariant(detail.status, detail.exposureStatus)
+  const brandName = market?.marketName ?? "브랜드"
 
+  /*
+    이력 한 줄에 사유까지 붙여 읽는다 — "문의 삭제 요청 · 타 브랜드 비교·비방"처럼
+    무엇을 했는지와 왜 했는지가 떨어져 있으면 이력을 두 번 읽어야 한다.
+  */
   const historyItems: Array<HistoryItem> = detail.history.map(item => ({
-    label: item.label,
+    label: item.detail ? `${item.label} · ${item.detail}` : item.label,
     tone: HISTORY_TONE[item.event] ?? "muted",
     processedAt: item.occurredAt,
     processorName: item.actorLabel,
@@ -179,23 +188,17 @@ export default function ProductInquiryDetailPage() {
     답변 시각은 등록과 수정을 **병기**한다(§23-4). 수정 시각으로 갈아치우면 소비자
     화면에 처음 답이 붙은 시점이 사라져 응답 속도 근거가 없어진다.
   */
-  const answerMeta = [
-    detail.answeredAt && `등록 ${formatDateTimeShort(detail.answeredAt)}`,
-    detail.answerModifiedAt &&
-      `수정 ${formatDateTimeShort(detail.answerModifiedAt)}`,
-  ]
-    .filter(Boolean)
-    .join(" · ")
+  const answeredAtText = formatDateTimeShort(detail.answeredAt)
+  const answerMeta = detail.answerModifiedAt
+    ? `${answeredAtText} 등록 · ${formatDateTimeShort(detail.answerModifiedAt)} 수정됨`
+    : answeredAtText
 
   return (
     <>
       <div className="mb-4 flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-[20px] font-semibold text-sz-n-900">문의 상세</h1>
-          <p className="mt-0.5 text-[12px] text-sz-n-600">
-            {detail.typeName} · {detail.inquiryNumber}
-          </p>
-        </div>
+        <h1 className="text-[20px] font-semibold text-sz-n-900">
+          상품 문의 상세
+        </h1>
 
         <RecordNav
           onList={goToList}
@@ -233,24 +236,41 @@ export default function ProductInquiryDetailPage() {
               <button
                 type="button"
                 onClick={() => navigate(`/product/edit/${detail.productId}`)}
-                className="text-[12px] text-sz-n-600 underline underline-offset-2 hover:text-sz-accent-600"
+                className="text-sz-n-600 underline underline-offset-2 hover:text-sz-accent-600"
               >
-                상품 보기
+                상품 상세 보기
               </button>
             </FieldRow>
             {/*
               작성자는 마스킹된 닉네임뿐이다. 실명·연락처도, 회원 상세 링크도 없다 —
-              브랜드에게 소비자 신원을 열어 줄 근거가 없다(§23-3).
+              브랜드에게 소비자 신원을 열어 줄 근거가 없다(§23-3). 왜 마스킹인지를
+              한 줄로 붙여 "값이 잘려 온 것"으로 오해하지 않게 한다.
             */}
-            <FieldRow label="작성자">{detail.writerName}</FieldRow>
+            <FieldRow label="작성자">
+              {detail.writerName}
+              <div className="mt-0.5 text-[11px] text-sz-n-500">
+                소비자 닉네임 마스킹 · 브랜드는 실명·연락처를 볼 수 없습니다
+              </div>
+            </FieldRow>
             <FieldRow label="공개 여부">
-              {/* 비밀글은 상태가 아니라 분류라 점 없는 배지를 쓴다 */}
-              {detail.secret ? (
-                <StatusBadge variant="neutral" hideDot>
-                  {detail.visibilityName}
-                </StatusBadge>
+              {/* 공개여부는 상태가 아니라 분류라 점 없는 배지를 쓴다 */}
+              <StatusBadge variant="neutral" hideDot>
+                {detail.visibilityName}
+              </StatusBadge>
+              {/*
+                브랜드가 바꿀 수 없는 값(권한 ③)이라는 것과, 삭제로 노출이 끊긴 것은
+                서로 다른 사실이다. 배지 값을 덮지 않고 옆에 덧붙인다.
+              */}
+              {isDeleted ? (
+                <span className="ml-1.5 text-[11px] text-sz-n-500">
+                  삭제되어 비노출
+                </span>
               ) : (
-                detail.visibilityName
+                detail.secret && (
+                  <span className="ml-1.5 text-[11px] text-sz-n-500">
+                    작성자 지정 · 변경 불가
+                  </span>
+                )
               )}
             </FieldRow>
             <FieldRow label="등록일시">
@@ -260,25 +280,89 @@ export default function ProductInquiryDetailPage() {
             </FieldRow>
           </DetailCard>
 
-          <DetailCard title="문의 내용" note="소비자 입력">
-            <div className="pt-2">
-              <ThreadMessage
-                authorName={detail.writerName}
-                roleLabel="소비자"
-                sentAt={detail.createdAt}
-                content={detail.content}
-                imageUrls={detail.imageUrls}
-              />
-            </div>
+          {/*
+            반려 결과는 문의 정보 **바로 아래**에 온다(B7). 브랜드가 이 화면에 들어온
+            이유가 그 결과이므로 원문보다 먼저 읽혀야 한다. 검토 중·삭제된 건의
+            삭제 요청 카드는 반대로 맨 아래에 둔다 — 그때는 경위가 참고 자료다.
+          */}
+          {isRejected && deleteRequest && (
+            <DetailCard
+              title="삭제 요청 결과"
+              note={
+                deleteRequest.reviewedAt
+                  ? `운영자 · ${formatDateTimeShort(deleteRequest.reviewedAt)} 처리`
+                  : "운영자 처리"
+              }
+            >
+              <Notice tone="warn" className="mb-3">
+                <b className="font-semibold">삭제 요청이 반려되었습니다.</b>{" "}
+                문의는 그대로 게시되며 상태는{" "}
+                <b className="font-semibold">
+                  요청 직전 상태({detail.statusLabel})
+                </b>
+                로 돌아갑니다.
+              </Notice>
+              <FieldRow label="내 요청 사유">
+                {deleteRequest.reasonName}
+                <div className="mt-0.5 text-[11px] text-sz-n-500">
+                  {formatDateTimeShort(deleteRequest.requestedAt)} 요청
+                </div>
+              </FieldRow>
+              {deleteRequest.rejectReason && (
+                <FieldRow label="운영자 반려 사유">
+                  {deleteRequest.rejectReason}
+                </FieldRow>
+              )}
+            </DetailCard>
+          )}
+
+          <DetailCard
+            title="문의 내용"
+            note={
+              isDeleted
+                ? "삭제 전 원문 보관"
+                : "소비자 입력 · 250자 이내 · 사진 최대 3장"
+            }
+          >
+            {/*
+              삭제된 건에서 가장 먼저 읽혀야 하는 정보다. 답변까지 함께 내려간다는
+              점을 모르면 "답변은 남아 있겠지"라고 오해한 채 화면을 닫는다.
+            */}
+            {isDeleted && (
+              <Notice tone="danger" className="mb-3">
+                <b className="font-semibold">운영자가 삭제한 문의입니다.</b>{" "}
+                질문과 <b className="font-semibold">브랜드 답변이 함께</b>{" "}
+                소비자 화면에서 내려갑니다 — 질문 없는 답변은 성립하지 않기
+                때문입니다. 원문·답변 모두 분쟁 대비로 보관되며 이 화면에서만
+                조회할 수 있습니다.
+              </Notice>
+            )}
+
+            <ThreadMessage
+              authorName={detail.writerName}
+              roleLabel="소비자"
+              sentAt={detail.createdAt}
+              content={detail.content}
+              imageUrls={detail.imageUrls}
+            />
           </DetailCard>
 
-          <DetailCard title="답변" note={detail.answerElapsedText ?? undefined}>
+          <DetailCard
+            title="브랜드 답변"
+            note={
+              detail.answerContent
+                ? brandName
+                : detail.canRegisterAnswer
+                  ? `${brandName} · 답변 작성`
+                  : undefined
+            }
+          >
             {detail.answerContent && !isEditingAnswer && (
-              <div className="pt-2">
+              <>
                 <ThreadMessage
                   // 답변 작성자명을 서버가 내려주지 않는다 — 마켓 하나에 답변도
                   // 하나뿐이라 지금 로그인한 마켓 이름이 곧 작성자다
-                  authorName={market?.marketName ?? "브랜드"}
+                  authorName={brandName}
                   roleLabel="브랜드"
                   meta={answerMeta}
                   sentAt={detail.answeredAt ?? detail.createdAt}
@@ -286,7 +370,7 @@ export default function ProductInquiryDetailPage() {
                   emphasized
                 />
                 {detail.canModifyAnswer && (
-                  <div className="mt-2 flex justify-end">
+                  <div className="mt-3 flex justify-end">
                     <button
                       type="button"
                       onClick={() => setIsEditingAnswer(true)}
@@ -296,7 +380,7 @@ export default function ProductInquiryDetailPage() {
                     </button>
                   </div>
                 )}
-              </div>
+              </>
             )}
 
             {detail.answerContent && isEditingAnswer && (
@@ -313,6 +397,12 @@ export default function ProductInquiryDetailPage() {
               <AnswerForm
                 submitLabel="답변 등록"
                 isSubmitting={isRegistering}
+                /*
+                  비밀글에는 공개 전환 예고를 띄우지 않는다(B5) — 답변해도 공개로
+                  바뀌지 않으므로 그 문구가 거짓이 된다.
+                */
+                writerName={detail.secret ? undefined : detail.writerName}
+                onCancel={() => undefined}
                 onSubmit={handleRegister}
               />
             )}
@@ -322,60 +412,35 @@ export default function ProductInquiryDetailPage() {
               않는 건 의도된 것이다 — 답하지 못한 채로 끝났다는 사실 자체가 기록이다.
             */}
             {!detail.answerContent && !detail.canRegisterAnswer && (
-              <p className="py-3 text-[12px] text-sz-n-500">
-                지금은 답변을 등록할 수 없습니다. 삭제 요청이 검토 중이거나 이미
-                삭제된 문의입니다.
+              <p className="text-[12px] text-sz-n-500">
+                답변 없이 종료된 문의입니다. 삭제 요청이 검토 중이거나 이미
+                삭제된 문의에는 답변을 등록할 수 없습니다.
               </p>
             )}
           </DetailCard>
 
           {/*
-            삭제 요청 카드는 요청이 있는 건에만 그린다. 반려·집행된 뒤에도 지우지
-            않는다 — 무엇을 근거로 요청했고 운영자가 어떻게 판단했는지가 한 화면에서
-            대조돼야 한다.
+            검토 중·삭제된 건의 삭제 요청 경위. 집행된 뒤에도 지우지 않는다 —
+            무엇을 근거로 요청했고 운영자가 어떻게 판단했는지가 한 화면에서 대조돼야
+            분쟁 시 소명이 된다.
           */}
-          {deleteRequest && (
+          {deleteRequest && !isRejected && (
             <DetailCard
               title="삭제 요청"
-              note={
-                deleteRequest.underReview
-                  ? "운영자 검토 중"
-                  : deleteRequest.rejected
-                    ? "반려됨"
-                    : undefined
-              }
+              note={`${brandName} · ${formatDateTimeShort(deleteRequest.requestedAt)} 요청`}
             >
               <FieldRow label="요청 사유">{deleteRequest.reasonName}</FieldRow>
               {deleteRequest.detail && (
                 <FieldRow label="상세 설명">{deleteRequest.detail}</FieldRow>
               )}
-              <FieldRow label="요청일시">
-                <span className="tabular-nums">
-                  {formatDateTimeShort(deleteRequest.requestedAt)}
-                </span>
-              </FieldRow>
-              {deleteRequest.reviewedAt && (
-                <FieldRow label="검토일시">
-                  <span className="tabular-nums">
-                    {formatDateTimeShort(deleteRequest.reviewedAt)}
-                  </span>
-                </FieldRow>
-              )}
-              {/*
-                운영자의 삭제 사유는 내부 기록이라 이 응답에 오지 않는다(§23-5).
-                브랜드가 받는 건 반려 사유뿐이다.
-              */}
-              {deleteRequest.rejected && deleteRequest.rejectReason && (
-                <FieldRow label="반려 사유">
-                  {deleteRequest.rejectReason}
-                </FieldRow>
-              )}
-              {deleteRequest.deletedAt && (
-                <FieldRow label="삭제일시">
-                  <span className="tabular-nums">
-                    {formatDateTimeShort(deleteRequest.deletedAt)}
-                  </span>
-                </FieldRow>
+              {isUnderReview && (
+                <Notice tone="info" className="mt-3">
+                  <b className="font-semibold">운영자 검토 중입니다.</b> 검토
+                  결과에 따라 문의가 삭제되거나, 요청이 반려되고 문의는 그대로
+                  게시됩니다(반려 시{" "}
+                  <b className="font-semibold">요청 직전 상태로 복귀</b>).
+                  결과는 알림으로 전달됩니다.
+                </Notice>
               )}
             </DetailCard>
           )}
@@ -383,7 +448,7 @@ export default function ProductInquiryDetailPage() {
 
         <div className="sticky top-0 flex flex-col gap-4">
           <DetailCard title="처리">
-            <div className="flex items-center justify-between gap-2.5 border-b border-sz-n-100 pb-3 pt-2">
+            <div className="flex items-center justify-between gap-2.5 border-b border-sz-n-100 pb-3">
               <span className="text-[12px] text-sz-n-500">현재 상태</span>
               <StatusBadge variant={variant}>{detail.statusLabel}</StatusBadge>
             </div>
@@ -398,67 +463,96 @@ export default function ProductInquiryDetailPage() {
                   </span>
                 }
               />
-              {detail.answeredAt && (
-                <MetaRow
-                  label="답변일시"
-                  value={
-                    <span className="tabular-nums">
-                      {formatDateTimeShort(detail.answeredAt)}
-                    </span>
-                  }
-                />
-              )}
-              {detail.answerModifiedAt && (
-                <MetaRow
-                  label="답변 수정"
-                  value={
-                    <span className="tabular-nums">
-                      {formatDateTimeShort(detail.answerModifiedAt)}
-                    </span>
-                  }
-                />
-              )}
-              {/* 서버가 계산한 문구를 그대로 쓴다 — 프론트에서 다시 재지 않는다 */}
-              {detail.answerElapsedText && (
-                <MetaRow label="답변 소요" value={detail.answerElapsedText} />
-              )}
-              {deleteRequest && (
-                <MetaRow
-                  label="삭제 요청"
-                  value={
-                    <span className="tabular-nums">
-                      {formatDateTimeShort(deleteRequest.requestedAt)}
-                    </span>
-                  }
-                />
+              {/*
+                삭제된 건에서는 답변일시 대신 삭제일시·처리자를 본다. 답변 여부는
+                본문 카드에서 이미 보이고, 여기서 필요한 건 "언제 누가 내렸는가"다.
+              */}
+              {isDeleted ? (
+                <>
+                  <MetaRow
+                    label="삭제일시"
+                    value={
+                      <span className="tabular-nums">
+                        {formatDateTimeShort(deleteRequest?.deletedAt ?? null)}
+                      </span>
+                    }
+                  />
+                  {/* 삭제 집행 주체는 언제나 운영자다(브랜드는 요청까지만 한다) */}
+                  <MetaRow label="처리자" value="운영자" />
+                </>
+              ) : (
+                <>
+                  {/* 미답변이어도 행을 지우지 않는다 — 값이 `—`인 것 자체가 정보다 */}
+                  <MetaRow
+                    label="답변일시"
+                    value={
+                      <span className="tabular-nums">{answeredAtText}</span>
+                    }
+                  />
+                  {/* 서버가 계산한 문구를 그대로 쓴다 — 프론트에서 다시 재지 않는다 */}
+                  {detail.answerElapsedText && (
+                    <MetaRow
+                      label="답변 소요"
+                      value={detail.answerElapsedText}
+                    />
+                  )}
+                  {isUnderReview && deleteRequest && (
+                    <MetaRow
+                      label="삭제 요청일"
+                      value={
+                        <span className="tabular-nums">
+                          {formatDateTimeShort(deleteRequest.requestedAt)}
+                        </span>
+                      }
+                    />
+                  )}
+                  {isRejected && (
+                    <MetaRow
+                      label="삭제 요청 결과"
+                      value={<span className="text-sz-warning-text">반려</span>}
+                    />
+                  )}
+                </>
               )}
             </div>
 
-            {isDeleted ? (
-              <p className="mb-2 mt-2.5 text-[11px] leading-[1.55] text-sz-n-500">
-                운영자가 삭제를 집행해 소비자 화면에서 내려갔습니다. 되돌리는
-                경로는 제공하지 않습니다.
-              </p>
-            ) : (
-              <>
-                {detail.canRequestDelete && (
-                  <div className="mt-4">
-                    <button
-                      type="button"
-                      onClick={() => setIsDeleteOpen(true)}
-                      className="inline-flex h-9 w-full items-center justify-center rounded-[6px] border border-sz-n-300 bg-white px-3.5 text-[12px] font-medium text-sz-n-900 hover:bg-sz-n-100"
-                    >
-                      {deleteRequest?.rejected ? "삭제 다시 요청" : "삭제 요청"}
-                    </button>
-                  </div>
-                )}
-                <p className="mb-2 mt-2.5 text-[11px] leading-[1.55] text-sz-n-500">
-                  {deleteRequest?.underReview
-                    ? "삭제 요청을 검토하는 중입니다. 요청을 취소할 수는 없고, 결과가 나오면 이 화면에 표시됩니다."
-                    : "문의 삭제는 운영자가 집행합니다. 브랜드는 사유를 붙여 요청까지 할 수 있습니다."}
-                </p>
-              </>
+            {/*
+              검토 중에는 버튼이 없다 — 운영자 판단이 나올 때까지 브랜드가 할 수 있는
+              조작이 없고, 요청 취소도 불가하다(§23-5).
+            */}
+            {detail.canRequestDelete && (
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsDeleteOpen(true)}
+                  className="inline-flex h-8 w-full items-center justify-center rounded-[6px] border border-[#E9C9C9] bg-white px-3.5 text-[12px] font-medium text-sz-danger-text hover:bg-sz-danger-bg"
+                >
+                  {isRejected ? "문의 삭제 재요청" : "문의 삭제 요청"}
+                </button>
+              </div>
             )}
+
+            <p className="mt-2.5 text-[11px] leading-[1.55] text-sz-n-500">
+              {isDeleted ? (
+                "삭제 사유는 운영자 내부 기록으로 관리되며 브랜드·작성자에게 공개되지 않습니다. 되돌리려면 운영자에게 문의하세요."
+              ) : isUnderReview ? (
+                <>
+                  삭제 요청은{" "}
+                  <b className="font-semibold">취소할 수 없습니다.</b> 운영자
+                  판단이 나올 때까지 이 화면에서 할 수 있는 조작은 없습니다.
+                </>
+              ) : isRejected ? (
+                "반려된 요청은 사유를 보완해 다시 제출할 수 있습니다."
+              ) : detail.answerContent ? (
+                "답변을 등록한 뒤에도 부적절한 문의라면 삭제를 요청할 수 있습니다."
+              ) : (
+                <>
+                  비방·개인정보·광고 등 부적절한 문의는{" "}
+                  <b className="font-semibold">운영자에게 삭제를 요청</b>할 수
+                  있습니다. 삭제 집행 여부는 운영자가 판단합니다.
+                </>
+              )}
+            </p>
           </DetailCard>
 
           <DetailCard title="처리 이력" flushBody>
@@ -471,7 +565,6 @@ export default function ProductInquiryDetailPage() {
         open={isDeleteOpen}
         onOpenChange={setIsDeleteOpen}
         isSubmitting={isRequesting}
-        isRerequest={!!deleteRequest?.rejected}
         onSubmit={handleRequestDelete}
       />
     </>

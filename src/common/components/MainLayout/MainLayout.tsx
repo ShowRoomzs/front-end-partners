@@ -23,8 +23,16 @@ const SUB_PAGE_LABELS: Array<{ prefix: string; label: string }> = [
   { prefix: "/product/register", label: "상품 등록" },
   { prefix: "/product/edit", label: "상품 수정" },
   // 목록(/inquiry/product)은 걸리지 않게 끝에 슬래시를 둔다
-  { prefix: "/inquiry/product/", label: "문의 상세" },
+  { prefix: "/inquiry/product/", label: "상품 문의 상세" },
 ]
+
+/**
+ * 셸이 H1을 그리지 않는 경로 — 화면이 제목을 직접 그린다.
+ *
+ * 메뉴 라벨과 화면 제목이 다르거나(문의 관리 → `상품 문의`), 제목 아래 설명 줄이
+ * 필요한 화면들이다. 셸에는 설명 슬롯이 없어서 화면이 `page-h`를 통째로 가져간다.
+ */
+const SELF_TITLED_PREFIXES = ["/inquiry/product"]
 
 /**
  * 셸의 여백·제목·스크롤을 화면이 직접 가져가는 경로들.
@@ -107,8 +115,15 @@ export default function MainLayout() {
       location.pathname === prefix || location.pathname.startsWith(`${prefix}/`)
   )
 
+  const isSelfTitled = SELF_TITLED_PREFIXES.some(
+    prefix =>
+      location.pathname === prefix || location.pathname.startsWith(`${prefix}/`)
+  )
+
   const pageTitle =
-    breadcrumb.subtitle || isFullBleed ? undefined : breadcrumb.title
+    breadcrumb.subtitle || isFullBleed || isSelfTitled
+      ? undefined
+      : breadcrumb.title
 
   const { data: threadSummary } = useGetThreadSummary(menuType === "SELLER")
 

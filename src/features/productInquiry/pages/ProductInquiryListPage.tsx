@@ -34,11 +34,12 @@ function toggle<T extends string>(list: Array<T>, code: T): Array<T> {
 }
 
 /**
- * A1 — 상품 문의 목록(파트너센터).
+ * A1~A3 — 상품 문의 목록(파트너센터).
  *
  * 어드민의 모니터링 화면과 짝을 이루지만 주체가 다르다. 여기서 브랜드는 **답변하는
- * 쪽**이고, 삭제는 요청까지만 할 수 있다. 그래서 목록에 관리 열이 없고 상태 배지의
- * 색 기준도 어드민과 다르다(utils/statusBadge 참고).
+ * 쪽**이고, 삭제는 요청까지만 할 수 있다. 그래서 목록에 관리 열이 없다.
+ * 상태값·색·컬럼은 어드민(§18)을 정본으로 따른다 — 같은 상태가 서피스마다 다른 색이면
+ * 3서피스를 오가는 운영 소통에서 혼선이 생긴다.
  */
 export default function ProductInquiryListPage() {
   const navigate = useNavigate()
@@ -120,60 +121,53 @@ export default function ProductInquiryListPage() {
     [updateParams]
   )
 
-  const hasFilter =
+  const hasCondition =
     !!params.keyword ||
     params.types.length > 0 ||
     params.visibilities.length > 0
 
   /*
-    빈 상태는 세 가지가 서로 다른 의미다 — 조건이 빗나간 것, 처리할 게 없는 것,
-    아직 아무 문의도 없는 것. 어느 경우에도 CTA를 두지 않는다. 문의는 소비자가
-    만드는 것이라 브랜드가 이 화면에서 시작할 수 있는 일이 없다.
+    빈 상태는 두 가지다 — 조건이 빗나간 것과 아직 아무 문의도 없는 것.
+    어느 쪽에도 CTA를 두지 않는다. 문의는 소비자가 만드는 것이라 브랜드가 이 화면에서
+    시작할 수 있는 일이 없다(§23-2).
   */
-  const emptyState = useMemo(() => {
-    if (hasFilter) {
-      return (
+  const emptyState = useMemo(
+    () =>
+      hasCondition ? (
         <div className="px-6 py-[72px] text-center">
-          <div className="mb-2.5 text-[28px] leading-none text-sz-n-300">⌕</div>
           <div className="mb-1 text-[13px] font-semibold text-sz-n-700">
             검색 결과가 없습니다
           </div>
           <div className="text-[12px] text-sz-n-500">
-            다른 상품명·질문으로 검색하거나 필터를 풀어 보세요.
+            검색어를 바꾸거나 필터를 초기화해 보세요.
           </div>
         </div>
-      )
-    }
-
-    if (params.status === "WAITING") {
-      return (
+      ) : (
         <div className="px-6 py-[72px] text-center">
-          <div className="mb-2.5 text-[28px] leading-none text-sz-n-300">✓</div>
           <div className="mb-1 text-[13px] font-semibold text-sz-n-700">
-            답변을 기다리는 문의가 없습니다
+            아직 등록된 문의가 없습니다
           </div>
           <div className="text-[12px] text-sz-n-500">
-            새 문의가 들어오면 이 탭에 표시됩니다.
+            소비자가 상품 상세에서 문의를 남기면 여기에 표시됩니다.
           </div>
         </div>
-      )
-    }
-
-    return (
-      <div className="px-6 py-[72px] text-center">
-        <div className="mb-2.5 text-[28px] leading-none text-sz-n-300">⌕</div>
-        <div className="mb-1 text-[13px] font-semibold text-sz-n-700">
-          문의가 없습니다
-        </div>
-        <div className="text-[12px] text-sz-n-500">
-          소비자가 상품 상세에서 문의를 남기면 이 목록에 표시됩니다.
-        </div>
-      </div>
-    )
-  }, [hasFilter, params.status])
+      ),
+    [hasCondition]
+  )
 
   return (
     <ListViewWrapper>
+      {/*
+        셸이 아니라 화면이 제목을 그린다 — GNB 라벨(문의 관리)과 화면 이름(상품 문의)이
+        다르고 설명 줄이 붙기 때문이다(MainLayout의 SELF_TITLED_PREFIXES).
+      */}
+      <div className="mb-4 shrink-0">
+        <h1 className="text-[20px] font-semibold text-sz-n-900">상품 문의</h1>
+        <p className="mt-0.5 text-[12px] text-sz-n-600">
+          소비자가 상품 상세에서 남긴 문의에 답변합니다.
+        </p>
+      </div>
+
       <InquiryStatusTabs
         status={params.status}
         onStatusChange={handleStatusChange}
@@ -205,15 +199,12 @@ export default function ProductInquiryListPage() {
             {!!inquiryList?.waitingCount && (
               <>
                 {" · 답변대기 "}
-                <b className="text-sz-warning-text">
-                  {inquiryList.waitingCount}
-                </b>
-                건
+                <b className="text-sz-n-900">{inquiryList.waitingCount}</b>건
               </>
             )}
           </span>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <select
               aria-label="정렬"
               value={params.sort}
@@ -221,7 +212,7 @@ export default function ProductInquiryListPage() {
                 handleSortChange(event.target.value as InquirySort)
               }
               style={SELECT_CHEVRON_STYLE}
-              className="h-7 appearance-none rounded-[6px] border border-sz-n-300 bg-white py-0 pl-2.5 pr-[26px] text-[12px] text-sz-n-700 outline-none focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50"
+              className="h-7 appearance-none rounded-[6px] border border-sz-n-300 bg-white py-0 pl-2 pr-[22px] text-[12px] text-sz-n-700 outline-none focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50"
             >
               {INQUIRY_SORT_OPTIONS.map(option => (
                 <option key={option.value} value={option.value}>
@@ -235,7 +226,7 @@ export default function ProductInquiryListPage() {
               value={params.size}
               onChange={event => handleSizeChange(Number(event.target.value))}
               style={SELECT_CHEVRON_STYLE}
-              className="h-7 appearance-none rounded-[6px] border border-sz-n-300 bg-white py-0 pl-2.5 pr-[26px] text-[12px] text-sz-n-700 outline-none focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50"
+              className="h-7 appearance-none rounded-[6px] border border-sz-n-300 bg-white py-0 pl-2 pr-[22px] text-[12px] text-sz-n-700 outline-none focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50"
             >
               {INQUIRY_PAGE_SIZES.map(size => (
                 <option key={size} value={size}>

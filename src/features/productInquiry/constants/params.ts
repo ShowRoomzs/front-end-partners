@@ -76,6 +76,15 @@ export const ANSWER_MAX_LENGTH = 2000
 /** 삭제 요청 상세 설명 상한 — 서버 `@Size(max = 500)` */
 export const DELETE_DETAIL_MAX_LENGTH = 500
 
+/** 시안 `.msel` — 모달 셀렉트는 선으로 그린 갈매기표를 쓴다(목록 툴바와 다르다) */
+export const MODAL_SELECT_CHEVRON_STYLE = {
+  backgroundImage:
+    "url(\"data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%235B5F68' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")",
+  backgroundRepeat: "no-repeat",
+  backgroundPosition: "right 10px center",
+}
+
+/** 시안 `.sel-sm` — 목록 툴바 셀렉트는 채운 삼각형이다 */
 export const SELECT_CHEVRON_STYLE = {
   backgroundImage:
     "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='5'><path d='M0 0L4.5 5L9 0Z' fill='%237B7F89'/></svg>\")",
