@@ -7,6 +7,8 @@ interface UseParams<P extends BaseParams> {
   localParams: P // 로컬 상태 (필터 UI에서 변경)
   params: P // 실제 상태 (URL과 동기화)
   updateParam: (key: keyof P, value: P[keyof P]) => void
+  /** 여러 축을 한 번에 바꾼다 — 탭 전환처럼 `page: 1`을 함께 되돌려야 할 때 쓴다 */
+  updateParams: (updatedParams: Partial<P>) => void
   updateLocalParam: (key: keyof P, value: P[keyof P]) => void
   update: () => void
   reset: () => void
@@ -152,6 +154,7 @@ export function useParams<P extends BaseParams>(
     localParams,
     params,
     updateParam,
+    updateParams,
     updateLocalParam,
     update,
     reset,
