@@ -130,17 +130,9 @@ export const mainRoutes: Array<RouteObject> = [
             path: "basic",
             element: <div>aasdf</div>,
           },
-          /*
-            상품 문의 관리 (§23) — 목록 · 상세.
-            상세는 행 클릭으로만 들어가므로 GNB에 올리지 않는다.
-          */
           {
             path: "product",
-            element: <ProductInquiryListPage />,
-          },
-          {
-            path: "product/:inquiryId",
-            element: <ProductInquiryDetailPage />,
+            element: <div>aasdf</div>,
           },
           {
             path: "post",
@@ -320,9 +312,17 @@ export const mainRoutes: Array<RouteObject> = [
             path: "respond",
             element: <div>aasdf</div>,
           },
+          /*
+            상품 문의 관리 (§23) — 목록 · 상세.
+            상세는 행 클릭으로만 들어가므로 GNB에 올리지 않는다.
+          */
           {
             path: "product",
-            element: <div>aasdf</div>,
+            element: <ProductInquiryListPage />,
+          },
+          {
+            path: "product/:inquiryId",
+            element: <ProductInquiryDetailPage />,
           },
           {
             path: "order",
