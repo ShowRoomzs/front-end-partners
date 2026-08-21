@@ -246,8 +246,17 @@ export default function ProductInquiryListPage() {
           onRowClick={handleRowClick}
           emptyState={emptyState}
           fitWidth
+          // 시안 `.pager` — 좌측에 합계가 없으므로 페이저를 가운데 둔다
+          footerAlign="center"
           bodyClassName="overflow-hidden whitespace-nowrap"
-          headerClassName="whitespace-nowrap"
+          headerClassName="whitespace-nowrap font-semibold tracking-[.2px]"
+          /*
+            시안 `tbody td{padding:13px 16px;border-top:1px solid n-100}` —
+            공용 기본값(8px 패딩 · n-200 구분선)보다 행이 높고 선이 옅다.
+          */
+          cellClassName="border-sz-n-100 py-[13px]"
+          // 시안 `tbody tr:hover{background:accent-50}` — 공용 기본은 무채색이다
+          rowClassName="hover:bg-sz-accent-50"
         />
       </div>
     </ListViewWrapper>

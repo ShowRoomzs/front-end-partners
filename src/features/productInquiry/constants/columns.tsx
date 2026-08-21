@@ -30,8 +30,9 @@ export const PRODUCT_INQUIRY_COLUMNS: Columns<ProductInquiryListItem> = [
     key: "content",
     label: "질문",
     width: 330,
+    // 시안 `tbody tr:hover .t-q{color:accent-600}` — 행 위에서 눌러야 할 곳을 가리킨다
     render: value => (
-      <span className="block truncate font-medium text-sz-n-900">
+      <span className="block truncate font-medium text-sz-n-900 group-hover:text-sz-accent-600">
         {value as string}
       </span>
     ),
