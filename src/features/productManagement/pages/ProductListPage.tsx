@@ -248,6 +248,8 @@ export default function ProductListPage() {
           onRowClick={handleClickRow}
           emptyState={emptyState}
           fitWidth
+          // 좌측 합계가 툴바로 올라가 있어 푸터에는 페이저뿐이다 — 가운데로 둔다
+          footerAlign="center"
           bodyClassName="overflow-hidden whitespace-nowrap"
           headerClassName="whitespace-nowrap"
         />
