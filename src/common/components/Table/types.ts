@@ -50,4 +50,10 @@ export interface TableProps<T, K extends keyof T = keyof T> {
    * columns의 고정 폭을 비율로 환산해 남는 공간까지 나눠 갖는다.
    */
   fitWidth?: boolean
+  /** 페이지네이션 정렬 — 기본은 우측(`between`), `center`는 시안 `.pager` */
+  footerAlign?: "between" | "center"
+  /** 본문 셀(`td`)에 얹는 클래스 — 기본 패딩(`px-4 py-[8px]`)을 덮어쓸 때 쓴다 */
+  cellClassName?: string
+  /** 본문 행(`tr`)에 얹는 클래스 — hover 배경색 등을 덮어쓸 때 쓴다 */
+  rowClassName?: string
 }

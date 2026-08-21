@@ -34,6 +34,9 @@ export default function Table<T, K extends keyof T = keyof T>(
     onSortChange,
     emptyState,
     fitWidth = false,
+    footerAlign = "between",
+    cellClassName = "",
+    rowClassName = "",
   } = props
   const [checkedKeys, setCheckedKeys] = useState<Array<T[K]>>(
     originCheckedKeys as Array<T[K]>
@@ -358,6 +361,8 @@ export default function Table<T, K extends keyof T = keyof T>(
             data={data}
             onRowClick={onRowClick}
             bodyClassName={bodyClassName}
+            cellClassName={cellClassName}
+            rowClassName={rowClassName}
           />
         </table>
       </div>
@@ -371,6 +376,8 @@ export default function Table<T, K extends keyof T = keyof T>(
     renderColGroup,
     totalTableWidth,
     bodyClassName,
+    cellClassName,
+    rowClassName,
     emptyState,
     fitWidth,
     isFitWidthMeasured,
@@ -436,6 +443,7 @@ export default function Table<T, K extends keyof T = keyof T>(
 
       <div className="shrink-0">
         <TableFooter
+          align={footerAlign}
           renderLeft={renderFooter}
           renderRight={
             pageInfo && hasData ? <Pagination {...pageInfo} /> : undefined

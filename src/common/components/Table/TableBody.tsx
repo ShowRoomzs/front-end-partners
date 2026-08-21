@@ -9,13 +9,28 @@ interface TableBodyProps<T> {
   data: Array<T>
   onRowClick?: (record: T) => void
   bodyClassName?: string
+  /** 셀(`td`) 자체에 얹는 클래스 — 행 높이를 시안에 맞출 때 패딩을 덮어쓴다 */
+  cellClassName?: string
+  /** 행(`tr`)에 얹는 클래스 — hover 배경색처럼 화면마다 다른 값을 덮어쓴다 */
+  rowClassName?: string
 }
 
 export default function TableBody<T>(props: TableBodyProps<T>) {
-  const { columns, data, onRowClick, bodyClassName = "" } = props
+  const {
+    columns,
+    data,
+    onRowClick,
+    bodyClassName = "",
+    cellClassName = "",
+    rowClassName = "",
+  } = props
   const { getColumnFixedStyle } = useTableFixed<T>(columns, false)
   const isRowClickClass = onRowClick ? "cursor-pointer" : ""
-  const rowClickClassName = cn("group hover:bg-sz-n-50", isRowClickClass)
+  const rowClickClassName = cn(
+    "group hover:bg-sz-n-50",
+    isRowClickClass,
+    rowClassName
+  )
   const cellRef = useRef<Record<string, HTMLTableCellElement>>({})
   const handleRowClick = useCallback(
     (record: T) => {
@@ -72,9 +87,11 @@ export default function TableBody<T>(props: TableBodyProps<T>) {
                   }
                 }}
                 onClick={e => handleCellClick(e, col, index)}
-                className={`px-4 py-[8px] border-b border-sz-n-200 ${
-                  col.fixed ? "bg-white group-hover:bg-sz-n-50" : ""
-                }`}
+                className={cn(
+                  "border-b border-sz-n-200 px-4 py-[8px]",
+                  col.fixed && "bg-white group-hover:bg-sz-n-50",
+                  cellClassName
+                )}
                 style={{
                   width: width ? `${width}px` : undefined,
                   minWidth: width ? `${width}px` : undefined,
