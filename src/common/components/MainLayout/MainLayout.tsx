@@ -32,7 +32,7 @@ const SUB_PAGE_LABELS: Array<{ prefix: string; label: string }> = [
  * 메뉴 라벨과 화면 제목이 다르거나(문의 관리 → `상품 문의`), 제목 아래 설명 줄이
  * 필요한 화면들이다. 셸에는 설명 슬롯이 없어서 화면이 `page-h`를 통째로 가져간다.
  */
-const SELF_TITLED_PREFIXES = ["/inquiry/product"]
+const SELF_TITLED_PREFIXES = ["/inquiry/product", "/product/list"]
 
 /**
  * 셸의 여백·제목·스크롤을 화면이 직접 가져가는 경로들.

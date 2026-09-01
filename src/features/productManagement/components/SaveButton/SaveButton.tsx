@@ -73,6 +73,8 @@ export default function SaveButton(props: SaveButtonProps) {
     <Button
       type="submit"
       size="sm"
+      // 시안 `.btn` — 32px 높이 · 12px 글씨 · 좌우 14px
+      className="px-3.5 text-[12px]"
       isLoading={isLoading}
       disabled={!hasAllRequiredValues(values)}
     >
