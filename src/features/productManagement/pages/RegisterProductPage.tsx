@@ -476,7 +476,18 @@ export default function RegisterProductPage() {
                 <ProductNoticeForm control={control} disabled={isLocked} />
               </ProductSection>
 
-              {/* 시안 `.btn-row` — 삭제는 좌측 끝, 취소·저장은 우측. 버튼 높이 32px */}
+              {/*
+                시안 `.save-hint` — 저장을 누르면 무슨 일이 생기는지 경우별 예고.
+                카드 **안**, 버튼 바로 위에 붙는다. 카드 밖으로 빼면 버튼과 멀어져
+                누르기 직전에 읽히지 않는다.
+              */}
+              {saveHint && (
+                <p className="-mb-1.5 px-5 text-right text-[11px] text-sz-n-600">
+                  {saveHint}
+                </p>
+              )}
+
+              {/* 시안 `.btn-row` — 삭제는 좌측 끝, 취소·저장은 우측. 높이 32px · 글씨 12px */}
               <div className="flex items-center justify-end gap-2.5 p-5">
                 {isEdit && (
                   /*
@@ -497,7 +508,7 @@ export default function RegisterProductPage() {
                         시안 `.btn-danger`는 흰 배경 + 빨간 테두리·글자다(solid 아님).
                         solid 빨강인 destructive variant와는 다른 물건이라 여기서만 덧칠한다.
                       */
-                      className="border-sz-danger-bg text-sz-danger-text hover:bg-sz-danger-bg hover:text-sz-danger-text"
+                      className="border-sz-danger-bg px-3.5 text-[12px] text-sz-danger-text hover:bg-sz-danger-bg hover:text-sz-danger-text"
                       disabled={deleteBlocked}
                       onClick={handleClickDelete}
                     >
@@ -509,6 +520,7 @@ export default function RegisterProductPage() {
                   type="button"
                   variant="outline"
                   size="sm"
+                  className="px-3.5 text-[12px]"
                   onClick={handleClickCancel}
                 >
                   취소
@@ -516,13 +528,6 @@ export default function RegisterProductPage() {
                 <SaveButton control={control} isLoading={isLoading} />
               </div>
             </ProductFormCard>
-
-            {/* 시안 `.save-hint` — 저장을 누르면 무슨 일이 생기는지 경우별 예고 */}
-            {saveHint && (
-              <p className="mt-3 text-right text-[11px] text-sz-n-600">
-                {saveHint}
-              </p>
-            )}
           </Form>
         </div>
 

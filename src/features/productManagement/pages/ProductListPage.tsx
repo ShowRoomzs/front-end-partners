@@ -168,10 +168,19 @@ export default function ProductListPage() {
 
   return (
     <ListViewWrapper>
-      {/* 제목은 셸(MainLayout)이 메뉴 라벨로 그린다 — 여기선 설명과 액션만 */}
-      <div className="mb-4 flex shrink-0 items-end justify-between">
-        <div className="text-[12px] text-sz-n-600">
-          등록된 상품을 확인하고 관리합니다.
+      {/*
+        시안 `.page-h` — 제목·설명 왼쪽, 주 액션 오른쪽(아래 정렬).
+
+        제목을 화면이 직접 그린다. GNB 라벨은 `상품 관리`인데 화면 이름은 `상품 목록`이고
+        설명 줄이 붙어서, 셸이 메뉴 라벨로 그리는 H1로는 둘 다 표현할 수 없다
+        (MainLayout의 SELF_TITLED_PREFIXES).
+      */}
+      <div className="mb-4 flex shrink-0 items-end justify-between gap-4">
+        <div>
+          <h1 className="text-[20px] font-semibold text-sz-n-900">상품 목록</h1>
+          <p className="mt-0.5 text-[12px] text-sz-n-600">
+            등록된 상품을 확인하고 관리합니다.
+          </p>
         </div>
         <button
           type="button"
