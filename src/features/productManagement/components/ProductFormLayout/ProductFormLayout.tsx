@@ -64,7 +64,16 @@ export function ProductSection(props: ProductSectionProps) {
           {description}
         </p>
       )}
-      {children}
+      {/*
+        필드 사이 간격(시안 `.frow{margin-bottom:12px}`)을 **컨테이너**가 잡는다.
+
+        필드 자신에게 `mb-3 last:mb-0`을 걸면 안 된다 — `FormController`가 필드마다
+        `<div>`로 한 겹 감싸기 때문에, 감싼 div의 유일한 자식인 **모든** 필드가
+        `:last-child`가 되어 여백이 전부 0으로 지워진다(칸이 서로 붙어 버린다).
+        `space-y-*`는 `> * + *`라 래퍼가 있든 없든 같은 간격이 나오고, 마지막 칸
+        아래에 군더더기 여백도 남기지 않는다.
+      */}
+      <div className="space-y-3">{children}</div>
     </section>
   )
 }
@@ -84,7 +93,7 @@ export function ProductField(props: ProductFieldProps) {
   const { label, required = false, sub, hint, error, children } = props
 
   return (
-    <div className="mb-3 flex items-start gap-3 last:mb-0">
+    <div className="flex items-start gap-3">
       {/* 필수 표시(*)는 언제나 라벨 왼쪽 — 시안 `.flab`의 `<span class="req">*</span> 상품명` */}
       <div className="w-[118px] shrink-0 pt-[9px] text-[12px] text-sz-n-600">
         {required && <span className="mr-0.5 text-sz-danger-text">*</span>}
