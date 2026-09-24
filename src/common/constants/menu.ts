@@ -1,7 +1,8 @@
 import type { MenuConfig } from "@/common/types/menu"
 
 /**
- * 시안 GNB — 번호 매겨진 flat 9항목이다. 아코디언(그룹 + 펼침 하위메뉴)을 쓰지 않는다.
+ * 시안 GNB — 번호 매겨진 flat 목록이다. 아코디언(그룹 + 펼침 하위메뉴)을 쓰지 않는다.
+ * 시안은 9항목이었고, 성과 관리(#8)는 그 뒤에 추가로 요청된 항목이다.
  *
  * 하위 화면이 여러 개인 메뉴(판매·정산·문의)도 여기서는 항목 하나로 두고, 누르면
  * 대표 화면으로 바로 이동한다(`path`). 그 안의 나머지 화면들은 GNB가 아니라 각 화면
@@ -11,7 +12,7 @@ import type { MenuConfig } from "@/common/types/menu"
  * `matchPaths`는 "누르면 갈 곳"과 "활성으로 칠할 범위"를 분리한다 — 예를 들어 판매 관리는
  * 전체 주문 내역으로 이동하지만 `/sales/*` 어디에 있든 활성이어야 한다.
  *
- * 번호는 Sidebar가 배열 순서로 매기므로(`index + 1`) 이 배열의 순서가 곧 시안의 #1~#9다.
+ * 번호는 Sidebar가 배열 순서로 매기므로(`index + 1`) 이 배열의 순서가 곧 화면의 #1~#10이다.
  */
 export const SELLER_MENU: MenuConfig = {
   menuType: "SELLER",
@@ -56,6 +57,12 @@ export const SELLER_MENU: MenuConfig = {
       label: "정산 관리",
       path: "/settlement/history",
       matchPaths: ["/settlement"],
+    },
+    // 계약·공구와 마찬가지로 아직 화면이 없다 — 플레이스홀더로 연결된다.
+    {
+      id: "performance",
+      label: "성과 관리",
+      path: "/performance",
     },
     {
       id: "inquiry",

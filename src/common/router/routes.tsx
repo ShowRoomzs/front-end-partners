@@ -122,6 +122,16 @@ export const mainRoutes: Array<RouteObject> = [
           />
         ),
       },
+      // Seller - 성과 관리 — 같은 이유의 플레이스홀더(GNB #8).
+      {
+        path: "performance",
+        element: (
+          <ComingSoonPage
+            title="성과 관리"
+            description="판매·노출 성과 분석 화면은 아직 준비 중입니다."
+          />
+        ),
+      },
       // Creator - 쇼룸 관리
       {
         path: "showroom",
