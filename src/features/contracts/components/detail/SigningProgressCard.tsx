@@ -1,3 +1,4 @@
+import { reviewRejectReasonLabel } from "@/features/contracts/constants/labels"
 import DetailCard, { FieldRow } from "@/common/components/DetailCard/DetailCard"
 import Notice from "@/common/components/Notice/Notice"
 import { formatDateTimeShort } from "@/common/utils/formatDate"
@@ -94,7 +95,14 @@ export default function SigningProgressCard(props: SigningProgressCardProps) {
       {view === "expired" && (
         <Notice tone="neutral" className="mb-4">
           <b className="font-semibold">
-            서명 기한까지 양측 서명이 완료되지 않아 만료되었습니다.
+            {/* 시안 B7 — 누가 서명하지 않았는지 밝힌다 */}
+            서명 기한까지{" "}
+            {signature.brandSignedAt && !signature.creatorSignedAt
+              ? "인플루언서가 서명하지 않아"
+              : !signature.brandSignedAt && signature.creatorSignedAt
+                ? "브랜드 서명이 완료되지 않아"
+                : "양측 서명이 완료되지 않아"}{" "}
+            만료되었습니다.
           </b>{" "}
           거절된 것이 아니라 <b className="font-semibold">응답이 없었던</b>{" "}
           건입니다 — 상대가 계약서를 열어보지 않았을 수 있으니, 스레드에서
@@ -153,7 +161,7 @@ export default function SigningProgressCard(props: SigningProgressCardProps) {
           </Notice>
           <div className="mt-3">
             <FieldRow label="반려 사유">
-              {review.rejectReason?.code ?? "—"}
+              {reviewRejectReasonLabel(review.rejectReason?.code)}
               {review.rejectReason?.detail && (
                 <div className={FSUB_CLASS}>{review.rejectReason.detail}</div>
               )}
@@ -190,7 +198,12 @@ export default function SigningProgressCard(props: SigningProgressCardProps) {
           creatorName={creatorName}
           brandSignedAt={signature.brandSignedAt}
           creatorSignedAt={signature.creatorSignedAt}
-          asOf={isConcluded || isClosed ? null : signature.asOf}
+          // 어드민이 서명을 아직 한 번도 옮겨 적지 않았으면 asOf가 비어 온다 — 발송 시각이 기준이다
+          asOf={
+            isConcluded || isClosed
+              ? null
+              : (signature.asOf ?? signature.requestedAt)
+          }
           counterpartyViewed={signature.counterpartyViewed}
           isExpired={view === "expired"}
           showResend={permissions.canRequestResend}

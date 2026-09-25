@@ -2,7 +2,6 @@ import {
   FIXED_FEE_MAX,
   PRICE_UNIT,
   REWARD_RATE_MAX,
-  SECONDARY_USE_DEFAULT_MONTHS,
   TITLE_MIN_LENGTH,
 } from "@/features/contracts/constants/rules"
 import type {
@@ -94,8 +93,9 @@ export function fromDetail(detail: ContractDetailResponse): ContractFormValues {
             minQuantity: item.minQuantity,
           }))
         : [emptyItem()],
-    fixedFeeAmount: fixedFee.amount,
-    fixedFeeTrigger: fixedFee.trigger,
+    // 시안 B1 — 새 초안은 고정 지급비 0원 · 지급 시점 「공구 게시물 등록 후」가 기본 선택이다
+    fixedFeeAmount: fixedFee.amount ?? 0,
+    fixedFeeTrigger: fixedFee.trigger ?? "POST_REGISTERED",
     fixedFeeNoticeAgreed: fixedFee.noticeAgreedAt !== null,
     contentFeedCount: content.feedCount,
     contentReelsCount: content.reelsCount,
@@ -103,11 +103,8 @@ export function fromDetail(detail: ContractDetailResponse): ContractFormValues {
     contentDueDate: content.dueDate,
     secondaryUseAllowed: content.secondaryUseAllowed ?? true,
     secondaryUsePeriodType: content.secondaryUsePeriodType ?? "FIXED",
-    secondaryUseMonths:
-      content.secondaryUseMonths ??
-      (content.secondaryUsePeriodType === "UNLIMITED"
-        ? null
-        : SECONDARY_USE_DEFAULT_MONTHS),
+    // 시안 B1 — 개월 칸은 비워 두고 12를 자리표시로만 보여준다
+    secondaryUseMonths: content.secondaryUseMonths,
     brandPreReview: content.brandPreReview ?? false,
     note: content.note ?? "",
   }

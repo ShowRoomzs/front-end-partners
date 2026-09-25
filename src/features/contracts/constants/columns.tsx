@@ -1,6 +1,6 @@
 import StatusBadge from "@/common/components/StatusBadge/StatusBadge"
 import type { Columns } from "@/common/components/Table/types"
-import { formatDateTimeShort } from "@/common/utils/formatDate"
+import { formatDateOnly } from "@/common/utils/formatDate"
 import type { ContractListItem } from "@/features/contracts/types"
 import { periodText } from "@/features/contracts/utils/format"
 import { toneToVariant } from "@/features/contracts/utils/statusBadge"
@@ -66,7 +66,8 @@ export const CONTRACT_COLUMNS: Columns<ContractListItem> = [
     align: "center",
     render: value => (
       <span className="whitespace-nowrap tabular-nums text-sz-n-500">
-        {formatDateTimeShort(value as string)}
+        {/* 시안 A1 — 118px 열에 시각까지 넣으면 잘린다. 날짜만 */}
+        {formatDateOnly(value as string)}
       </span>
     ),
   },

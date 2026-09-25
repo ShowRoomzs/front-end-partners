@@ -21,14 +21,7 @@ export default function ClausesCard(props: ClausesCardProps) {
   const { clauses, onOpenFullText } = props
 
   return (
-    <DetailCard
-      title="표준 조항"
-      note={
-        clauses
-          ? `v${clauses.versionNumber} · 브랜드 편집 불가 · 계약서 자동 삽입`
-          : "브랜드 편집 불가 · 계약서 자동 삽입"
-      }
-    >
+    <DetailCard title="표준 조항" note="브랜드 편집 불가 · 계약서 자동 삽입">
       <Terms>
         {clauses?.clauses.map(clause => (
           <TermRow key={clause.code} label={clause.summaryTitle}>

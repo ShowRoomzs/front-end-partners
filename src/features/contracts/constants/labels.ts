@@ -37,7 +37,7 @@ export const EVENT_LABEL: Record<ContractEventType, string> = {
   CONCLUDED: "체결완료 · PDF·인증서 발급",
   DECLINED: "인플루언서 거절",
   EXPIRED: "서명 기한 초과 확인 · 만료 처리",
-  CANCELED: "계약 취소 · 어드민 직권 · 양측 통지",
+  CANCELED: "계약 취소",
   FIXED_FEE_PAID: "고정 지급비 지급 완료 기록 · 브랜드 직접 지급",
   GROUP_BUY_CREATED: "공구 자동 생성",
 }
@@ -105,3 +105,23 @@ export const VIOLATION_FIELD_CARD: Array<{ prefix: string; cardId: string }> = [
   { prefix: "creatorId", cardId: "contract-card-identity" },
   { prefix: "note", cardId: "contract-card-note" },
 ]
+
+/**
+ * 어드민 검토 반려 사유(`ContractReviewRejectReason`) 화면 문구 — 서버는 코드만 내려준다.
+ * 문구는 어드민 설계서 §6-1 표 그대로다.
+ */
+export const REVIEW_REJECT_REASON_LABEL: Record<string, string> = {
+  AGREEMENT_MISMATCH: "계약 조건이 인플루언서 합의 내용과 다릅니다",
+  INFO_MISMATCH: "계약 조건과 상품 정보가 일치하지 않습니다",
+  OBLIGATION_UNVERIFIABLE: "콘텐츠 의무가 이행 판정 가능한 형태가 아닙니다",
+  TYPO_OR_OMISSION: "계약 내용에 오기·누락이 있습니다",
+  ACCOUNT_STATUS: "당사자 계정 상태 문제",
+  ETC: "기타",
+}
+
+export function reviewRejectReasonLabel(code: string | null | undefined) {
+  if (!code) {
+    return "—"
+  }
+  return REVIEW_REJECT_REASON_LABEL[code] ?? code
+}

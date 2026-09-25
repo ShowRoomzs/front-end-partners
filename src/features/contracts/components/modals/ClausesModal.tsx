@@ -34,12 +34,6 @@ export default function ClausesModal(props: ClausesModalProps) {
       <Notice tone="neutral" className="mb-4">
         브랜드가 편집할 수 없는 <b className="font-semibold">표준 조항</b>이며
         계약서 생성 시 자동 삽입됩니다. 문안은 법률 검토 후 확정됩니다.
-        {clauses && (
-          <>
-            {" "}
-            (v{clauses.versionNumber} · {clauses.effectiveDate} 시행)
-          </>
-        )}
       </Notice>
       {fullClauses?.map(clause => (
         <div key={clause.code} className="mb-[18px] last:mb-0">

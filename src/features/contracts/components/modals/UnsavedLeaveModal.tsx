@@ -16,6 +16,9 @@ interface UnsavedLeaveModalProps {
 export default function UnsavedLeaveModal(props: UnsavedLeaveModalProps) {
   const { changedSections, isSaving, onLeave, onSaveAndLeave, onStay } = props
 
+  const subject =
+    changedSections.length > 0 ? changedSections.join(" · ") : "입력 내용"
+
   return (
     <ModalShell
       isOpen
@@ -43,12 +46,9 @@ export default function UnsavedLeaveModal(props: UnsavedLeaveModalProps) {
     >
       <div>
         마지막 임시저장 이후{" "}
-        <b className="font-semibold text-sz-n-900">
-          {changedSections.length > 0
-            ? changedSections.join(" · ")
-            : "입력 내용"}
-        </b>
-        이(가) 변경되었습니다. 저장하지 않고 나가면 이 변경은 사라집니다.
+        <b className="font-semibold text-sz-n-900">{subject}</b>
+        {subjectParticle(subject)} 변경되었습니다. 저장하지 않고 나가면 이
+        변경은 사라집니다.
       </div>
       <div className="mt-2.5 text-[11px] text-sz-n-500">
         임시저장한 계약은 목록의{" "}
@@ -57,4 +57,11 @@ export default function UnsavedLeaveModal(props: UnsavedLeaveModalProps) {
       </div>
     </ModalShell>
   )
+}
+
+/** 받침 유무로 주격 조사를 고른다 — 「공구명이」 · 「고정 지급비가」 */
+function subjectParticle(word: string) {
+  const last = word.charCodeAt(word.length - 1)
+  const isHangul = last >= 0xac00 && last <= 0xd7a3
+  return isHangul && (last - 0xac00) % 28 !== 0 ? "이" : "가"
 }

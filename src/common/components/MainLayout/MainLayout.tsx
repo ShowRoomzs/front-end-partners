@@ -25,8 +25,7 @@ const SUB_PAGE_LABELS: Array<{ prefix: string; label: string }> = [
   { prefix: "/product/edit", label: "상품 수정" },
   // 목록(/inquiry/product)은 걸리지 않게 끝에 슬래시를 둔다
   { prefix: "/inquiry/product/", label: "상품 문의 상세" },
-  // 작성중이면 「계약 작성」, 나머지는 「계약서」인데 crumb는 상태를 모른다 — 시안 탑바 표기 중
-  // 넓은 쪽을 쓴다. 화면 제목(H1)은 화면이 상태를 보고 직접 그린다.
+  // 기본값 — 작성 모드면 화면이 usePageSubtitle로 「계약 작성」으로 바꾼다
   { prefix: "/contract/", label: "계약서" },
 ]
 
@@ -55,6 +54,9 @@ export default function MainLayout() {
     return stored === null ? true : stored === "true"
   }
   const [isSidebarOpen, setIsSidebarOpen] = useState(getInitialSidebarState)
+  // 화면이 상태를 보고 올리는 crumb(usePageSubtitle) — 경로표보다 우선한다
+  const [subtitleOverride, setSubtitle] = useState<string | null>(null)
+  const outletContext = useMemo(() => ({ setSubtitle }), [])
   const menuType = getMenuTypeByRole(role as Role)
   const location = useLocation()
 
@@ -103,11 +105,13 @@ export default function MainLayout() {
 
     return {
       title: findLabel(flattenMenus),
-      subtitle: SUB_PAGE_LABELS.find(entry =>
-        location.pathname.startsWith(entry.prefix)
-      )?.label,
+      subtitle:
+        subtitleOverride ??
+        SUB_PAGE_LABELS.find(entry =>
+          location.pathname.startsWith(entry.prefix)
+        )?.label,
     }
-  }, [flattenMenus, location.pathname])
+  }, [flattenMenus, location.pathname, subtitleOverride])
 
   /**
    * 본문 제목(H1)은 메뉴에 있는 화면에서만 셸이 그린다.
@@ -167,7 +171,7 @@ export default function MainLayout() {
               {pageTitle}
             </h1>
           )}
-          <Outlet />
+          <Outlet context={outletContext} />
         </main>
       </div>
     </div>

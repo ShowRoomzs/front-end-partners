@@ -79,18 +79,21 @@ export default function PeriodCard(props: PeriodCardProps) {
               — 막지는 않지만 검토 요청 시 확인을 받습니다(경고).
             </div>
           )}
-          <Notice tone="info" className="mt-2">
-            체결 후 <b className="font-semibold">게시물 등록·오픈 승인</b>이
-            필요해 시작일은 검토 요청일 +{" "}
-            <b className="font-semibold">{LEAD_DAYS}일 이후</b>부터, 기간은{" "}
-            <b className="font-semibold">
-              {MIN_PERIOD_DAYS}~{MAX_PERIOD_DAYS}일
-            </b>
-            만 선택할 수 있습니다. 달력에서{" "}
-            <b className="font-semibold">
-              선택할 수 없는 날짜는 아예 잠깁니다.
-            </b>
-          </Notice>
+          {/* 시안 B1 — 기간을 아직 다 고르지 않았을 때만 규칙을 안내한다(B2·B3·B2a는 없음) */}
+          {days === null && (
+            <Notice tone="info" className="mt-2">
+              체결 후 <b className="font-semibold">게시물 등록·오픈 승인</b>이
+              필요해 시작일은 검토 요청일 +{" "}
+              <b className="font-semibold">{LEAD_DAYS}일 이후</b>부터, 기간은{" "}
+              <b className="font-semibold">
+                {MIN_PERIOD_DAYS}~{MAX_PERIOD_DAYS}일
+              </b>
+              만 선택할 수 있습니다. 달력에서{" "}
+              <b className="font-semibold">
+                선택할 수 없는 날짜는 아예 잠깁니다.
+              </b>
+            </Notice>
+          )}
         </FormRow>
       </div>
 

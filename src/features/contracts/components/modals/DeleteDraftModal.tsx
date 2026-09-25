@@ -26,7 +26,7 @@ export default function DeleteDraftModal(props: DeleteDraftModalProps) {
           <Btn variant="ghost" onClick={onClose}>
             닫기
           </Btn>
-          <Btn variant="dangerSolid" isLoading={isPending} onClick={onConfirm}>
+          <Btn variant="danger" isLoading={isPending} onClick={onConfirm}>
             삭제
           </Btn>
         </>

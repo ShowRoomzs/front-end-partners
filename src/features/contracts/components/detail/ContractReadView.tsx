@@ -32,6 +32,7 @@ import {
 import { toHistoryItems } from "@/features/contracts/utils/history"
 import { useCallback, useState } from "react"
 import toast from "react-hot-toast"
+import { useContractNeighbors } from "@/features/contracts/hooks/useContractNeighbors"
 import { useLocation, useNavigate } from "react-router-dom"
 
 interface ContractReadViewProps {
@@ -66,6 +67,20 @@ export default function ContractReadView(props: ContractReadViewProps) {
 
   const isConcluded = CONCLUDED_VIEWS.includes(view)
   const isClosed = CLOSED_VIEWS.includes(view)
+
+  const { prevId, nextId } = useContractNeighbors(
+    detail.contractId,
+    location.search
+  )
+  const goToRecord = useCallback(
+    (id: number) => {
+      navigate({
+        pathname: `${CONTRACT_LIST_PATH}/${id}`,
+        search: location.search,
+      })
+    },
+    [navigate, location.search]
+  )
 
   const goToList = useCallback(() => {
     navigate({ pathname: CONTRACT_LIST_PATH, search: location.search })
@@ -103,11 +118,11 @@ export default function ContractReadView(props: ContractReadViewProps) {
       const result = await requestResend(detail.contractId)
       if (result.alreadyRequested) {
         toast(
-          "이미 접수된 재발송 요청이 있습니다. 운영자 확인을 기다려 주세요."
+          "이미 접수된 재발송 요청이 있습니다. 어드민 확인을 기다려 주세요."
         )
       } else {
         toast.success(
-          "서명 안내 재발송을 요청했습니다. 운영자가 확인한 뒤 모두싸인에서 다시 보냅니다."
+          "서명 안내 재발송을 요청했습니다. 어드민이 확인한 뒤 모두싸인에서 다시 보냅니다."
         )
       }
     } catch {
@@ -191,8 +206,11 @@ export default function ContractReadView(props: ContractReadViewProps) {
             {headerMeta(detail, view)}
           </p>
         </div>
-        {/* 셀러 상세엔 이전/다음이 없다 — [목록]만 */}
-        <RecordNav onList={goToList} />
+        <RecordNav
+          onList={goToList}
+          onPrev={prevId !== null ? () => goToRecord(prevId) : undefined}
+          onNext={nextId !== null ? () => goToRecord(nextId) : undefined}
+        />
       </div>
 
       <div className="grid grid-cols-[1fr_320px] items-start gap-4">
@@ -230,7 +248,10 @@ export default function ContractReadView(props: ContractReadViewProps) {
             showSettlementNote={!isClosed}
           />
 
-          <ContentObligationCard content={detail.content} />
+          {/* 시안 B8 — 어드민 직권 취소 화면엔 콘텐츠 의무 카드가 없다 */}
+          {view !== "canceled" && (
+            <ContentObligationCard content={detail.content} />
+          )}
         </div>
 
         <div className="sticky top-0 flex flex-col gap-4">
@@ -247,7 +268,9 @@ export default function ContractReadView(props: ContractReadViewProps) {
             onOpenThread={openThread}
           />
           <DetailCard title="이력" flushBody>
-            <HistoryList items={toHistoryItems(detail.history)} />
+            <HistoryList
+              items={toHistoryItems(detail.history, detail.fixedFee.amount)}
+            />
           </DetailCard>
         </div>
       </div>

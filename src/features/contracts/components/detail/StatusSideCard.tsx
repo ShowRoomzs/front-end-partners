@@ -10,6 +10,7 @@ import {
   type ContractViewState,
 } from "@/features/contracts/utils/contractView"
 import { formatKRW } from "@/features/contracts/utils/format"
+import { concludedAt } from "@/features/contracts/utils/contractView"
 import { toneToVariant } from "@/features/contracts/utils/statusBadge"
 import type { ReactNode } from "react"
 
@@ -54,6 +55,7 @@ export default function StatusSideCard(props: StatusSideCardProps) {
     permissions,
     documents,
   } = detail
+  const hint = hintByView(view, detail)
   const isConcluded = CONCLUDED_VIEWS.includes(view)
   const isClosed = CLOSED_VIEWS.includes(view)
   const hasDraft = documents.some(doc => doc.type === "GENERATED_DRAFT")
@@ -151,7 +153,7 @@ export default function StatusSideCard(props: StatusSideCardProps) {
       case "concludedFeeDue":
         return (
           <>
-            <MetaRow label="체결일시" value={time(closure.closedAt)} />
+            <MetaRow label="체결일시" value={time(concludedAt(detail))} />
             <MetaRow
               label="서명 PDF"
               value={
@@ -192,7 +194,7 @@ export default function StatusSideCard(props: StatusSideCardProps) {
                     {detail.title ?? "공구"} ↗
                   </button>
                 ) : (
-                  <span className="font-normal text-sz-n-500">생성 대기</span>
+                  <span className="font-normal text-sz-n-500">없음</span>
                 )
               }
             />
@@ -218,7 +220,15 @@ export default function StatusSideCard(props: StatusSideCardProps) {
         return (
           <>
             <MetaRow label="검토 요청" value={time(review.requestedAt)} />
-            <MetaRow label="서명 기한" value={time(signature.deadlineAt)} />
+            <MetaRow
+              // 시안 B7 — 브랜드가 서명한 뒤 만료됐으면 남은 쪽은 상대다
+              label={
+                signature.brandSignedAt && !signature.creatorSignedAt
+                  ? "상대 서명 기한"
+                  : "서명 기한"
+              }
+              value={time(signature.deadlineAt)}
+            />
             <MetaRow label="만료 처리" value={time(closure.closedAt)} />
             <MetaRow label="고정 지급비" value="지급 의무 소멸" />
             <MetaRow
@@ -301,7 +311,6 @@ export default function StatusSideCard(props: StatusSideCardProps) {
             <Btn
               variant="secondary"
               className="w-full"
-              disabled={groupBuy.groupBuyId === null}
               onClick={onOpenGroupBuy}
             >
               공구 관리에서 보기 ↗
@@ -325,9 +334,11 @@ export default function StatusSideCard(props: StatusSideCardProps) {
         </div>
       )}
 
-      <p className="mt-2.5 text-[11px] leading-[1.55] text-sz-n-500">
-        {hintByView(view, detail)}
-      </p>
+      {hint && (
+        <p className="mt-2.5 text-[11px] leading-[1.55] text-sz-n-500">
+          {hint}
+        </p>
+      )}
     </DetailCard>
   )
 }
@@ -348,16 +359,10 @@ function hintByView(
   detail: ContractDetailResponse
 ): ReactNode {
   switch (view) {
+    // 시안 B3c·B3d 상태 카드엔 하단 안내가 없다 — 서명 진행 카드의 notice가 같은 말을 한다
     case "reviewPending":
-      return (
-        <>
-          어드민이 확인하는 동안 브랜드가 할 수 있는 조작은{" "}
-          <b className="font-semibold">[요청 취소]</b>뿐입니다. 취소하면
-          작성중으로 돌아가며 계약은 종결되지 않습니다.
-        </>
-      )
     case "reviewRejected":
-      return "반려된 계약은 사유를 반영해 수정한 뒤 다시 검토를 요청할 수 있습니다. 접으려면 삭제하세요 — 상대에게 도달한 적이 없어 통지되지 않습니다."
+      return null
     case "signingNone":
     case "signingMine":
     case "signingTheirs":
@@ -373,35 +378,9 @@ function hintByView(
         </>
       )
     case "concludedNoFee":
-      return (
-        <>
-          계약이 체결되면 <b className="font-semibold">공구가 자동으로 생성</b>
-          됩니다(계약 1건당 1건). 공구는 이 계약의 기간·공구가·리워드율을 그대로
-          상속합니다.
-        </>
-      )
     case "concludedFeeDue":
-      return (
-        <>
-          공구는 계약 1건당 1건이며 추가로 만들 수 없습니다. 고정 지급비는
-          계약서에 적은 지급 시점(
-          <b className="font-semibold">
-            {detail.fixedFee.triggerLabel}
-          </b>)에 <b className="font-semibold">브랜드가 직접</b> 지급하고, 지급
-          후 [지급 완료 기록]으로 표시해 주세요.
-        </>
-      )
     case "concludedPaid":
-      return (
-        <>
-          고정 지급비는 계약서에 적은 지급 시점(
-          <b className="font-semibold">
-            {detail.fixedFee.triggerLabel}
-          </b>)에 <b className="font-semibold">브랜드가 직접 지급</b>했습니다.
-          플랫폼은 지급을 확인·보증하지 않으며, 지급 이후 콘텐츠 미이행이 있어도
-          지급액을 되돌릴 수 없습니다.
-        </>
-      )
+      return concludedHint(view, detail)
     case "declined":
       return (
         <>
@@ -427,4 +406,59 @@ function hintByView(
     case "draft":
       return null
   }
+}
+
+/**
+ * 체결완료 3종의 안내 — 시안은 공구 생성 여부로 문구가 갈린다.
+ * B5(공구 없음) · B5a(공구 있음 + 지급 기록) · B5b(공구 있음 + 지급 예정).
+ */
+function concludedHint(
+  view: ContractViewState,
+  detail: ContractDetailResponse
+): ReactNode {
+  const hasGroupBuy = detail.groupBuy.groupBuyId !== null
+  const paid = view === "concludedPaid"
+  const paidText = (
+    <>
+      {" "}
+      고정 지급비는 계약서에 적은 지급 시점(
+      <b className="font-semibold">{detail.fixedFee.triggerLabel}</b>)에
+      브랜드가 직접 지급했습니다. 플랫폼은 지급을 확인·보증하지 않으며, 지급
+      이후 콘텐츠 미이행이 있어도 지급액을 되돌릴 수 없습니다.
+    </>
+  )
+  if (!hasGroupBuy) {
+    return (
+      <>
+        계약이 체결되면 <b className="font-semibold">공구가 자동으로 생성</b>
+        됩니다(계약 1건당 1건). 공구는 이 계약의 기간·공구가·리워드율을 그대로
+        상속합니다.
+        {paid
+          ? paidText
+          : view === "concludedFeeDue" && (
+              <>
+                {" "}
+                고정 지급비는 계약서에 적은 지급 시점에{" "}
+                <b className="font-semibold">브랜드가 직접</b> 지급합니다.
+              </>
+            )}
+      </>
+    )
+  }
+  return (
+    <>
+      공구가 이미 생성돼 있어{" "}
+      <b className="font-semibold">추가로 만들 수 없습니다</b>(계약 1건당 공구
+      1건).
+      {paid ? (
+        paidText
+      ) : (
+        <>
+          {" "}
+          승인 진행 상황은 <b className="font-semibold">공구 관리</b>에서 확인할
+          수 있습니다.
+        </>
+      )}
+    </>
+  )
 }
