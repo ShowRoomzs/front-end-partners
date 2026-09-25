@@ -1,3 +1,4 @@
+import { usePageSubtitle } from "@/common/components/MainLayout/usePageSubtitle"
 import { useMarketStore } from "@/common/stores/useMarketStore"
 import ContractReadView from "@/features/contracts/components/detail/ContractReadView"
 import ContractForm from "@/features/contracts/components/form/ContractForm"
@@ -9,7 +10,7 @@ import {
   useGetContractFormSources,
 } from "@/features/contracts/hooks/useContractQueries"
 import { deriveContractView } from "@/features/contracts/utils/contractView"
-import { useCallback } from "react"
+import { useCallback, useEffect } from "react"
 import {
   useNavigate,
   useParams as useRouteParams,
@@ -42,6 +43,20 @@ export default function ContractDetailPage() {
   const isEditMode =
     view === "draft" ||
     (view === "reviewRejected" && searchParams.get("mode") === "edit")
+
+  // 반려 편집에서 다시 요청하면 상태가 바뀐다 — 남은 `?mode=edit`이 다음 반려 때 폼을 바로 열지 않게 걷는다
+  const staleEditMode =
+    !!view && view !== "reviewRejected" && searchParams.get("mode") === "edit"
+  useEffect(() => {
+    if (staleEditMode) {
+      const next = new URLSearchParams(searchParams)
+      next.delete("mode")
+      setSearchParams(next, { replace: true })
+    }
+  }, [staleEditMode, searchParams, setSearchParams])
+
+  // 탑바 crumb — 시안 B1~B3 「계약 작성」, 계약서 모드 「계약서」
+  usePageSubtitle(isEditMode ? "계약 작성" : "계약서")
 
   const { data: sources } = useGetContractFormSources(isEditMode)
   const { data: clauses } = useGetContractClauses(isEditMode)

@@ -99,8 +99,6 @@ export function buildStepper(
   detail: ContractDetailResponse
 ): Array<StepChip> {
   const { review, signature, closure } = detail
-  const brandDone = signature.brandSignedAt ? 1 : 0
-  const creatorDone = signature.creatorSignedAt ? 1 : 0
 
   const approved: StepChip = {
     label: "어드민 검토 통과",
@@ -178,12 +176,12 @@ export function buildStepper(
         { ...sent, who: formatMonthDayTime(signature.requestedAt) },
         {
           label: "양측 서명 완료",
-          who: `브랜드 ${brandDone}/1 · 인플루언서 ${creatorDone}/1`,
+          who: `브랜드 ${formatMonthDayTime(signature.brandSignedAt)} · 인플루언서 ${formatMonthDayTime(signature.creatorSignedAt)}`,
           tone: "done",
         },
         {
           label: "체결완료",
-          who: `${formatMonthDayTime(closure.closedAt)} · PDF·인증서 발급됨`,
+          who: `${formatMonthDayTime(concludedAt(detail))} · PDF·인증서 발급됨`,
           tone: "cur",
         },
       ]
@@ -212,6 +210,7 @@ export function buildStepper(
           who: `어드민 · ${formatMonthDayTime(closure.closedAt)}`,
           tone: "halt",
         },
+        { label: "체결완료", who: "진행되지 않음", tone: "todo" },
       ]
     case "canceled":
       return [
@@ -252,9 +251,9 @@ export function headerMeta(
         return `${formatDateTimeShort(detail.closure.closedAt)} 취소`
       case "concludedNoFee":
       case "concludedFeeDue":
-        return `${formatDateTimeShort(detail.closure.closedAt)} 체결`
+        return `${formatDateTimeShort(concludedAt(detail))} 체결`
       case "concludedPaid":
-        return `${formatDateTimeShort(detail.closure.closedAt)} 체결 · ${formatDateTimeShort(detail.fixedFee.paidAt)} 지급완료`
+        return `${formatDateTimeShort(concludedAt(detail))} 체결 · ${formatDateTimeShort(detail.fixedFee.paidAt)} 지급완료`
       default:
         return detail.review.requestedAt
           ? `${formatDateTimeShort(detail.review.requestedAt)} 검토 요청`
@@ -266,4 +265,16 @@ export function headerMeta(
   }
 
   return parts.join(" · ")
+}
+
+/**
+ * 체결 시각 — 셀러 상세 응답엔 체결 시각 필드가 없고 `closure.closedAt`은 종결 3종에만 찬다.
+ * 이력의 체결 이벤트 시각으로 대신한다.
+ */
+export function concludedAt(detail: ContractDetailResponse): string | null {
+  return (
+    detail.closure.closedAt ??
+    detail.history.find(entry => entry.eventType === "CONCLUDED")?.occurredAt ??
+    null
+  )
 }

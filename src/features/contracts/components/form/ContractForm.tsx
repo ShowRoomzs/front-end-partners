@@ -1,3 +1,4 @@
+import { reviewRejectReasonLabel } from "@/features/contracts/constants/labels"
 import { confirm } from "@/common/components/ConfirmModal/confirm"
 import DetailCard, { FieldRow } from "@/common/components/DetailCard/DetailCard"
 import Notice from "@/common/components/Notice/Notice"
@@ -334,7 +335,7 @@ export default function ContractForm(props: ContractFormProps) {
             <b className="font-semibold">다시 검토를 요청</b>해 주세요.
           </Notice>
           <FieldRow label="반려 사유">
-            {detail.review.rejectReason?.code ?? "—"}
+            {reviewRejectReasonLabel(detail.review.rejectReason?.code)}
             {detail.review.rejectReason?.detail && (
               <div className={FSUB_CLASS}>
                 {detail.review.rejectReason.detail}

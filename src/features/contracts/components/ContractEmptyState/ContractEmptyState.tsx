@@ -29,7 +29,7 @@ export default function ContractEmptyState(props: ContractEmptyStateProps) {
         </div>
         <div className="text-[12px] text-sz-n-500">
           {keyword
-            ? `${tabLabel} 탭에서 “${keyword}”을(를) 찾지 못했습니다. 다른 탭에는 있을 수 있습니다.`
+            ? `${tabLabel} 탭에서 “${keyword}”${objectParticle(keyword)} 찾지 못했습니다. 다른 탭에는 있을 수 있습니다.`
             : `${tabLabel} 탭에 조건에 맞는 계약이 없습니다. 다른 탭에는 있을 수 있습니다.`}
         </div>
         <Btn variant="secondary" className="mt-4" onClick={onReset}>
@@ -55,4 +55,11 @@ export default function ContractEmptyState(props: ContractEmptyStateProps) {
       </Btn>
     </div>
   )
+}
+
+/** 받침 유무로 목적격 조사를 고른다 — 「앵콜을」 · 「크림을」 · 「세럼을」 · 「토너를」 */
+function objectParticle(word: string) {
+  const last = word.charCodeAt(word.length - 1)
+  const isHangul = last >= 0xac00 && last <= 0xd7a3
+  return isHangul && (last - 0xac00) % 28 === 0 ? "를" : "을"
 }

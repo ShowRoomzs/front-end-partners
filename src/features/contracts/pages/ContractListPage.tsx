@@ -103,11 +103,12 @@ export default function ContractListPage() {
     navigate(`${CONTRACT_LIST_PATH}/${created.contractId}`)
   }, [createContract, isCreating, navigate])
 
-  const hasCondition =
-    params.tab !== "ALL" ||
-    !!params.keyword ||
-    !!params.startDate ||
-    !!params.endDate
+  const hasCondition = params.tab !== "ALL" || !!params.keyword
+  /*
+    빈 상태 2종은 표 모양도 다르다 — 계약이 아예 없으면(A2) 표 없이 안내 카드만,
+    검색 결과가 없으면(A2a) 표 머리는 남기고 「총 N건」 줄만 걷는다.
+  */
+  const isEmpty = !isLoading && (contractList?.content.length ?? 0) === 0
 
   const emptyState = useMemo(
     () => (
@@ -142,73 +143,77 @@ export default function ContractListPage() {
       <ContractToolbar
         keyword={localParams.keyword}
         onKeywordChange={keyword => updateLocalParam("keyword", keyword)}
-        startDate={localParams.startDate}
-        endDate={localParams.endDate}
-        onDateChange={(startDate, endDate) => {
-          updateLocalParam("startDate", startDate)
-          updateLocalParam("endDate", endDate)
-        }}
         onSearch={update}
         onCreate={handleCreate}
         isCreating={isCreating}
       />
 
-      <div className="flex flex-col overflow-hidden rounded-[8px] border border-sz-n-200 bg-white">
-        <div className="flex shrink-0 items-center justify-between border-b border-sz-n-200 px-4 py-2.5">
-          <span className="text-[12px] text-sz-n-600">
-            총 <b className="text-sz-n-900">{pageInfo.totalResults}</b>건
-          </span>
-
-          <div className="flex items-center gap-2">
-            <select
-              aria-label="정렬"
-              value={params.sort}
-              onChange={event =>
-                handleSortChange(event.target.value as ContractSortType)
-              }
-              style={SELECT_CHEVRON_STYLE}
-              className="h-7 appearance-none rounded-[6px] border border-sz-n-300 bg-white py-0 pl-2 pr-[22px] text-[12px] text-sz-n-700 outline-none focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50"
-            >
-              {CONTRACT_SORT_OPTIONS.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-
-            <select
-              aria-label="표시 건수"
-              value={params.size}
-              onChange={event => handleSizeChange(Number(event.target.value))}
-              style={SELECT_CHEVRON_STYLE}
-              className="h-7 appearance-none rounded-[6px] border border-sz-n-300 bg-white py-0 pl-2 pr-[22px] text-[12px] text-sz-n-700 outline-none focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50"
-            >
-              {CONTRACT_PAGE_SIZES.map(size => (
-                <option key={size} value={size}>
-                  {size}건씩
-                </option>
-              ))}
-            </select>
-          </div>
+      {isEmpty && !hasCondition ? (
+        <div className="rounded-[8px] border border-sz-n-200 bg-white">
+          {emptyState}
         </div>
+      ) : (
+        <div className="flex flex-col overflow-hidden rounded-[8px] border border-sz-n-200 bg-white">
+          {!isEmpty && (
+            <div className="flex shrink-0 items-center justify-between border-b border-sz-n-200 px-4 py-2.5">
+              <span className="text-[12px] text-sz-n-600">
+                총 <b className="text-sz-n-900">{pageInfo.totalResults}</b>건
+              </span>
 
-        <Table<ContractListItem, "contractId">
-          rowKey="contractId"
-          columns={CONTRACT_COLUMNS}
-          data={contractList?.content ?? []}
-          pageInfo={pageInfo}
-          isLoading={isLoading}
-          onRowClick={handleRowClick}
-          emptyState={emptyState}
-          fitWidth
-          footerAlign="center"
-          bodyClassName="overflow-hidden whitespace-nowrap"
-          headerClassName="whitespace-nowrap font-semibold tracking-[.2px]"
-          // 시안 `tbody td{padding:13px 16px;border-top:1px solid n-100}`
-          cellClassName="border-sz-n-100 py-[13px]"
-          rowClassName="hover:bg-sz-accent-50"
-        />
-      </div>
+              <div className="flex items-center gap-2">
+                <select
+                  aria-label="정렬"
+                  value={params.sort}
+                  onChange={event =>
+                    handleSortChange(event.target.value as ContractSortType)
+                  }
+                  style={SELECT_CHEVRON_STYLE}
+                  className="h-7 appearance-none rounded-[6px] border border-sz-n-300 bg-white py-0 pl-2 pr-[22px] text-[12px] text-sz-n-700 outline-none focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50"
+                >
+                  {CONTRACT_SORT_OPTIONS.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  aria-label="표시 건수"
+                  value={params.size}
+                  onChange={event =>
+                    handleSizeChange(Number(event.target.value))
+                  }
+                  style={SELECT_CHEVRON_STYLE}
+                  className="h-7 appearance-none rounded-[6px] border border-sz-n-300 bg-white py-0 pl-2 pr-[22px] text-[12px] text-sz-n-700 outline-none focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50"
+                >
+                  {CONTRACT_PAGE_SIZES.map(size => (
+                    <option key={size} value={size}>
+                      {size}건씩
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
+          <Table<ContractListItem, "contractId">
+            rowKey="contractId"
+            columns={CONTRACT_COLUMNS}
+            data={contractList?.content ?? []}
+            pageInfo={pageInfo}
+            isLoading={isLoading}
+            onRowClick={handleRowClick}
+            emptyState={emptyState}
+            fitWidth
+            footerAlign="center"
+            bodyClassName="overflow-hidden whitespace-nowrap"
+            headerClassName="whitespace-nowrap font-semibold tracking-[.2px]"
+            // 시안 `tbody td{padding:13px 16px;border-top:1px solid n-100}`
+            cellClassName="border-sz-n-100 py-[13px]"
+            rowClassName="hover:bg-sz-accent-50"
+          />
+        </div>
+      )}
     </ListViewWrapper>
   )
 }

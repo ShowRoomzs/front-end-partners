@@ -46,11 +46,18 @@ export function useUpdateContract() {
 }
 
 export function useDeleteContract() {
-  const invalidate = useInvalidateContract()
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (contractId: number) => contractService.delete(contractId),
-    onSuccess: invalidate,
+    // 지운 계약의 상세는 무효화(재조회)가 아니라 제거한다 — 다시 부르면 404가 난다
+    onSuccess: (_, contractId) => {
+      queryClient.removeQueries({
+        queryKey: [CONTRACT_QUERY_KEYS.DETAIL, contractId],
+      })
+      queryClient.invalidateQueries({ queryKey: [CONTRACT_QUERY_KEYS.LIST] })
+      queryClient.invalidateQueries({ queryKey: [CONTRACT_QUERY_KEYS.SUMMARY] })
+    },
   })
 }
 
