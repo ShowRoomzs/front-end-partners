@@ -17,8 +17,12 @@ import type {
   ThreadListItem,
 } from "@/features/connections/services/threadService"
 import { downloadAttachment } from "@/features/connections/utils/download"
+import { CONTRACT_LIST_PATH } from "@/features/contracts/constants/params"
+import { useCreateContract } from "@/features/contracts/hooks/useContractMutations"
+import { contractService } from "@/features/contracts/services/contractService"
 import { useState } from "react"
 import toast from "react-hot-toast"
+import { useNavigate } from "react-router-dom"
 
 interface ThreadPanelProps {
   thread: ThreadListItem
@@ -33,11 +37,14 @@ interface LightboxState {
 /** 우측 소통 스레드 (시안 `.cs-thread`) */
 export default function ThreadPanel(props: ThreadPanelProps) {
   const { thread } = props
+  const navigate = useNavigate()
 
   const { messages, hasNextPage, isFetchingNextPage, fetchNextPage } =
     useGetThreadMessages(thread.threadId)
   const { outgoing, send, retry, cancel } = useOutgoingMessages(thread.threadId)
   useMarkThreadRead(thread.threadId, thread.unreadCount)
+  const { mutateAsync: createContract, isPending: isCreatingContract } =
+    useCreateContract()
 
   const [lightbox, setLightbox] = useState<LightboxState | null>(null)
   const [playingVideo, setPlayingVideo] = useState<AttachmentSummary | null>(
@@ -45,6 +52,39 @@ export default function ThreadPanel(props: ThreadPanelProps) {
   )
 
   const currentImage = lightbox?.images[lightbox.index]
+
+  /**
+   * [계약 작성] — 스레드 경유 진입은 상대가 **자동 지정 · 변경 불가**다(§25-6-1).
+   * 스레드 목록에는 상대의 creatorId가 없어 작성 폼 선택지(연결됨 상대 전량)에서 쇼룸명으로
+   * 찾는다. 못 찾으면 상대를 비운 초안을 만들고 폼에서 고르게 한다.
+   */
+  const handleCreateContract = async () => {
+    if (isCreatingContract) {
+      return
+    }
+    try {
+      const sources = await contractService.getFormSources()
+      const counterpart = sources.counterparties.find(
+        item => item.showroomName === thread.counterpartName
+      )
+      const created = await createContract(
+        counterpart
+          ? {
+              creatorId: counterpart.creatorId,
+              connectionId: counterpart.connectionId,
+            }
+          : {}
+      )
+      if (!counterpart) {
+        toast(
+          "계약 상대를 자동 지정하지 못했습니다. 작성 화면에서 선택해 주세요."
+        )
+      }
+      navigate(`${CONTRACT_LIST_PATH}/${created.contractId}`)
+    } catch {
+      // 인터셉터가 서버 문구를 토스트로 띄운다
+    }
+  }
 
   return (
     <div className="flex min-w-0 flex-1 flex-col bg-sz-n-50">
@@ -67,14 +107,16 @@ export default function ThreadPanel(props: ThreadPanelProps) {
         </div>
         {/*
           [계약 작성]은 연결됨일 때만 활성이다(§13-5). 운영자 채널엔 계약 개념이
-          없어 버튼 자체를 두지 않는다. 계약 관리 화면은 아직 없어서 진입점만 있다.
+          없어 버튼 자체를 두지 않는다. 누르면 이 상대로 고정된 빈 초안이 만들어지고
+          작성 화면으로 넘어간다.
         */}
         {!thread.operatorChannel && (
           <Button
             type="button"
             size="sm"
             disabled={thread.connectionStatus !== "CONNECTED"}
-            onClick={() => toast("계약 관리 화면은 준비 중입니다.")}
+            isLoading={isCreatingContract}
+            onClick={handleCreateContract}
           >
             계약 작성
           </Button>

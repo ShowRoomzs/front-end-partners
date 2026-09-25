@@ -12,6 +12,7 @@ import { cookie } from "@/common/lib/cookie"
 import { COOKIE_NAME } from "@/common/constants/cookie"
 import { useMarketStore } from "@/common/stores/useMarketStore"
 import { useGetThreadSummary } from "@/features/connections/hooks/useGetThreadSummary"
+import { useGetContractSummary } from "@/features/contracts/hooks/useContractQueries"
 
 /**
  * 메뉴에는 없지만 브레드크럼 하위 이름이 필요한 화면들.
@@ -24,6 +25,9 @@ const SUB_PAGE_LABELS: Array<{ prefix: string; label: string }> = [
   { prefix: "/product/edit", label: "상품 수정" },
   // 목록(/inquiry/product)은 걸리지 않게 끝에 슬래시를 둔다
   { prefix: "/inquiry/product/", label: "상품 문의 상세" },
+  // 작성중이면 「계약 작성」, 나머지는 「계약서」인데 crumb는 상태를 모른다 — 시안 탑바 표기 중
+  // 넓은 쪽을 쓴다. 화면 제목(H1)은 화면이 상태를 보고 직접 그린다.
+  { prefix: "/contract/", label: "계약서" },
 ]
 
 /**
@@ -32,7 +36,7 @@ const SUB_PAGE_LABELS: Array<{ prefix: string; label: string }> = [
  * 메뉴 라벨과 화면 제목이 다르거나(문의 관리 → `상품 문의`), 제목 아래 설명 줄이
  * 필요한 화면들이다. 셸에는 설명 슬롯이 없어서 화면이 `page-h`를 통째로 가져간다.
  */
-const SELF_TITLED_PREFIXES = ["/inquiry/product", "/product/list"]
+const SELF_TITLED_PREFIXES = ["/inquiry/product", "/product/list", "/contract"]
 
 /**
  * 셸의 여백·제목·스크롤을 화면이 직접 가져가는 경로들.
@@ -126,13 +130,18 @@ export default function MainLayout() {
       : breadcrumb.title
 
   const { data: threadSummary } = useGetThreadSummary(menuType === "SELLER")
+  // 계약 GNB 배지 — 브랜드가 지금 조치해야 하는 건수(검토 반려 + 상대만 서명 완료)
+  const { data: contractSummary } = useGetContractSummary(menuType === "SELLER")
 
   return (
     <div className="flex h-screen bg-sz-n-50">
       <Sidebar
         menus={menus}
         isOpen={isSidebarOpen}
-        badgeCounts={{ connections: threadSummary?.unreadCount ?? 0 }}
+        badgeCounts={{
+          connections: threadSummary?.unreadCount ?? 0,
+          contract: contractSummary?.actionRequiredCount ?? 0,
+        }}
       />
 
       <div

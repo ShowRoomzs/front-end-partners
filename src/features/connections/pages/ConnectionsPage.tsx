@@ -12,6 +12,9 @@ import { useSearchParams } from "react-router-dom"
  * 선택한 스레드를 경로가 아니라 쿼리파라미터로 들고 있는다 — 상대를 바꾸는 건
  * 화면 이동이 아니라 같은 화면 안의 선택이라, 라우트를 갈아끼우면 목록까지
  * 불필요하게 다시 마운트된다.
+ *
+ * `threadId` 외에 두 가지 진입 키를 더 받는다 — 계약 상세가 스레드 ID를 갖고 있지 않아서다.
+ * `counterpart=<쇼룸명>`은 그 상대의 스레드를, `operator=1`은 운영팀 채널을 고른다.
  */
 export default function ConnectionsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -23,8 +26,21 @@ export default function ConnectionsPage() {
   const threads = data?.content ?? []
 
   const threadIdParam = Number(searchParams.get("threadId"))
+  const counterpartParam = searchParams.get("counterpart")
+  const wantsOperator = searchParams.get("operator") === "1"
   const selectedThread =
-    threads.find(thread => thread.threadId === threadIdParam) ?? threads[0]
+    threads.find(thread => thread.threadId === threadIdParam) ??
+    (wantsOperator
+      ? threads.find(thread => thread.operatorChannel)
+      : undefined) ??
+    (counterpartParam
+      ? threads.find(
+          thread =>
+            !thread.operatorChannel &&
+            thread.counterpartName === counterpartParam
+        )
+      : undefined) ??
+    threads[0]
 
   return (
     <div className="flex min-h-0 flex-1 border-t border-sz-n-200">

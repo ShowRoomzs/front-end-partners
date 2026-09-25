@@ -16,6 +16,8 @@ import AnswerTemplateWritePage from "@/features/inquiry/pages/AnswerTemplateWrit
 import ConnectionsPage from "@/features/connections/pages/ConnectionsPage"
 import ProductInquiryListPage from "@/features/productInquiry/pages/ProductInquiryListPage"
 import ProductInquiryDetailPage from "@/features/productInquiry/pages/ProductInquiryDetailPage"
+import ContractListPage from "@/features/contracts/pages/ContractListPage"
+import ContractDetailPage from "@/features/contracts/pages/ContractDetailPage"
 
 export const authRoutes: Array<RouteObject> = [
   {
@@ -102,17 +104,21 @@ export const mainRoutes: Array<RouteObject> = [
         path: "connections",
         element: <ConnectionsPage />,
       },
-      // Seller - 계약 관리 / 공구 관리 — 시안 GNB #4·#5의 자리만 확보한 플레이스홀더.
-      // 기능이 생기면 이 element를 실제 화면으로 갈아끼우면 된다.
+      /*
+        Seller - 계약 관리 (§26) — 목록 · 상세.
+        작성 모드와 계약서 모드가 같은 라우트다 — 작성중은 폼, 나머지는 읽기 화면이고
+        상세가 응답 값으로 고른다. `/contract/new`는 두지 않는다(임시저장에 계약 ID가 필요해
+        빈 초안을 먼저 만들고 그 ID로 들어간다).
+      */
       {
         path: "contract",
-        element: (
-          <ComingSoonPage
-            title="계약 관리"
-            description="브랜드·인플루언서 계약 관리 화면은 아직 준비 중입니다."
-          />
-        ),
+        element: <ContractListPage />,
       },
+      {
+        path: "contract/:contractId",
+        element: <ContractDetailPage />,
+      },
+      // Seller - 공구 관리 — 시안 GNB #5의 자리만 확보한 플레이스홀더.
       {
         path: "group-buy",
         element: (

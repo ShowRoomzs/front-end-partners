@@ -34,13 +34,15 @@ export const SELLER_MENU: MenuConfig = {
       label: "연결·소통",
       path: "/connections",
     },
-    // 계약 관리·공구 관리는 아직 기능 자체가 없다 — 시안 번호(#4·#5)를 맞추기 위해
-    // 자리만 잡아둔 플레이스홀더 화면으로 연결된다.
     {
       id: "contract",
       label: "계약 관리",
       path: "/contract",
+      // 작성·계약서 화면(/contract/:id)에서도 이 메뉴가 활성으로 남아야 한다
+      matchPaths: ["/contract"],
     },
+    // 공구 관리는 아직 기능 자체가 없다 — 시안 번호(#5)를 맞추기 위해 자리만 잡아둔
+    // 플레이스홀더 화면으로 연결된다.
     {
       id: "groupbuy",
       label: "공구 관리",
