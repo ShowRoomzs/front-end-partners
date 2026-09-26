@@ -40,6 +40,7 @@ export const EVENT_LABEL: Record<ContractEventType, string> = {
   CANCELED: "계약 취소",
   FIXED_FEE_PAID: "고정 지급비 지급 완료 기록 · 브랜드 직접 지급",
   GROUP_BUY_CREATED: "공구 자동 생성",
+  DELETED: "계약 삭제",
 }
 
 /**

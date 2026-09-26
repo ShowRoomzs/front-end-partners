@@ -182,7 +182,7 @@ export default function SigningProgressCard(props: SigningProgressCardProps) {
                 수정하고 다시 요청
               </Btn>
             )}
-            {/* 서버는 작성중 초안만 지운다 — 반려 건의 [삭제]는 permissions.canDelete가 열릴 때만 */}
+            {/* 시안 B3d — 반려 건도 지울 수 있다(서버 permissions.canDelete) */}
             {permissions.canDelete && (
               <Btn variant="delete" className="w-full" onClick={onDelete}>
                 삭제

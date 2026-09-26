@@ -92,7 +92,8 @@ export default function ContractForm(props: ContractFormProps) {
   const { mutateAsync: requestReview, isPending: isRequesting } =
     useRequestReview()
 
-  const [savedAt, setSavedAt] = useState<string | null>(null)
+  // 시안 B2a — 저장본으로 다시 들어오면 서버의 마지막 임시저장 시각부터 보여준다
+  const [savedAt, setSavedAt] = useState<string | null>(detail.updatedAt)
   const hasSavedOnceRef = useRef(false)
   const [isValidating, setIsValidating] = useState(false)
   const [reviewWarnings, setReviewWarnings] =
@@ -133,6 +134,22 @@ export default function ContractForm(props: ContractFormProps) {
   )
 
   /** 임시저장 — 성공하면 서버가 돌려준 상세로 폼을 되돌린다(버전 갱신 포함) */
+  /**
+   * 다른 탭·늦게 끝난 요청 때문에 서버 상태가 이미 바뀌었으면(검토 요청됨 등) 상세를 다시 불러온다.
+   * 폼은 `key`에 상태가 들어 있어 새 상태의 화면으로 다시 그려진다.
+   */
+  const refetchIfStatusChanged = useCallback(
+    async (code: string | undefined) => {
+      if (
+        code === "CONTRACT_STATUS_CONFLICT" ||
+        code === "CONTRACT_EDIT_LOCKED"
+      ) {
+        await onRefetch()
+      }
+    },
+    [onRefetch]
+  )
+
   const save = useCallback(async (): Promise<ContractDetailResponse | null> => {
     try {
       const saved = await updateContract({
@@ -141,7 +158,7 @@ export default function ContractForm(props: ContractFormProps) {
       })
       hydrate(saved)
       hasSavedOnceRef.current = true
-      setSavedAt(new Date().toISOString())
+      setSavedAt(saved.updatedAt ?? new Date().toISOString())
       return saved
     } catch (error) {
       const code = getApiErrorCode(error)
@@ -162,9 +179,18 @@ export default function ContractForm(props: ContractFormProps) {
         return null
       }
       toast.error(getApiErrorMessage(error) ?? "임시저장에 실패했습니다.")
+      await refetchIfStatusChanged(code)
       return null
     }
-  }, [detail.contractId, hydrate, onRefetch, updateContract, values, version])
+  }, [
+    detail.contractId,
+    hydrate,
+    onRefetch,
+    refetchIfStatusChanged,
+    updateContract,
+    values,
+    version,
+  ])
 
   const handleSave = useCallback(async () => {
     if (isSaving) {
@@ -253,11 +279,13 @@ export default function ContractForm(props: ContractFormProps) {
         return
       }
       toast.error(getApiErrorMessage(error) ?? "검토 요청에 실패했습니다.")
+      await refetchIfStatusChanged(code)
     }
   }, [
     applyViolations,
     detail.contractId,
     isRequesting,
+    refetchIfStatusChanged,
     requestReview,
     reviewWarnings,
     scrollToFirstViolation,

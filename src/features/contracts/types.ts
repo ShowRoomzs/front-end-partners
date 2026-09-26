@@ -75,6 +75,7 @@ export type ContractEventType =
   | "CANCELED"
   | "FIXED_FEE_PAID"
   | "GROUP_BUY_CREATED"
+  | "DELETED"
 
 /**
  * 하드 검증 위반의 종류(§25-6 절대 규칙).
@@ -309,6 +310,10 @@ export interface ContractDetailResponse {
   version: number
   /** 재작성 출처 계약 ID */
   sourceContractId: number | null
+  /** 브랜드의 마지막 임시저장 시각 — 한 번도 저장하지 않았으면 null */
+  updatedAt: string | null
+  /** 체결 시각 — 체결완료가 아니면 null(closure는 종결 3종 전용) */
+  concludedAt: string | null
   counterparty: ContractCounterparty
   period: ContractPeriod
   items: Array<ContractItem>
