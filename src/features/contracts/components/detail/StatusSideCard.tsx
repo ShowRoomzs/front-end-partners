@@ -102,7 +102,7 @@ export default function StatusSideCard(props: StatusSideCardProps) {
             <MetaRow label="검토 요청" value={time(review.requestedAt)} />
             <MetaRow label="반려 처리" value={time(review.rejectedAt)} />
             {fee}
-            {draftLink}
+            {/* 반려 상태는 제출본을 보여주지 않는다(2026-09-26 기획 결정) — 「생성 전」도 사실과 달라 줄째 뺀다 */}
           </>
         )
       case "signingNone":
