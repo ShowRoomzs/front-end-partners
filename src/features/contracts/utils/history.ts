@@ -17,10 +17,11 @@ import { formatKRW } from "@/features/contracts/utils/format"
  */
 export function toHistoryItems(
   history: Array<ContractHistoryEntry>,
+  signature: { brandSignedAt: string | null; creatorSignedAt: string | null },
   fixedFeeAmount: number | null = null
 ): Array<HistoryItem> {
   // 서버 정렬에 기대지 않는다 — 스튜디오 응답은 최신순, 셀러 응답은 오래된순으로 온다
-  return newestFirst(history)
+  return newestFirst(withCurrentSignatures(history, signature))
     .filter(entry => !HIDDEN_EVENTS.has(entry.eventType))
     .map(entry => {
       // 시안 B5a 「고정 지급비 300,000원 지급 완료 기록 · 브랜드 직접 지급」 — 금액을 문구에 넣는다
@@ -61,6 +62,29 @@ const HIDDEN_EVENTS = new Set<string>([
   "DOCUMENT_UPLOADED",
   "DOCUMENT_DELETED",
 ])
+
+/**
+ * 서명 기록 정리 — 어드민이 서명 현황을 정정(체크 해제·일시 수정)해도 서버는 이전 「서명 완료」
+ * 이벤트를 지우지 않는다. 지금 서명 칸이 비어 있는 쪽의 기록은 빼고, 여러 번이면 마지막 하나만 둔다.
+ */
+function withCurrentSignatures<T extends { eventType: string | null }>(
+  history: Array<T>,
+  signature: { brandSignedAt: string | null; creatorSignedAt: string | null }
+) {
+  const lastIndex = (type: string) =>
+    history.map(entry => entry.eventType).lastIndexOf(type)
+  const keep = {
+    BRAND_SIGNED: signature.brandSignedAt ? lastIndex("BRAND_SIGNED") : -1,
+    CREATOR_SIGNED: signature.creatorSignedAt
+      ? lastIndex("CREATOR_SIGNED")
+      : -1,
+  }
+  return history.filter((entry, index) =>
+    entry.eventType === "BRAND_SIGNED" || entry.eventType === "CREATOR_SIGNED"
+      ? keep[entry.eventType] === index
+      : true
+  )
+}
 
 /** 이력 상세 문자열에 서버 시각(ISO)·null이 그대로 섞여 오면 화면 표기로 바꾼다 */
 const ISO_IN_TEXT =
