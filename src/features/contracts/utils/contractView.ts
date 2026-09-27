@@ -267,14 +267,7 @@ export function headerMeta(
   return parts.join(" · ")
 }
 
-/**
- * 체결 시각 — 셀러 상세 응답엔 체결 시각 필드가 없고 `closure.closedAt`은 종결 3종에만 찬다.
- * 이력의 체결 이벤트 시각으로 대신한다.
- */
+/** 체결 시각 — `closure.closedAt`은 종결 3종 전용이라 체결은 별도 필드로 온다 */
 export function concludedAt(detail: ContractDetailResponse): string | null {
-  return (
-    detail.closure.closedAt ??
-    detail.history.find(entry => entry.eventType === "CONCLUDED")?.occurredAt ??
-    null
-  )
+  return detail.concludedAt
 }

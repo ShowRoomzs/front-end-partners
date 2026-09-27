@@ -19,9 +19,7 @@ import type {
 import { downloadAttachment } from "@/features/connections/utils/download"
 import { CONTRACT_LIST_PATH } from "@/features/contracts/constants/params"
 import { useCreateContract } from "@/features/contracts/hooks/useContractMutations"
-import { contractService } from "@/features/contracts/services/contractService"
 import { useState } from "react"
-import toast from "react-hot-toast"
 import { useNavigate } from "react-router-dom"
 
 interface ThreadPanelProps {
@@ -55,31 +53,17 @@ export default function ThreadPanel(props: ThreadPanelProps) {
 
   /**
    * [계약 작성] — 스레드 경유 진입은 상대가 **자동 지정 · 변경 불가**다(§25-6-1).
-   * 스레드 목록에는 상대의 creatorId가 없어 작성 폼 선택지(연결됨 상대 전량)에서 쇼룸명으로
-   * 찾는다. 못 찾으면 상대를 비운 초안을 만들고 폼에서 고르게 한다.
+   * 스레드 행의 creatorId·connectionId를 초안 생성 요청에 그대로 보낸다.
    */
   const handleCreateContract = async () => {
-    if (isCreatingContract) {
+    if (isCreatingContract || thread.creatorId === null) {
       return
     }
     try {
-      const sources = await contractService.getFormSources()
-      const counterpart = sources.counterparties.find(
-        item => item.showroomName === thread.counterpartName
-      )
-      const created = await createContract(
-        counterpart
-          ? {
-              creatorId: counterpart.creatorId,
-              connectionId: counterpart.connectionId,
-            }
-          : {}
-      )
-      if (!counterpart) {
-        toast(
-          "계약 상대를 자동 지정하지 못했습니다. 작성 화면에서 선택해 주세요."
-        )
-      }
+      const created = await createContract({
+        creatorId: thread.creatorId,
+        connectionId: thread.connectionId,
+      })
       navigate(`${CONTRACT_LIST_PATH}/${created.contractId}`)
     } catch {
       // 인터셉터가 서버 문구를 토스트로 띄운다

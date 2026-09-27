@@ -41,6 +41,9 @@ export interface ThreadListItem {
   counterpartImageUrl: string | null
   /** 운영자 고정 채널 — 서버가 이미 최상단으로 정렬해 내려준다(§13-3) */
   operatorChannel: boolean
+  /** [계약 작성] 시 초안 생성 요청에 그대로 보낸다 — 운영자 채널이면 null */
+  creatorId: number | null
+  connectionId: number
   /** [계약 작성] 버튼 게이트(§13-5) */
   connectionStatus: ConnectionStatus
   lastMessagePreview: string | null
