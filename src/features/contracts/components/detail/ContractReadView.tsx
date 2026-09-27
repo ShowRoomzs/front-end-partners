@@ -269,7 +269,11 @@ export default function ContractReadView(props: ContractReadViewProps) {
           />
           <DetailCard title="이력" flushBody>
             <HistoryList
-              items={toHistoryItems(detail.history, detail.fixedFee.amount)}
+              items={toHistoryItems(
+                detail.history,
+                detail.signature,
+                detail.fixedFee.amount
+              )}
             />
           </DetailCard>
         </div>

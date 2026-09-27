@@ -36,13 +36,15 @@ export default function SignatureBoxes(props: SignatureBoxesProps) {
     isResending,
     onResend,
   } = props
+  // 기준 시각을 내린 화면(체결완료·종결)은 서명 기록이 확정값이다 — 시안 B5·B7은 「✓ 서명 완료 · 시각」 한 색
+  const settled = asOf === null
 
   return (
     <>
       <div className="mt-4 flex gap-3">
         <SignBox mine who="브랜드(나)" name={brandName}>
           {brandSignedAt ? (
-            <Done at={brandSignedAt} />
+            <Done at={brandSignedAt} settled={settled} />
           ) : (
             <>
               <div className="text-[11px] text-sz-n-500">
@@ -83,7 +85,7 @@ export default function SignatureBoxes(props: SignatureBoxesProps) {
         </SignBox>
         <SignBox who="인플루언서" name={creatorName}>
           {creatorSignedAt ? (
-            <Done at={creatorSignedAt} />
+            <Done at={creatorSignedAt} settled={settled} />
           ) : (
             <div className="text-[11px] text-sz-n-500">
               {isExpired
@@ -134,7 +136,14 @@ function SignBox(props: {
   )
 }
 
-function Done(props: { at: string }) {
+function Done(props: { at: string; settled: boolean }) {
+  if (props.settled) {
+    return (
+      <div className="text-[11px] font-medium tabular-nums text-sz-success-text">
+        ✓ 서명 완료 · {formatDateTimeShort(props.at)}
+      </div>
+    )
+  }
   return (
     <div className="text-[11px] font-medium text-sz-success-text">
       ✓ 서명 완료{" "}
