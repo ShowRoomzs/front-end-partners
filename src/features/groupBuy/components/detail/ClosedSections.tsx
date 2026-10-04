@@ -258,7 +258,7 @@ export function FulfillmentCard(props: {
         <>
           {mine.reason && (
             <Notice tone="neutral" className="mt-3">
-              내가 제출한 내용 — “{mine.reason}”
+              내가 제출한 내용 — "{mine.reason}"
             </Notice>
           )}
           {threadId !== null && (

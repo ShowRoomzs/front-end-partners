@@ -133,3 +133,9 @@ export const POST_REJECT_REASON_LABEL: Record<string, string> = {
   DISCLOSURE_DAMAGED: "대가관계 표시 훼손",
   ETC: "기타",
 }
+
+/**
+ * 플랫폼 수수료율(%) — 시안 B6 「플랫폼 수수료 2%·원천징수를 포함한…」 안내에만 쓴다.
+ * 상세 응답에 수수료율이 없어 고정값으로 둔다. 금액 계산에는 쓰지 않는다(정산 관리 소관).
+ */
+export const PLATFORM_FEE_RATE = 2
