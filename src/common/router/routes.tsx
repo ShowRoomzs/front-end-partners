@@ -18,6 +18,8 @@ import ProductInquiryListPage from "@/features/productInquiry/pages/ProductInqui
 import ProductInquiryDetailPage from "@/features/productInquiry/pages/ProductInquiryDetailPage"
 import ContractListPage from "@/features/contracts/pages/ContractListPage"
 import ContractDetailPage from "@/features/contracts/pages/ContractDetailPage"
+import GroupBuyListPage from "@/features/groupBuy/pages/GroupBuyListPage"
+import GroupBuyDetailPage from "@/features/groupBuy/pages/GroupBuyDetailPage"
 
 export const authRoutes: Array<RouteObject> = [
   {
@@ -118,17 +120,19 @@ export const mainRoutes: Array<RouteObject> = [
         path: "contract/:contractId",
         element: <ContractDetailPage />,
       },
-      // Seller - 공구 관리 — 시안 GNB #5의 자리만 확보한 플레이스홀더.
+      /*
+        Seller - 공구 관리 (§29) — 목록 · 상세. 공구는 계약 체결로만 생기므로 생성 라우트가 없다.
+        상세 B1~B7a는 한 화면이고 응답 값으로 카드 구성을 고른다.
+      */
       {
         path: "group-buy",
-        element: (
-          <ComingSoonPage
-            title="공구 관리"
-            description="공동구매 등록·진행 관리 화면은 아직 준비 중입니다."
-          />
-        ),
+        element: <GroupBuyListPage />,
       },
-      // Seller - 성과 관리 — 같은 이유의 플레이스홀더(GNB #8).
+      {
+        path: "group-buy/:groupBuyId",
+        element: <GroupBuyDetailPage />,
+      },
+      // Seller - 성과 관리 — 아직 화면이 없는 플레이스홀더(GNB #8).
       {
         path: "performance",
         element: (
@@ -242,7 +246,13 @@ export const mainRoutes: Array<RouteObject> = [
         children: [
           {
             path: "orders",
-            element: <div>aasdf</div>,
+            // 공구 관리의 [판매 관리에서 처리 ↗]가 오는 곳 — 화면이 생기기 전까지 자리표시
+            element: (
+              <ComingSoonPage
+                title="판매 관리"
+                description="주문·배송·반품 처리 화면은 아직 준비 중입니다."
+              />
+            ),
           },
           {
             path: "purchase-orders",
@@ -294,7 +304,13 @@ export const mainRoutes: Array<RouteObject> = [
         children: [
           {
             path: "history",
-            element: <div>aasdf</div>,
+            // 공구 관리의 [정산 관리 열기]·[정산 내역 보기 ↗]가 오는 곳 — 화면이 생기기 전까지 자리표시
+            element: (
+              <ComingSoonPage
+                title="정산 관리"
+                description="정산 내역·지급 명세 화면은 아직 준비 중입니다."
+              />
+            ),
           },
           {
             path: "by-product",
