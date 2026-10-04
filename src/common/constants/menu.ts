@@ -41,12 +41,12 @@ export const SELLER_MENU: MenuConfig = {
       // 작성·계약서 화면(/contract/:id)에서도 이 메뉴가 활성으로 남아야 한다
       matchPaths: ["/contract"],
     },
-    // 공구 관리는 아직 기능 자체가 없다 — 시안 번호(#5)를 맞추기 위해 자리만 잡아둔
-    // 플레이스홀더 화면으로 연결된다.
     {
       id: "groupbuy",
       label: "공구 관리",
       path: "/group-buy",
+      // 상세(/group-buy/:id)에서도 이 메뉴가 활성으로 남아야 한다
+      matchPaths: ["/group-buy"],
     },
     {
       id: "sales",
@@ -60,7 +60,7 @@ export const SELLER_MENU: MenuConfig = {
       path: "/settlement/history",
       matchPaths: ["/settlement"],
     },
-    // 계약·공구와 마찬가지로 아직 화면이 없다 — 플레이스홀더로 연결된다.
+    // 아직 화면이 없다 — 플레이스홀더로 연결된다.
     {
       id: "performance",
       label: "성과 관리",
