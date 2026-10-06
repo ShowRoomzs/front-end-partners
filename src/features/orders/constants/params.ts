@@ -58,9 +58,12 @@ export function defaultSortOf(tab: OrderTab): OrderSortType {
   return isWorkQueueTab(tab) ? "OLDEST_FIRST" : "LATEST_FIRST"
 }
 
-/** 발송기한 열 정렬이 있는 탭 — 발송기한은 작업 큐의 우선순위 축이다(rev.3) */
+/**
+ * 발송기한 열 정렬이 있는 탭 — 시안의 「발송기한▼」가 있는 상품준비중(10b)·전체(10e).
+ * 신규 탭은 주문 순서가 곧 기한 순서라 따로 두지 않는다(시안 10a).
+ */
 export function hasShipDueSort(tab: OrderTab) {
-  return tab === "NEW" || tab === "PREPARING"
+  return tab === "PREPARING" || tab === "ALL"
 }
 
 /** 기본 진입 탭은 신규(준비 대기) — 브랜드가 매일 처음 여는 작업 큐다 */

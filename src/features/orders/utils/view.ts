@@ -112,14 +112,15 @@ export function formatNumber(value: number) {
   return value.toLocaleString("ko-KR")
 }
 
-/** 경과 — 1일 미만은 시간, 그 이상은 「N일 N시간」(우 레일 · 취소 요청 「경과」 열) */
+/**
+ * 경과(우 레일 · 취소 요청 「경과」 열) — 시안처럼 사흘 미만은 시간(「38시간」), 그 이상은 일(「7일」).
+ * 기한 판단(24·72시간)이 시간 단위라 그 구간은 시간으로 읽혀야 한다.
+ */
 export function formatElapsedHours(hours: number) {
-  if (hours < 24) {
+  if (hours < 72) {
     return `${Math.max(0, hours)}시간`
   }
-  const days = Math.floor(hours / 24)
-  const rest = hours % 24
-  return rest === 0 ? `${days}일` : `${days}일 ${rest}시간`
+  return `${Math.floor(hours / 24)}일`
 }
 
 export function hoursSince(value: string | null, now: Dayjs = dayjs()) {
@@ -186,6 +187,14 @@ export function splitLabel(label: string | null) {
 /** 송장번호 입력 정제 — 공백·하이픈 등 숫자 외 문자는 입력 중에 걷어낸다(검사 ①) */
 export function sanitizeTrackingNumber(value: string) {
   return value.replace(/\D/g, "")
+}
+
+/** 읽기 전용 송장번호 — 시안처럼 네 자리씩 띄운다(「6412 3389 4571」). 입력값은 숫자만 둔다 */
+export function formatTrackingNumber(value: string | null) {
+  if (!value) {
+    return "—"
+  }
+  return /^\d+$/.test(value) ? value.replace(/(\d{4})(?=\d)/g, "$1 ") : value
 }
 
 /** 받침 유무로 목적격 조사를 고른다 — 「ORD-1을」 · 「선크림을」 */
