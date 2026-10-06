@@ -1,6 +1,7 @@
 import { apiInstance } from "@/common/lib/apiInstance"
 import type { PageResponse } from "@/common/types/page"
 import { paramsToSearchParams } from "@/common/utils/paramsToSearchParams"
+import dayjs from "dayjs"
 import type {
   ClaimBatchResponse,
   ClaimDetailResponse,
@@ -27,7 +28,12 @@ function toListSearchParams(params: ClaimListParams) {
   })
 }
 
-/** 서버가 `filename*=UTF-8''…`로 내려준 파일명을 읽는다 */
+/**
+ * 서버가 `filename*=UTF-8''…`로 내려준 파일명을 읽는다.
+ *
+ * ⚠️ 운영 서버 CORS가 Content-Disposition을 노출하지 않아(exposedHeaders 없음) 브라우저에서는 이 헤더가
+ * 비어 온다 — 그래서 대체 이름을 서버 규칙(`재발송목록_yyyyMMdd_HHmmss.xlsx`)과 같게 만든다.
+ */
 function filenameFrom(disposition: string | undefined, fallback: string) {
   const match = disposition?.match(/filename\*=UTF-8''([^;]+)/i)
   return match ? decodeURIComponent(match[1]) : fallback
@@ -128,7 +134,7 @@ export const claimService = {
       response.data,
       filenameFrom(
         response.headers["content-disposition"] as string | undefined,
-        "재발송_목록.xlsx"
+        `재발송목록_${dayjs().format("YYYYMMDD_HHmmss")}.xlsx`
       )
     )
   },
