@@ -31,7 +31,44 @@ export interface ContractItemValues {
   productId: number | null
   groupBuyPrice: number | null
   rewardRate: number | null
+  /** 옵션별 최소 물량 — 상품을 고르면 그 상품의 옵션 전량이 행이 된다. 상품 행의 최소 물량은 합계다 */
+  options: Array<ContractOptionValues>
+}
+
+export interface ContractOptionValues {
+  /** 상품 관리에서 옵션이 지워졌으면 null — 검토 요청 시 ITEM_OPTIONS_MISMATCH */
+  variantId: number | null
+  /** 옵션 없는 상품은 null */
+  variantName: string | null
+  /** 옵션 정가 — 옵션가(= 옵션 정가 − 상품 정가) 계산용 */
+  regularPrice: number | null
   minQuantity: number | null
+}
+
+/** 상품을 고를 때 — 그 상품의 옵션 전량을 수량 빈 행으로 만든다(상품 재선택 = 초기화) */
+export function optionsOfProduct(
+  product: ContractProductOption | undefined
+): Array<ContractOptionValues> {
+  return (product?.options ?? []).map(variant => ({
+    variantId: variant.variantId,
+    variantName: variant.variantName,
+    regularPrice: variant.regularPrice,
+    minQuantity: null,
+  }))
+}
+
+/** 상품 행의 최소 물량 = 옵션 합계. 하나라도 비어 있으면 null(서버 파생값과 같은 규칙) */
+export function totalMinQuantity(item: ContractItemValues): number | null {
+  if (
+    item.options.length === 0 ||
+    item.options.some(option => option.minQuantity === null)
+  ) {
+    return null
+  }
+  return item.options.reduce(
+    (sum, option) => sum + (option.minQuantity ?? 0),
+    0
+  )
 }
 
 export interface ContractFormValues {
@@ -69,7 +106,7 @@ export function emptyItem(): ContractItemValues {
     productId: null,
     groupBuyPrice: null,
     rewardRate: null,
-    minQuantity: null,
+    options: [],
   }
 }
 
@@ -90,7 +127,12 @@ export function fromDetail(detail: ContractDetailResponse): ContractFormValues {
             productId: item.productId,
             groupBuyPrice: item.groupBuyPrice,
             rewardRate: item.rewardRate,
-            minQuantity: item.minQuantity,
+            options: (item.options ?? []).map(option => ({
+              variantId: option.variantId,
+              variantName: option.variantName,
+              regularPrice: option.regularPrice,
+              minQuantity: option.minQuantity,
+            })),
           }))
         : [emptyItem()],
     // 시안 B1 — 새 초안은 고정 지급비 0원 · 지급 시점 「공구 게시물 등록 후」가 기본 선택이다
@@ -150,7 +192,12 @@ export function toUpdateRequest(
         productId: item.productId,
         groupBuyPrice: item.groupBuyPrice,
         rewardRate: item.rewardRate,
-        minQuantity: item.minQuantity,
+        // 지워진 옵션(variantId null)은 보낼 수 없다 — 서버가 검토 요청 때 「상품을 다시 선택」으로 잡는다
+        options: item.options.flatMap(option =>
+          option.variantId === null
+            ? []
+            : [{ variantId: option.variantId, minQuantity: option.minQuantity }]
+        ),
       })),
   }
 }
@@ -180,6 +227,12 @@ export function isRequiredSatisfied(values: ContractFormValues): boolean {
       item.groupBuyPrice !== null &&
       item.rewardRate !== null
   )
+  // 서버 ITEM_OPTION_MIN_QUANTITY_REQUIRED — 상품을 고른 행은 옵션마다 최소 물량이 있어야 한다
+  const optionQuantitiesOk = values.items.every(
+    item =>
+      item.productId === null ||
+      item.options.every(option => option.minQuantity !== null)
+  )
 
   const feeNoticeOk =
     values.fixedFeeAmount === null ||
@@ -197,6 +250,7 @@ export function isRequiredSatisfied(values: ContractFormValues): boolean {
     values.groupBuyStartAt !== null &&
     values.groupBuyEndAt !== null &&
     hasCompleteItem &&
+    optionQuantitiesOk &&
     contentTotal >= 1 &&
     values.contentDueDate !== null &&
     values.fixedFeeAmount !== null &&
@@ -211,7 +265,10 @@ export interface RuleErrors {
   title?: string
   fixedFeeAmount?: string
   groupBuyPeriod?: string
-  items: Record<string, { groupBuyPrice?: string; rewardRate?: string }>
+  items: Record<
+    string,
+    { groupBuyPrice?: string; rewardRate?: string; options?: string }
+  >
 }
 
 export const EMPTY_RULE_ERRORS: RuleErrors = { items: {} }
@@ -285,6 +342,18 @@ export function violationsToRuleErrors(
     .filter(violation => violation.kind === "RULE")
     .forEach(violation => {
       const field = violation.field ?? ""
+      // 옵션 위반(ITEM_OPTIONS_MISMATCH · ITEM_OPTION_SALE_PRICE_NEGATIVE) — `items[0].options` · `items[0].options[1].…`
+      const optionMatch = /^items\[(\d+)\]\.options/.exec(field)
+      if (optionMatch) {
+        const row = sentItems[Number(optionMatch[1])]
+        if (row) {
+          errors.items[row.clientKey] = {
+            ...errors.items[row.clientKey],
+            options: violation.message,
+          }
+        }
+        return
+      }
       const itemMatch = /^items\[(\d+)\]\.(\w+)$/.exec(field)
       if (itemMatch) {
         const row = sentItems[Number(itemMatch[1])]
@@ -339,7 +408,12 @@ export function diffSections(
         item.productId !== other.productId ||
         item.groupBuyPrice !== other.groupBuyPrice ||
         item.rewardRate !== other.rewardRate ||
-        item.minQuantity !== other.minQuantity
+        item.options.length !== other.options.length ||
+        item.options.some(
+          (option, optionIndex) =>
+            option.variantId !== other.options[optionIndex]?.variantId ||
+            option.minQuantity !== other.options[optionIndex]?.minQuantity
+        )
       )
     })
   if (itemsChanged) {

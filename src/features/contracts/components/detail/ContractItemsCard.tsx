@@ -47,6 +47,24 @@ export default function ContractItemsCard(props: ContractItemsCardProps) {
                   ? "—"
                   : `${item.minQuantity.toLocaleString("ko-KR")}개`}
               </b>
+              {/* 옵션이 있는 상품은 옵션별 판매가 · 최소 물량 — 상품 행의 최소 물량은 그 합계다 */}
+              {(item.options ?? []).some(
+                option => option.variantName !== null
+              ) && (
+                <div className="mt-1 text-[11px] text-sz-n-500">
+                  옵션 —{" "}
+                  {item.options
+                    .map(
+                      option =>
+                        `${option.variantName ?? "(삭제된 옵션)"} ${formatKRW(option.salePrice)} · 최소 ${
+                          option.minQuantity === null
+                            ? "—"
+                            : `${option.minQuantity.toLocaleString("ko-KR")}개`
+                        }`
+                    )
+                    .join(" / ")}
+                </div>
+              )}
             </TermRow>
           ))}
         </Terms>

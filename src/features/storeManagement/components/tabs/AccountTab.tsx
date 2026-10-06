@@ -1,6 +1,6 @@
 import { PasswordInput } from "@/common/components/Auth/PasswordInput"
 import { COOKIE_NAME } from "@/common/constants/cookie"
-import { cookie } from "@/common/lib/cookie"
+import { removeAuthCookie } from "@/common/lib/cookie"
 import { formatDateOnly, formatDateTimeShort } from "@/common/utils/formatDate"
 import { Button } from "@/components/ui/button"
 import { validatePasswordStrength } from "@/features/auth/utils/validationHelpers"
@@ -52,8 +52,8 @@ export default function AccountTab() {
    * 그래서 성공 즉시 쿠키를 비우고 로그인 화면으로 새로 띄운다.
    */
   const handleEmailChanged = () => {
-    cookie.remove(COOKIE_NAME.ACCESS_TOKEN)
-    cookie.remove(COOKIE_NAME.REFRESH_TOKEN)
+    removeAuthCookie(COOKIE_NAME.ACCESS_TOKEN)
+    removeAuthCookie(COOKIE_NAME.REFRESH_TOKEN)
     // navigate가 아니라 문서 교체 — 라우터가 accessToken 유무로 트리를 갈아끼우므로
     // 같은 라우터 안에서 이동시키면 주소와 화면이 어긋난다.
     window.location.replace("/login")

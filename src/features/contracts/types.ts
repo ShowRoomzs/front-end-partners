@@ -146,6 +146,20 @@ export interface ContractProductOption {
   /** 현재 정가 — 계약 항목에는 이 값이 스냅샷으로 복사된다 */
   regularPrice: number
   thumbnailUrl: string | null
+  /** 옵션 전량 — 상품을 고르면 이 목록이 옵션 행이 된다. 옵션은 최소 물량만 입력한다 */
+  options: Array<ContractProductVariant>
+}
+
+/** 상품 옵션(variant) — 옵션 없는 상품도 이름 없는 1행이 있다 */
+export interface ContractProductVariant {
+  variantId: number
+  /** 옵션 없는 상품은 null */
+  variantName: string | null
+  /** 옵션 정가(옵션가 포함). 옵션가 = 이 값 − 상품 정가 */
+  regularPrice: number
+  /** 현재 재고 — 참고값. 서버는 최소 물량 ≤ 재고를 판정하지 않는다 */
+  stock: number
+  isRepresentative: boolean
 }
 
 /** 작성 폼 드롭다운 선택지 — 연결됨 상대 전량 + 진열 상품 전량 */
@@ -198,6 +212,24 @@ export interface ContractItem {
   rewardRate: number | null
   /** 1개당 예상 리워드(원) — 서버 파생값, 1원 단위 버림 */
   unitReward: number | null
+  /** 옵션별 최소 물량의 합계(파생값) — 옵션 중 하나라도 비어 있으면 null */
+  minQuantity: number | null
+  /** 옵션별 최소 물량 — 상품의 옵션 전량이 행이다(variant 순서) */
+  options: Array<ContractItemOption>
+}
+
+export interface ContractItemOption {
+  contractItemOptionId: number
+  /** 상품 관리에서 옵션이 지워졌으면 null */
+  variantId: number | null
+  /** 옵션명(스냅샷) — 옵션 없는 상품은 null */
+  variantName: string | null
+  /** 옵션 정가(스냅샷) */
+  regularPrice: number | null
+  /** 옵션가 = 옵션 정가 − 상품 정가 */
+  optionExtraPrice: number | null
+  /** 옵션 판매가 = 공구가 + 옵션가. 공구가가 없으면 null */
+  salePrice: number | null
   minQuantity: number | null
 }
 
@@ -346,7 +378,11 @@ export interface ContractUpdateItemRequest {
   productId: number | null
   groupBuyPrice: number | null
   rewardRate: number | null
-  minQuantity: number | null
+  /**
+   * 옵션별 최소 물량 — 상품의 옵션 전량. 상품 단위 최소 물량은 받지 않는다(옵션 합계의 파생값).
+   * 보내지 않은 옵션은 수량 null로 저장되고, 상품의 옵션이 아닌 variantId는 400이다.
+   */
+  options: Array<{ variantId: number; minQuantity: number | null }>
 }
 
 /** 임시저장 — 전체 교체(PUT). 형식만 검사되고 필수 판정은 검토 요청 시점에 한다 */

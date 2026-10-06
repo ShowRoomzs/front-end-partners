@@ -65,7 +65,9 @@ export function GroupBuyInfoCard(props: {
           {periodText(timeline.startAt, timeline.endAt)}{" "}
           <span className="text-sz-n-500">
             {isSuspended
-              ? `(${timeline.elapsedDays}일차 중단)`
+              ? groupBuy.openedAt === null
+                ? "(시작 전 중단)"
+                : `(${timeline.elapsedDays}일차 중단)`
               : extendedDays
                 ? `(${timeline.totalDays}일 · ${extendedDays}일 연장)`
                 : `(${timeline.totalDays}일)`}

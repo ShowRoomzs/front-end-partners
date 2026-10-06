@@ -188,7 +188,17 @@ export function ReadinessCard(props: {
         className="mt-4"
         rows={gateRows(detail, onConfirmStock, isConfirming)}
       />
-      {isReady ? (
+      {isReady && detail.post.status === "HIDDEN" ? (
+        // 준비완료에서도 운영자가 숨길 수 있다 — 숨긴 채로 시작되면 소비자에게 보이지 않는다
+        <Notice tone="warn" className="mt-4">
+          <B>운영자가 게시물 노출을 중지했습니다.</B> 공구는{" "}
+          {dt(detail.timeline.startAt)}에 그대로 시작되지만{" "}
+          <B>소비자에게 게시물이 보이지 않아</B> 주문이 들어오기 어렵습니다 —
+          게시물을 고칠 권한은 인플루언서에게 있으니 사유를{" "}
+          <B>스레드에서 확인</B>해 주세요. 인플루언서가 고치면 운영자가 확인하고
+          숨김을 해제합니다.
+        </Notice>
+      ) : isReady ? (
         <Notice tone="info" className="mt-4">
           <B>{dt(detail.timeline.startAt)}에 자동으로 시작됩니다.</B> 별도
           조작은 필요 없습니다. 기간은 <B>시작 전에 바꿀 수 없고</B>, 시작한
@@ -559,7 +569,8 @@ export function ClosedProgressCard(props: { detail: Detail }) {
     return (
       <DetailCard
         title="진행 상황"
-        note={`진행 ${timeline.elapsedDays}일차 ${isAdmin ? "직권 중단" : "중단"} · ${d(groupBuy.endedAt)}`}
+        // 시작 전에 중단된 공구(준비완료 중 중단 요청 승인)는 진행 일차가 없다
+        note={`${groupBuy.openedAt === null ? "시작 전" : `진행 ${timeline.elapsedDays}일차`} ${isAdmin ? "직권 중단" : "중단"} · ${d(groupBuy.endedAt)}`}
       >
         {/* 시안 B7·B7a — 5단계 중 종료 자리에 「중단」이 들어간다 */}
         <GbStepper

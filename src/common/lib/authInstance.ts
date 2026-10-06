@@ -1,5 +1,5 @@
 import { COOKIE_NAME } from "@/common/constants/cookie"
-import { cookie } from "@/common/lib/cookie"
+import { cookie, removeAuthCookie } from "@/common/lib/cookie"
 import axios, { isAxiosError } from "axios"
 import toast from "react-hot-toast"
 
@@ -21,8 +21,8 @@ authInstance.interceptors.response.use(
     const suppressErrorToast = error.config?.suppressErrorToast === true
     const hasAccessToken = !!cookie.get(COOKIE_NAME.ACCESS_TOKEN)
     if (error.response?.status === 401 && hasAccessToken) {
-      cookie.remove(COOKIE_NAME.ACCESS_TOKEN)
-      cookie.remove(COOKIE_NAME.REFRESH_TOKEN)
+      removeAuthCookie(COOKIE_NAME.ACCESS_TOKEN)
+      removeAuthCookie(COOKIE_NAME.REFRESH_TOKEN)
       if (!suppressErrorToast) {
         toast.error("세션이 만료되었습니다. 다시 로그인해주세요.")
       }
