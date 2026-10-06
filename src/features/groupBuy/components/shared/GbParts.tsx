@@ -8,6 +8,7 @@ import {
   Fragment,
   useCallback,
   useEffect,
+  useId,
   type ReactNode,
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
@@ -282,9 +283,10 @@ export function GbStepper(props: { steps: Array<GbStep> }) {
             )}
           >
             {step.label}
+            {/* 시안 `.stp .who`는 굵기를 따로 두지 않아 현재·중단 단계에선 600을 물려받는다 */}
             <span
               className={cn(
-                "mt-px block text-[10px] font-normal tabular-nums",
+                "mt-px block text-[10px] tabular-nums",
                 STEP_WHO_CLASS[step.tone]
               )}
             >
@@ -337,6 +339,7 @@ export function GbModal(props: {
   children: ReactNode
 }) {
   const { title, width = 480, onClose, footer, children } = props
+  const titleId = useId()
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -361,11 +364,16 @@ export function GbModal(props: {
     // 바깥 클릭으로 닫지 않는다 — 입력한 사유가 빗나간 클릭 한 번에 날아가면 안 된다
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(26,27,31,0.4)]">
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         className="flex max-h-[90vh] flex-col overflow-hidden rounded-[8px] bg-white shadow-[0_8px_24px_rgba(26,27,31,0.12),0_2px_6px_rgba(26,27,31,0.08)]"
         style={{ width }}
       >
         <div className="flex shrink-0 items-center justify-between border-b border-sz-n-200 px-5 py-3.5">
-          <h2 className="text-[13px] font-semibold text-sz-n-900">{title}</h2>
+          <h2 id={titleId} className="text-[13px] font-semibold text-sz-n-900">
+            {title}
+          </h2>
           <button
             type="button"
             onClick={onClose}

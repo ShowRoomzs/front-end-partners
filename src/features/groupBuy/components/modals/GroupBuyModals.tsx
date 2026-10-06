@@ -297,10 +297,23 @@ export function SuspensionRequestModal(
           ) : null}
           {fee !== null && (
             <>
-              · 이미 지급된 고정 지급비{" "}
-              <B className="text-sz-n-900">
-                {formatKRW(fee)}은 플랫폼이 회수해 주지 않습니다
-              </B>{" "}
+              {/* 시안 C4는 문장 전체, C2는 금액부터 굵게 */}
+              {beforeStart ? (
+                <>
+                  ·{" "}
+                  <B className="text-sz-n-900">
+                    이미 지급된 고정 지급비 {formatKRW(fee)}은 플랫폼이 회수해
+                    주지 않습니다
+                  </B>{" "}
+                </>
+              ) : (
+                <>
+                  · 이미 지급된 고정 지급비{" "}
+                  <B className="text-sz-n-900">
+                    {formatKRW(fee)}은 플랫폼이 회수해 주지 않습니다
+                  </B>{" "}
+                </>
+              )}
               — 돈이 플랫폼을 지나가지 않아 되돌릴 대상이 없습니다
               {!beforeStart && (
                 <>

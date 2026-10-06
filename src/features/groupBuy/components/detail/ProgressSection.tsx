@@ -15,6 +15,7 @@ import {
 } from "@/features/groupBuy/components/shared/GbParts"
 import {
   EMERGENCY_REASON_LABEL,
+  PLATFORM_FEE_RATE,
   SUSPENSION_CLAUSE_TEXT,
 } from "@/features/groupBuy/constants/params"
 import {
@@ -472,7 +473,8 @@ export function SituationCard(props: {
             <FSub>연장 요청은 공구당 1회로 제한됩니다</FSub>
           </FRow>
           <Notice tone="neutral" className="mt-3">
-            <B>거절은 두 경로로 옵니다.</B> 인플루언서가 <B>명시적으로 거절</B>
+            <B>거절은 두 경로로 옵니다.</B> {expired ? "" : "위처럼 "}
+            인플루언서가 <B>명시적으로 거절</B>
             하면 처리자·사유가 남습니다. 반면{" "}
             <B>공구 기간이 끝날 때까지 응답이 없으면 «기간 만료 자동 거절»</B>로
             처리되며, 이때는 처리자가 <B>시스템</B>이고 거절 사유가 없습니다 —
@@ -556,14 +558,16 @@ export function ClosedProgressCard(props: { detail: Detail }) {
         title="진행 상황"
         note={`진행 ${timeline.elapsedDays}일차 ${isAdmin ? "직권 중단" : "중단"} · ${d(groupBuy.endedAt)}`}
       >
+        {/* 시안 B7·B7a — 5단계 중 종료 자리에 「중단」이 들어간다 */}
         <GbStepper
           steps={[
+            ...lifecycleSteps(detail).slice(0, 2),
             {
               label: "진행중",
               who: groupBuy.openedAt
                 ? `${md(timeline.startAt)} 시작`
                 : "시작 전",
-              tone: "done",
+              tone: groupBuy.openedAt ? "done" : "todo",
             },
             {
               label: "중단",
@@ -612,19 +616,8 @@ export function ClosedProgressCard(props: { detail: Detail }) {
 
   const isSettled = groupBuy.status === "SETTLED"
   const isEarly = groupBuy.closeType === "EARLY_CLOSED"
-  const steps: Array<GbStep> = [
-    { label: "진행중", who: `${md(timeline.startAt)} 시작`, tone: "done" },
-    {
-      label: "종료",
-      who: md(timeline.endAt),
-      tone: isSettled ? "done" : "cur",
-    },
-    {
-      label: "정산완료",
-      who: "판매 관리 확정 후",
-      tone: isSettled ? "cur" : "todo",
-    },
-  ]
+  // 시안 B5~B6 — 준비중부터 다섯 단계 그대로(조기 마감도 종료 칸은 계약 종료 시각)
+  const steps = lifecycleSteps(detail)
 
   if (isSettled) {
     return (
@@ -633,8 +626,9 @@ export function ClosedProgressCard(props: { detail: Detail }) {
         <Notice tone="neutral" className="mt-4">
           공구가 종결되었습니다. 정산 상태는{" "}
           <B>정산대기 → 운영자확인 → 이체완료</B>를 거쳤고,{" "}
-          <B>이체완료 시점에 공구가 정산완료</B>가 됩니다. 플랫폼
-          수수료·원천징수를 포함한 <B>지급 명세는 정산 관리</B>에서 확인하세요.
+          <B>이체완료 시점에 공구가 정산완료</B>가 됩니다. 플랫폼 수수료{" "}
+          {PLATFORM_FEE_RATE}%·원천징수를 포함한 <B>지급 명세는 정산 관리</B>
+          에서 확인하세요.
         </Notice>
       </DetailCard>
     )
@@ -650,7 +644,7 @@ export function ClosedProgressCard(props: { detail: Detail }) {
       title="진행 상황"
       note={
         isEarly
-          ? `조기 마감 · ${mdDate(groupBuy.endedAt)} 종결`
+          ? `조기 마감 · ${d(groupBuy.endedAt)} 종결`
           : "판매 종료 · 실적 확정 대기"
       }
     >

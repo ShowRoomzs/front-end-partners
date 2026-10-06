@@ -37,6 +37,9 @@ export function GroupBuyInfoCard(props: {
   const { detail, onOpenThread, onOpenContract } = props
   const { counterparty, contract, timeline, fixedFee, groupBuy } = detail
   const isSuspended = groupBuy.status === "SUSPENDED"
+  // 시안 B4d 「(15일 · 7일 연장)」 — 수락된 연장은 기간 표기에 함께 적는다
+  const extendedDays =
+    detail.extension.status === "ACCEPTED" ? detail.extension.days : null
 
   return (
     <DetailCard title="공구 정보" note="계약에서 상속 · 변경 불가">
@@ -63,7 +66,9 @@ export function GroupBuyInfoCard(props: {
           <span className="text-sz-n-500">
             {isSuspended
               ? `(${timeline.elapsedDays}일차 중단)`
-              : `(${timeline.totalDays}일)`}
+              : extendedDays
+                ? `(${timeline.totalDays}일 · ${extendedDays}일 연장)`
+                : `(${timeline.totalDays}일)`}
           </span>
         </span>
       </FRow>
@@ -87,8 +92,8 @@ export function GroupBuyInfoCard(props: {
 /** 시안 「공구 상품 항목」 — 상품명만 링크(상품 상세 · 새 탭), 나머지는 계약 확정값 */
 export function GroupBuyItemsCard(props: { detail: Detail }) {
   const { detail } = props
-  const showNotice =
-    detail.groupBuy.status === "PREPARING" || detail.groupBuy.status === "READY"
+  // 시안 B1·B2·B2a만 — 준비완료(B3)부터는 안내 없이 항목만 둔다
+  const showNotice = detail.groupBuy.status === "PREPARING"
 
   return (
     <DetailCard

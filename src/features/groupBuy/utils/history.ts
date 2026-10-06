@@ -57,8 +57,9 @@ const EVENT_TEXT: Record<
     label: "운영자 직권 중단 · 공구 중단 · 게시물 내려감",
     tone: "warn",
   },
+  // 시안 B7a(제17조③ 긴급 집행)도 사전통지 집행과 같은 문구다
   SUSPENDED_EMERGENCY: {
-    label: "운영자 긴급 직권 중단 · 공구 중단 · 게시물 내려감",
+    label: "운영자 직권 중단 · 공구 중단 · 게시물 내려감",
     tone: "warn",
   },
   ENDED: { label: "공구 종료 · 게시물 노출 종료", tone: "accent" },
@@ -75,7 +76,7 @@ const EVENT_TEXT: Record<
   FULFILLMENT_AGREED: { label: "이행 이슈 합의 종결", tone: "success" },
   FULFILLMENT_RESOLVED: { label: "정산 보류 해제", tone: "success" },
   SALES_FINALIZED: { label: "전 주문 종결 · 실적 확정", tone: "accent" },
-  SETTLED: { label: "이체 완료 · 정산완료", tone: "success" },
+  SETTLED: { label: "이체 완료 · 브랜드·인플루언서 지급", tone: "success" },
 }
 
 /** 운영자·시스템은 이름 스냅샷이 없다 — 호칭은 FE가 고른다 */
@@ -102,10 +103,29 @@ export function toGroupBuyHistoryItems(
       tone: "muted" as const,
     }
     return {
-      label: entry.detail ? `${text.label} · ${entry.detail}` : text.label,
+      label:
+        entry.eventType === "FULFILLMENT_AUTO_CONFIRMED"
+          ? `계약 이행 확인 — ${autoConfirmText(entry.detail)}`
+          : entry.detail
+            ? `${text.label} · ${entry.detail}`
+            : text.label,
       processedAt: entry.occurredAt,
       tone: text.tone,
       processorName: actorName(entry),
     }
   })
+}
+
+/**
+ * 자동 이행 detail — 서버가 「인플루언서 무응답으로 자동 이행」 라벨을 남긴다.
+ * 그 전 기록은 무응답 측 enum 원문(SELLER · CREATOR)이라 바꿔 읽는다.
+ */
+function autoConfirmText(detail: string | null): string {
+  if (detail === "SELLER") {
+    return "브랜드 무응답으로 자동 이행"
+  }
+  if (detail === "CREATOR") {
+    return "인플루언서 무응답으로 자동 이행"
+  }
+  return detail ?? "무응답 자동 이행"
 }

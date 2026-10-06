@@ -29,13 +29,14 @@ function remarkText(remark: NonNullable<GroupBuyListItem["remark"]>) {
 
 /**
  * 시안 A1 컬럼 6종 — 폭도 시안 그대로다(나머지 / 156 / 92 / 272 / 124 / 128).
+ * 공구명 「나머지」는 셸 본문 폭(1134)에서 나머지 합(772)을 뺀 값 — 넘기면 상태 열이 잘린다.
  * 관리 열이 없다(행 전체 클릭). 게시물은 인플루언서 소관 값이라 공구 상태와 별 열이다.
  */
 export const GROUP_BUY_COLUMNS: Columns<GroupBuyListItem> = [
   {
     key: "title",
     label: "공구명",
-    width: 400,
+    width: 360,
     render: value => (
       <span className="block truncate font-medium text-sz-n-900 group-hover:text-sz-accent-600">
         {value as string}
@@ -91,8 +92,8 @@ export const GROUP_BUY_COLUMNS: Columns<GroupBuyListItem> = [
             <span
               className={
                 record.remark?.code === "ADMIN_SUSPENSION_NOTICED"
-                  ? "mt-[3px] whitespace-nowrap text-[11px] text-sz-warning-text"
-                  : "mt-[3px] whitespace-nowrap text-[11px] text-sz-n-600"
+                  ? "mt-[3px] whitespace-normal text-center text-[11px] text-sz-warning-text"
+                  : "mt-[3px] whitespace-normal text-center text-[11px] text-sz-n-600"
               }
             >
               {note}
