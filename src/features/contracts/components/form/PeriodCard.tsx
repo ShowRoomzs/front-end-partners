@@ -101,6 +101,7 @@ export default function PeriodCard(props: PeriodCardProps) {
         <DateTimePickerModal
           title="시작 일시"
           minDate={startMin}
+          minDateTime={today.add(LEAD_DAYS, "day")}
           maxDate={null}
           value={start}
           marker={today}

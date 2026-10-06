@@ -1,5 +1,5 @@
 import { COOKIE_NAME } from "@/common/constants/cookie"
-import { cookie } from "@/common/lib/cookie"
+import { cookie, setAuthCookie } from "@/common/lib/cookie"
 import { authService } from "@/features/auth/services/authService"
 import axios from "axios"
 import toast from "react-hot-toast"
@@ -14,6 +14,28 @@ apiInstance.interceptors.request.use(config => {
   }
   return config
 })
+
+/*
+  동시에 여러 요청이 401을 받아도 갱신 요청은 하나만 나가도록 진행 중인 약속을 공유한다.
+  화면 하나가 요약·목록·상세를 한꺼번에 불러서, 공유하지 않으면 만료 직후 갱신이 6~7번 겹친다.
+  서버는 만료 3일 전부터 갱신 때 리프레시 토큰을 새로 발급하므로, 겹친 갱신은 첫 번째만 통하고
+  나머지는 이미 바뀐 토큰을 보내 실패한다(그 요청들이 401로 끝난다).
+*/
+let refreshing: Promise<string> | null = null
+
+function refreshAccessToken(refreshToken: string) {
+  refreshing ??= authService
+    .refresh(refreshToken)
+    .then(({ accessToken, refreshToken: nextRefreshToken }) => {
+      setAuthCookie(COOKIE_NAME.ACCESS_TOKEN, accessToken)
+      setAuthCookie(COOKIE_NAME.REFRESH_TOKEN, nextRefreshToken)
+      return accessToken
+    })
+    .finally(() => {
+      refreshing = null
+    })
+  return refreshing
+}
 
 apiInstance.interceptors.response.use(
   res => res,
@@ -33,11 +55,7 @@ apiInstance.interceptors.response.use(
       config._retry = true
 
       try {
-        const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-          await authService.refresh(refreshToken)
-        cookie.set(COOKIE_NAME.ACCESS_TOKEN, newAccessToken)
-        cookie.set(COOKIE_NAME.REFRESH_TOKEN, newRefreshToken)
-
+        await refreshAccessToken(refreshToken)
         return await apiInstance(config)
       } catch {
         // 갱신 실패는 인터셉터 밖으로 흘리지 않는다 —

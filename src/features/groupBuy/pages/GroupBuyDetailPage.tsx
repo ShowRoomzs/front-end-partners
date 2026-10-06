@@ -327,8 +327,11 @@ export default function GroupBuyDetailPage() {
               {
                 onSuccess: () => {
                   closeModal()
+                  // 준비완료(시작 전)에서 보낸 요청은 「진행」이 아니라 시작 일정이 그대로다
                   toast.success(
-                    "중단을 요청했습니다. 검토 중에도 공구는 계속 진행됩니다."
+                    detail.groupBuy.status === "READY"
+                      ? "중단을 요청했습니다. 검토 결과가 나올 때까지 시작 일정은 그대로입니다."
+                      : "중단을 요청했습니다. 검토 중에도 공구는 계속 진행됩니다."
                   )
                 },
               }

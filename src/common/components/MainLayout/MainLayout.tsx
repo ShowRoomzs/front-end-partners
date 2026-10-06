@@ -8,7 +8,7 @@ import Sidebar from "@/common/components/Sidebar/Sidebar"
 import { COMMON_MENU, CREATOR_MENU, SELLER_MENU } from "@/common/constants/menu"
 import { getMenuTypeByRole, type Role } from "@/common/types/role"
 import type { MenuItem } from "@/common/types/menu"
-import { cookie } from "@/common/lib/cookie"
+import { removeAuthCookie } from "@/common/lib/cookie"
 import { COOKIE_NAME } from "@/common/constants/cookie"
 import { useMarketStore } from "@/common/stores/useMarketStore"
 import { useGetThreadSummary } from "@/features/connections/hooks/useGetThreadSummary"
@@ -83,8 +83,8 @@ export default function MainLayout() {
   const flattenMenus = useMemo(() => menus.flatMap(m => m.groups), [menus])
 
   const handleLogout = useCallback(() => {
-    cookie.remove(COOKIE_NAME.ACCESS_TOKEN)
-    cookie.remove(COOKIE_NAME.REFRESH_TOKEN)
+    removeAuthCookie(COOKIE_NAME.ACCESS_TOKEN)
+    removeAuthCookie(COOKIE_NAME.REFRESH_TOKEN)
     clear()
     navigate("/")
   }, [clear, navigate])

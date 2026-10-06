@@ -4,6 +4,7 @@ import TimeSelect from "@/features/contracts/components/DateTimePickerModal/Time
 import { useCalendarMonth } from "@/features/contracts/components/DateTimePickerModal/useCalendarMonth"
 import Btn from "@/features/contracts/components/shared/Btn"
 import { FLINK_CLASS } from "@/features/contracts/components/shared/styles"
+import { MINUTE_STEP } from "@/features/contracts/constants/rules"
 import { cn } from "@/lib/utils"
 import dayjs, { type Dayjs } from "dayjs"
 import type { ReactNode } from "react"
@@ -14,6 +15,11 @@ interface DateTimePickerModalProps {
   /** 일 단위 경계(양끝 포함). 밖은 잠긴다 */
   minDate: Dayjs | null
   maxDate: Dayjs | null
+  /**
+   * 시각까지 본 하한 — 경계일(minDate)에서 이보다 이른 시각은 고를 수 없다.
+   * 서버 H5는 「검토 요청 시각 + 7일」을 분 단위로 보므로 날짜만 잠그면 경계일 오전이 통과해 버린다.
+   */
+  minDateTime?: Dayjs | null
   /** 현재 값 — 재진입 시 그 달·그 시각으로 연다 */
   value: Dayjs | null
   /** 종료 모달의 앵커(시작 일시) — 격자에 구간을 칠하고 상단 앵커 행을 그린다 */
@@ -44,6 +50,7 @@ export default function DateTimePickerModal(props: DateTimePickerModalProps) {
     title,
     minDate,
     maxDate,
+    minDateTime = null,
     value,
     rangeStart = null,
     onChangeAnchor,
@@ -77,6 +84,29 @@ export default function DateTimePickerModal(props: DateTimePickerModalProps) {
       ? selectedDate.hour(hour).minute(minute).second(0).millisecond(0)
       : selectedDate
     : null
+  // 시각 하한을 분 단위 선택지(MINUTE_STEP)로 올림한 값 — 경계일에서 고를 수 있는 가장 이른 시각
+  const earliest = minDateTime
+    ? minDateTime
+        .second(0)
+        .millisecond(0)
+        .minute(Math.ceil(minDateTime.minute() / MINUTE_STEP) * MINUTE_STEP)
+    : null
+  const tooEarly =
+    withTime && composed !== null && earliest !== null
+      ? composed.isBefore(earliest)
+      : false
+
+  const selectDate = (date: Dayjs) => {
+    setSelectedDate(date)
+    // 경계일을 고르면 하한보다 이른 시각을 하한으로 끌어올린다 — 잠긴 값이 그대로 남지 않게
+    if (withTime && earliest && date.isSame(earliest, "day")) {
+      const candidate = date.hour(hour).minute(minute)
+      if (candidate.isBefore(earliest)) {
+        setHour(earliest.hour())
+        setMinute(earliest.minute())
+      }
+    }
+  }
 
   return (
     <ModalShell
@@ -95,8 +125,8 @@ export default function DateTimePickerModal(props: DateTimePickerModalProps) {
           </Btn>
           <Btn
             variant="primary"
-            disabled={composed === null}
-            onClick={() => composed && onSubmit(composed)}
+            disabled={composed === null || tooEarly}
+            onClick={() => composed && !tooEarly && onSubmit(composed)}
           >
             {submitLabel}
           </Btn>
@@ -164,7 +194,7 @@ export default function DateTimePickerModal(props: DateTimePickerModalProps) {
         selected={selectedDate}
         rangeStart={rangeStart}
         marker={marker}
-        onSelect={setSelectedDate}
+        onSelect={selectDate}
       />
 
       {withTime && (
@@ -177,6 +207,13 @@ export default function DateTimePickerModal(props: DateTimePickerModalProps) {
             setMinute(nextMinute)
           }}
         />
+      )}
+      {tooEarly && earliest && (
+        <p className="mt-2 text-[11px] text-sz-danger-text">
+          {earliest.format("MM.DD")}은{" "}
+          <b className="font-semibold">{earliest.format("HH:mm")}</b> 이후로만
+          고를 수 있습니다 — 지금부터 7일이 지나야 합니다.
+        </p>
       )}
     </ModalShell>
   )

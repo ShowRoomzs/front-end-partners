@@ -14,6 +14,7 @@ import {
   violationsToRuleErrors,
   type ContractFormValues,
   type ContractItemValues,
+  type ContractOptionValues,
   type RuleErrors,
 } from "@/features/contracts/utils/contractForm"
 import { endBounds } from "@/features/contracts/utils/datetime"
@@ -33,7 +34,12 @@ interface FormState {
 type FormAction =
   | { type: "set"; patch: Partial<ContractFormValues> }
   | { type: "setItem"; clientKey: string; patch: Partial<ContractItemValues> }
-  | { type: "changeProduct"; clientKey: string; productId: number | null }
+  | {
+      type: "changeProduct"
+      clientKey: string
+      productId: number | null
+      options: Array<ContractOptionValues>
+    }
   | { type: "addItem" }
   | { type: "removeItem"; clientKey: string }
   | { type: "setPeriod"; startAt: string | null; endAt: string | null }
@@ -69,7 +75,8 @@ function reducer(state: FormState, action: FormAction): FormState {
       }
 
     case "changeProduct":
-      // 상품을 바꾼 행은 공구가·리워드율·최소 물량이 초기화된다(§25-5-3) — 서버도 같은 규칙을 집행한다
+      // 상품을 바꾼 행은 공구가·리워드율·최소 물량이 초기화된다(§25-5-3) — 서버도 같은 규칙을 집행한다.
+      // 옵션 행은 새 상품의 옵션 전량으로 다시 만든다(수량 빈 칸)
       return {
         ...state,
         values: {
@@ -81,7 +88,7 @@ function reducer(state: FormState, action: FormAction): FormState {
                   productId: action.productId,
                   groupBuyPrice: null,
                   rewardRate: null,
-                  minQuantity: null,
+                  options: action.options,
                 }
               : item
           ),
@@ -232,8 +239,11 @@ export function useContractForm(
     []
   )
   const changeProduct = useCallback(
-    (clientKey: string, productId: number | null) =>
-      dispatch({ type: "changeProduct", clientKey, productId }),
+    (
+      clientKey: string,
+      productId: number | null,
+      options: Array<ContractOptionValues>
+    ) => dispatch({ type: "changeProduct", clientKey, productId, options }),
     []
   )
   const addItem = useCallback(() => dispatch({ type: "addItem" }), [])

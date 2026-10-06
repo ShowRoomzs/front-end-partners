@@ -12,7 +12,11 @@ import { REWARD_RATE_MAX } from "@/features/contracts/constants/rules"
 import type { ContractFormApi } from "@/features/contracts/hooks/useContractForm"
 import type { ContractProductOption } from "@/features/contracts/types"
 import type { ContractItemValues } from "@/features/contracts/utils/contractForm"
-import { findProduct } from "@/features/contracts/utils/contractForm"
+import {
+  findProduct,
+  optionsOfProduct,
+  totalMinQuantity,
+} from "@/features/contracts/utils/contractForm"
 import { formatNumber, unitReward } from "@/features/contracts/utils/format"
 import {
   formatIntegerInput,
@@ -54,8 +58,9 @@ export default function ItemsCard(props: ItemsCardProps) {
   // 첫 규칙 위반 문구만 표 아래에 보인다(시안 `.err` 한 줄) — 칸은 빨간 테두리로 가리킨다
   const firstError = values.items
     .map(item => errors.items[item.clientKey])
-    .find(error => error?.groupBuyPrice || error?.rewardRate)
-  const firstErrorText = firstError?.groupBuyPrice ?? firstError?.rewardRate
+    .find(error => error?.groupBuyPrice || error?.rewardRate || error?.options)
+  const firstErrorText =
+    firstError?.groupBuyPrice ?? firstError?.rewardRate ?? firstError?.options
 
   return (
     <DetailCard
@@ -81,7 +86,11 @@ export default function ItemsCard(props: ItemsCardProps) {
               error={errors.items[item.clientKey]}
               canRemove={canRemove}
               onChangeProduct={productId =>
-                changeProduct(item.clientKey, productId)
+                changeProduct(
+                  item.clientKey,
+                  productId,
+                  optionsOfProduct(findProduct(products, productId))
+                )
               }
               onChange={patch => setItem(item.clientKey, patch)}
               onRemove={() => removeItem(item.clientKey)}
@@ -103,8 +112,10 @@ export default function ItemsCard(props: ItemsCardProps) {
         <b className="text-sz-n-700">정가 이하 · 10원 단위</b>, 리워드율은{" "}
         <b className="text-sz-n-700">0~90%</b>(0.1% 단위)입니다. 예상 리워드는
         1개당 금액이며 정산이 이 리워드율을 그대로 사용합니다.{" "}
-        <b className="text-sz-n-700">최소 물량</b>은 브랜드가 그 상품에 대해
-        확보를 약속하는 수량입니다.
+        <b className="text-sz-n-700">최소 물량</b>은 브랜드가{" "}
+        <b className="text-sz-n-700">옵션별로</b> 확보를 약속하는 수량이고,
+        옵션이 있는 상품의 행에는 합계가 보입니다. 옵션 판매가는 공구가에
+        옵션가를 더한 값입니다.
       </div>
     </DetailCard>
   )
@@ -113,7 +124,9 @@ export default function ItemsCard(props: ItemsCardProps) {
 interface ItemRowProps {
   item: ContractItemValues
   products: Array<ContractProductOption>
-  error: { groupBuyPrice?: string; rewardRate?: string } | undefined
+  error:
+    | { groupBuyPrice?: string; rewardRate?: string; options?: string }
+    | undefined
   canRemove: boolean
   onChangeProduct: (productId: number | null) => void
   onChange: (patch: Partial<ContractItemValues>) => void
@@ -137,91 +150,173 @@ function ItemRow(props: ItemRowProps) {
     item.rewardRate === null ? "" : String(item.rewardRate)
   )
   const estimated = unitReward(item.groupBuyPrice, item.rewardRate)
+  // 옵션 없는 상품은 이름 없는 1행 — 그 행의 수량을 상품 행에서 바로 받는다
+  const singleOption =
+    item.options.length === 1 && item.options[0].variantName === null
+  const namedOptions = !singleOption && item.options.length > 0
+  const total = totalMinQuantity(item)
+  const setOptionQuantity = (index: number, minQuantity: number | null) =>
+    onChange({
+      options: item.options.map((option, optionIndex) =>
+        optionIndex === index ? { ...option, minQuantity } : option
+      ),
+    })
 
   return (
-    <div className="flex items-start gap-14 border-b border-sz-n-100 py-2.5 pl-3 pr-7 last:border-b-0">
-      <div className={COL.product}>
-        <select
-          className={cn(SELECT_CLASS, "w-full")}
-          style={FORM_SELECT_CHEVRON_STYLE}
-          value={item.productId ?? ""}
-          onChange={event => {
-            setRateText("")
-            onChangeProduct(
-              event.target.value === "" ? null : Number(event.target.value)
-            )
-          }}
-        >
-          <option value="">상품을 선택하세요</option>
-          {products.map(option => (
-            <option key={option.productId} value={option.productId}>
-              {option.productName}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className={cn(COL.list, RO_CELL)}>
-        {product ? formatNumber(product.regularPrice) : "—"}
-      </div>
-      <div className={COL.price}>
-        <input
-          className={cn(
-            INPUT_CLASS,
-            "w-full",
-            error?.groupBuyPrice && INPUT_ERROR_CLASS
-          )}
-          placeholder="0"
-          inputMode="numeric"
-          disabled={locked}
-          value={formatIntegerInput(item.groupBuyPrice)}
-          onChange={event =>
-            onChange({ groupBuyPrice: parseIntegerInput(event.target.value) })
-          }
-        />
-      </div>
-      <div className={COL.rate}>
-        <SuffixInput
-          suffix="%"
-          placeholder="0"
-          inputMode="decimal"
-          disabled={locked}
-          isError={!!error?.rewardRate}
-          value={rateText}
-          onChange={raw => {
-            const text = sanitizeRateInput(raw, REWARD_RATE_MAX)
-            setRateText(text)
-            onChange({ rewardRate: parseRateInput(text) })
-          }}
-        />
-      </div>
-      <div className={cn(COL.est, RO_CELL)}>
-        {estimated === null ? "—" : formatNumber(estimated)}
-      </div>
-      <div className={COL.qty}>
-        <SuffixInput
-          suffix="개"
-          placeholder="0"
-          inputMode="numeric"
-          disabled={locked}
-          value={formatIntegerInput(item.minQuantity)}
-          onChange={raw => onChange({ minQuantity: parseIntegerInput(raw) })}
-        />
-      </div>
-      <button
-        type="button"
-        aria-label="행 삭제"
-        disabled={!canRemove}
-        onClick={onRemove}
-        className={cn(
-          COL.del,
-          "pt-2 text-[12px]",
-          canRemove
-            ? "cursor-pointer text-sz-n-400 hover:text-sz-danger-text"
-            : "cursor-not-allowed text-sz-n-300"
+    <div className="border-b border-sz-n-100 last:border-b-0">
+      <div className="flex items-start gap-14 py-2.5 pl-3 pr-7">
+        <div className={COL.product}>
+          <select
+            className={cn(SELECT_CLASS, "w-full")}
+            style={FORM_SELECT_CHEVRON_STYLE}
+            value={item.productId ?? ""}
+            onChange={event => {
+              setRateText("")
+              onChangeProduct(
+                event.target.value === "" ? null : Number(event.target.value)
+              )
+            }}
+          >
+            <option value="">상품을 선택하세요</option>
+            {products.map(option => (
+              <option key={option.productId} value={option.productId}>
+                {option.productName}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className={cn(COL.list, RO_CELL)}>
+          {product ? formatNumber(product.regularPrice) : "—"}
+        </div>
+        <div className={COL.price}>
+          <input
+            className={cn(
+              INPUT_CLASS,
+              "w-full",
+              error?.groupBuyPrice && INPUT_ERROR_CLASS
+            )}
+            placeholder="0"
+            inputMode="numeric"
+            disabled={locked}
+            value={formatIntegerInput(item.groupBuyPrice)}
+            onChange={event =>
+              onChange({ groupBuyPrice: parseIntegerInput(event.target.value) })
+            }
+          />
+        </div>
+        <div className={COL.rate}>
+          <SuffixInput
+            suffix="%"
+            placeholder="0"
+            inputMode="decimal"
+            disabled={locked}
+            isError={!!error?.rewardRate}
+            value={rateText}
+            onChange={raw => {
+              const text = sanitizeRateInput(raw, REWARD_RATE_MAX)
+              setRateText(text)
+              onChange({ rewardRate: parseRateInput(text) })
+            }}
+          />
+        </div>
+        <div className={cn(COL.est, RO_CELL)}>
+          {estimated === null ? "—" : formatNumber(estimated)}
+        </div>
+        {namedOptions ? (
+          // 옵션이 있는 상품 — 상품 행은 옵션 합계(파생값)만 보인다
+          <div className={cn(COL.qty, RO_CELL)}>
+            {total === null ? "—" : `${formatNumber(total)}개`}
+          </div>
+        ) : (
+          <div className={COL.qty}>
+            <SuffixInput
+              suffix="개"
+              placeholder="0"
+              inputMode="numeric"
+              disabled={locked || !singleOption}
+              isError={!!error?.options}
+              value={formatIntegerInput(
+                singleOption ? item.options[0].minQuantity : null
+              )}
+              onChange={raw => setOptionQuantity(0, parseIntegerInput(raw))}
+            />
+          </div>
         )}
-      >
-        ✕
-      </button>
+        <button
+          type="button"
+          aria-label="행 삭제"
+          disabled={!canRemove}
+          onClick={onRemove}
+          className={cn(
+            COL.del,
+            "pt-2 text-[12px]",
+            canRemove
+              ? "cursor-pointer text-sz-n-400 hover:text-sz-danger-text"
+              : "cursor-not-allowed text-sz-n-300"
+          )}
+        >
+          ✕
+        </button>
+      </div>
+      {namedOptions &&
+        item.options.map((option, index) => {
+          const extra =
+            product && option.regularPrice !== null
+              ? option.regularPrice - product.regularPrice
+              : null
+          const salePrice =
+            item.groupBuyPrice !== null && extra !== null
+              ? item.groupBuyPrice + extra
+              : null
+          const variant = product?.options.find(
+            candidate => candidate.variantId === option.variantId
+          )
+          return (
+            <div
+              key={option.variantId ?? `removed-${index}`}
+              className="flex items-start gap-14 pb-2 pl-3 pr-7 last:pb-2.5"
+            >
+              <div className={cn(COL.product, "pl-3 pt-[7px] text-[12px]")}>
+                <span className="text-sz-n-400">└ </span>
+                <span className="text-sz-n-700">
+                  {option.variantName ?? "(삭제된 옵션)"}
+                </span>
+                {variant && (
+                  <span className="ml-1.5 text-[11px] text-sz-n-400">
+                    재고 {formatNumber(variant.stock)}
+                  </span>
+                )}
+              </div>
+              <div className={cn(COL.list, RO_CELL, "pt-[7px]")}>
+                {option.regularPrice === null
+                  ? "—"
+                  : formatNumber(option.regularPrice)}
+              </div>
+              {/* 옵션 판매가 = 공구가 + 옵션가 — 소비자가 이 옵션을 사는 가격 */}
+              <div
+                className={cn(COL.price, RO_CELL, "pt-[7px]")}
+                title="옵션 판매가 = 공구가 + 옵션가"
+              >
+                {salePrice === null ? "—" : formatNumber(salePrice)}
+              </div>
+              <div className={COL.rate} />
+              <div className={COL.est} />
+              <div className={COL.qty}>
+                <SuffixInput
+                  suffix="개"
+                  placeholder="0"
+                  inputMode="numeric"
+                  isError={!!error?.options}
+                  value={formatIntegerInput(option.minQuantity)}
+                  onChange={raw =>
+                    setOptionQuantity(index, parseIntegerInput(raw))
+                  }
+                />
+              </div>
+              <div className={COL.del} />
+            </div>
+          )
+        })}
     </div>
   )
 }
