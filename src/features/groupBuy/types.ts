@@ -360,8 +360,12 @@ export interface GroupBuyDetailResponse {
     openIssue: {
       issueId: number
       type: GroupBuyIssueType
+      /** 개설 측 — SELLER · CREATOR · ADMIN */
+      openerType: GroupBuyActorType
       openedAt: string
       threadId: number | null
+      /** 답변 대기 — 스레드의 마지막 글을 개설 측이 썼으면 true. 스레드나 글이 없으면 null */
+      awaitingReply: boolean | null
     } | null
     settlementWatchAt: string | null
     settledAt: string | null
