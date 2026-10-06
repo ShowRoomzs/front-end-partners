@@ -5,10 +5,12 @@ import AccountTab from "@/features/storeManagement/components/tabs/AccountTab"
 import BusinessInfoTab from "@/features/storeManagement/components/tabs/BusinessInfoTab"
 import ManagerCsTab from "@/features/storeManagement/components/tabs/ManagerCsTab"
 import SettlementAccountTab from "@/features/storeManagement/components/tabs/SettlementAccountTab"
+import ShippingPolicyTab from "@/features/storeManagement/components/tabs/ShippingPolicyTab"
 import { useSearchParams } from "react-router-dom"
 
 const TAB_KEYS: Array<BasicInfoTabKey> = [
   "business",
+  "shipping",
   "settlement",
   "manager",
   "account",
@@ -23,7 +25,12 @@ export default function BasicInfoPage() {
     : "business"
 
   const handleChangeTab = (key: BasicInfoTabKey) => {
-    setSearchParams(key === "business" ? {} : { tab: key })
+    // 개발용 `?mock=` 시나리오는 탭을 옮겨도 유지한다(devMock.ts)
+    const next = new URLSearchParams()
+    if (key !== "business") next.set("tab", key)
+    const mock = searchParams.get("mock")
+    if (mock) next.set("mock", mock)
+    setSearchParams(next)
   }
 
   return (
@@ -41,6 +48,7 @@ export default function BasicInfoPage() {
         <SubNav active={active} onChange={handleChangeTab} />
         <div className="min-w-0 flex-1">
           {active === "business" && <BusinessInfoTab />}
+          {active === "shipping" && <ShippingPolicyTab />}
           {active === "settlement" && <SettlementAccountTab />}
           {active === "manager" && <ManagerCsTab />}
           {active === "account" && <AccountTab />}

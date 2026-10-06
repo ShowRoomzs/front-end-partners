@@ -14,6 +14,7 @@ import { useMarketStore } from "@/common/stores/useMarketStore"
 import { useGetThreadSummary } from "@/features/connections/hooks/useGetThreadSummary"
 import { useGetContractSummary } from "@/features/contracts/hooks/useContractQueries"
 import { useGetGroupBuySummary } from "@/features/groupBuy/hooks/useGroupBuyQueries"
+import { useGetOrderSummary } from "@/features/orders/hooks/useOrderQueries"
 
 /**
  * 메뉴에는 없지만 브레드크럼 하위 이름이 필요한 화면들.
@@ -28,6 +29,8 @@ const SUB_PAGE_LABELS: Array<{ prefix: string; label: string }> = [
   { prefix: "/inquiry/product/", label: "상품 문의 상세" },
   // 기본값 — 작성 모드면 화면이 usePageSubtitle로 「계약 작성」으로 바꾼다
   { prefix: "/contract/", label: "계약서" },
+  { prefix: "/sales/claims", label: "반품·교환 관리" },
+  { prefix: "/settlement/history/", label: "정산 상세" },
 ]
 
 /**
@@ -45,6 +48,7 @@ const SELF_TITLED_PREFIXES = [
   "/",
   "/performance",
   "/sales/orders",
+  "/sales/claims",
   "/settlement/history",
 ]
 
@@ -149,6 +153,18 @@ export default function MainLayout() {
   const { data: contractSummary } = useGetContractSummary(menuType === "SELLER")
   // 공구 GNB 배지 — 물량 확인 대기 + 소명 가능 + 이행 확인 대기
   const { data: groupBuySummary } = useGetGroupBuySummary(menuType === "SELLER")
+  /*
+    판매 GNB 배지 — 브랜드가 손대야 넘어가는 건수: 준비 시작 + 송장 등록 + 취소 요청 + 반품·교환 입고 확인
+    + 재발송. 배송 이상(추적 정지·반송)은 브랜드 액션이 없는 건이 섞여 있어 넣지 않는다.
+  */
+  const { data: orderSummary } = useGetOrderSummary(menuType === "SELLER")
+  const salesActionCount = orderSummary
+    ? orderSummary.actionBar.prepareStart +
+      orderSummary.actionBar.invoiceRegister +
+      orderSummary.tabCounts.CANCEL_REQUESTED +
+      orderSummary.actionBar.incomingCheck +
+      orderSummary.actionBar.reshipExchange
+    : 0
 
   return (
     <div className="flex h-screen bg-sz-n-50">
@@ -159,6 +175,7 @@ export default function MainLayout() {
           connections: threadSummary?.unreadCount ?? 0,
           contract: contractSummary?.actionRequiredCount ?? 0,
           groupbuy: groupBuySummary?.actionRequiredCount ?? 0,
+          sales: salesActionCount,
         }}
       />
 

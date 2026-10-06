@@ -10,6 +10,8 @@ import RegisterCreatorPage from "@/features/auth/pages/RegisterCreatorPage"
 import OnboardingGatePage from "@/features/auth/pages/OnboardingGatePage"
 import ProductListPage from "@/features/productManagement/pages/ProductListPage"
 import BasicInfoPage from "@/features/storeManagement/pages/BasicInfoPage"
+import SettlementDetailPage from "@/features/settlement/pages/SettlementDetailPage"
+import SettlementListPage from "@/features/settlement/pages/SettlementListPage"
 import RegisterDirect from "@/features/coupon/RegisterDirect/RegisterDirect"
 import AnswerTemplateListPage from "@/features/inquiry/pages/AnswerTemplateListPage"
 import AnswerTemplateWritePage from "@/features/inquiry/pages/AnswerTemplateWritePage"
@@ -20,6 +22,8 @@ import ContractListPage from "@/features/contracts/pages/ContractListPage"
 import ContractDetailPage from "@/features/contracts/pages/ContractDetailPage"
 import GroupBuyListPage from "@/features/groupBuy/pages/GroupBuyListPage"
 import GroupBuyDetailPage from "@/features/groupBuy/pages/GroupBuyDetailPage"
+import OrderListPage from "@/features/orders/pages/OrderListPage"
+import ClaimListPage from "@/features/claims/pages/ClaimListPage"
 
 export const authRoutes: Array<RouteObject> = [
   {
@@ -67,7 +71,7 @@ export const mainRoutes: Array<RouteObject> = [
           />
         ),
       },
-      // Seller - 기본정보 관리(§15) — 사업자 정보·정산 계좌·담당자·CS·계정 4탭이
+      // Seller - 기본정보 관리(§15) — 사업자 정보·배송·반품 정책·정산 계좌·담당자·CS·계정 5탭이
       // 전부 한 페이지 안에서 쿼리파라미터(?tab=)로 전환되므로 하위 라우트가 필요 없다.
       {
         path: "store",
@@ -245,14 +249,17 @@ export const mainRoutes: Array<RouteObject> = [
         path: "sales",
         children: [
           {
+            /*
+              주문 관리 (§34 · 시안 10a~10e) — 탭 9종이 한 화면이고 상세는 모달이다(rev.2).
+              목록의 스크롤·필터·선택을 잃지 않으려고 상세 라우트를 두지 않는다.
+            */
             path: "orders",
-            // 공구 관리의 [판매 관리에서 처리 ↗]가 오는 곳 — 화면이 생기기 전까지 자리표시
-            element: (
-              <ComingSoonPage
-                title="판매 관리"
-                description="주문·배송·반품 처리 화면은 아직 준비 중입니다."
-              />
-            ),
+            element: <OrderListPage />,
+          },
+          // 판매 관리 › 반품·교환 관리(§35) — 상세는 목록 위 모달이라 하위 라우트가 없다
+          {
+            path: "claims",
+            element: <ClaimListPage />,
           },
           {
             path: "purchase-orders",
@@ -304,13 +311,13 @@ export const mainRoutes: Array<RouteObject> = [
         children: [
           {
             path: "history",
-            // 공구 관리의 [정산 관리 열기]·[정산 내역 보기 ↗]가 오는 곳 — 화면이 생기기 전까지 자리표시
-            element: (
-              <ComingSoonPage
-                title="정산 관리"
-                description="정산 내역·지급 명세 화면은 아직 준비 중입니다."
-              />
-            ),
+            // 공구 관리의 [정산 관리 열기]·[정산 내역 보기 ↗]가 오는 곳(ui-partner-13).
+            // 정산 API가 없어 개발 서버에서만 목업, 배포본은 화면 안에서 「준비 중」을 띄운다.
+            element: <SettlementListPage />,
+          },
+          {
+            path: "history/:settlementId",
+            element: <SettlementDetailPage />,
           },
           {
             path: "by-product",

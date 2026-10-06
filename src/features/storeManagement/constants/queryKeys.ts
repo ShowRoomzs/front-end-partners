@@ -3,6 +3,8 @@ export const BASIC_INFO_QUERY_KEYS = {
   SETTLEMENT: "basicInfoSettlement",
   MANAGER: "basicInfoManager",
   ACCOUNT: "basicInfoAccount",
+  SHIPPING_POLICY: "basicInfoShippingPolicy",
+  WITHDRAWAL: "basicInfoWithdrawal",
 } as const
 
 export const CHANGE_REQUEST_QUERY_KEYS = {
