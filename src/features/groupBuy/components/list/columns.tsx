@@ -28,15 +28,17 @@ function remarkText(remark: NonNullable<GroupBuyListItem["remark"]>) {
 }
 
 /**
- * 시안 A1 컬럼 6종 — 폭도 시안 그대로다(나머지 / 156 / 92 / 272 / 124 / 128).
- * 공구명 「나머지」는 셸 본문 폭(1134)에서 나머지 합(772)을 뺀 값 — 넘기면 상태 열이 잘린다.
+ * 시안 A1 컬럼 6종(나머지 / 156 / 92 / 272 / 124 / 128 · 본문 1150 기준).
+ * 공용 Table은 셀을 px로 고정하므로 합이 본문 폭을 넘으면 상태 열이 잘린다 — 1280 화면 본문(974)에
+ * 들어가게 시안 비율로 줄여 두고, fitWidth가 넓은 화면에서 비율대로 다시 늘린다(1440에서 시안과 같은 비율).
+ * 공구명에 폭을 안 주면 긴 제목이 한 줄 길이로 측정돼 표가 밀리므로 공구명도 폭을 준다.
  * 관리 열이 없다(행 전체 클릭). 게시물은 인플루언서 소관 값이라 공구 상태와 별 열이다.
  */
 export const GROUP_BUY_COLUMNS: Columns<GroupBuyListItem> = [
   {
     key: "title",
     label: "공구명",
-    width: 360,
+    width: 300,
     render: value => (
       <span className="block truncate font-medium text-sz-n-900 group-hover:text-sz-accent-600">
         {value as string}
@@ -46,7 +48,7 @@ export const GROUP_BUY_COLUMNS: Columns<GroupBuyListItem> = [
   {
     key: "creatorName",
     label: "인플루언서",
-    width: 156,
+    width: 132,
     render: value => (
       <span className="block truncate">{(value as string | null) ?? "—"}</span>
     ),
@@ -54,14 +56,14 @@ export const GROUP_BUY_COLUMNS: Columns<GroupBuyListItem> = [
   {
     key: "itemCount",
     label: "상품 수",
-    width: 92,
+    width: 78,
     align: "center",
     render: value => <span className="tabular-nums">{value as number}</span>,
   },
   {
     key: "startAt",
     label: "공구 기간",
-    width: 272,
+    width: 250,
     align: "center",
     render: (_value, record) => (
       <span className="whitespace-nowrap tabular-nums text-sz-n-500">
@@ -72,7 +74,7 @@ export const GROUP_BUY_COLUMNS: Columns<GroupBuyListItem> = [
   {
     key: "postStatusLabel",
     label: "게시물",
-    width: 124,
+    width: 105,
     align: "center",
     render: (value, record) => (
       <GbBadge tone={record.postStatusTone}>{value as string}</GbBadge>
@@ -81,7 +83,7 @@ export const GROUP_BUY_COLUMNS: Columns<GroupBuyListItem> = [
   {
     key: "statusLabel",
     label: "상태",
-    width: 128,
+    width: 108,
     align: "center",
     render: (value, record) => {
       const note = record.remark ? remarkText(record.remark) : null
