@@ -46,6 +46,7 @@ import {
   itemBadge,
   optionText,
   sanitizeTrackingNumber,
+  formatTrackingNumber,
 } from "@/features/orders/utils/view"
 import { cn } from "@/lib/utils"
 import { Loader2, X } from "lucide-react"
@@ -517,7 +518,8 @@ function ItemsBox(props: { detail: OrderDetailResponse }) {
             <td className="w-[90px] border-b border-sz-n-200 px-3 py-[9px] text-center">
               금액
             </td>
-            <td className="w-[88px] border-b border-sz-n-200 px-3 py-[9px] text-center">
+            {/* 서버 문구가 「신규(준비 대기)」까지 길어진다 — 배지가 상자 밖으로 나가지 않는 폭 */}
+            <td className="w-[120px] border-b border-sz-n-200 px-3 py-[9px] text-center">
               상태
             </td>
           </tr>
@@ -795,6 +797,7 @@ function daysUntil(value: string) {
 function StatusMeta(props: { detail: OrderDetailResponse }) {
   const { detail } = props
   const { status, timeline, overlays } = detail
+  const cancelledCount = detail.items.filter(item => item.cancelled).length
 
   if (detail.overlays.cancelRequested && detail.cancelRequest) {
     return (
@@ -820,18 +823,30 @@ function StatusMeta(props: { detail: OrderDetailResponse }) {
 
   switch (status) {
     case "NEW":
+      // C12 — 준비 시작 전에 일부 항목이 소비자 취소(PG 자동 환불)됐다
+      if (cancelledCount > 0) {
+        return (
+          <>
+            <MRow label="취소 항목">{cancelledCount}건 · 자동 환불</MRow>
+            <MRow label="남은 항목">
+              {detail.items.length - cancelledCount}건
+            </MRow>
+            <MRow label="소비자 취소">남은 항목은 가능</MRow>
+          </>
+        )
+      }
       return (
         <>
           <MRow label="주문일시">{formatDateTime(detail.orderedAt)}</MRow>
           <MRow label="경과" tone="warn">
             {formatElapsedHours(hoursSince(detail.orderedAt) ?? 0)}
           </MRow>
-          <MRow
-            label="발송기한"
-            tone={overlays.shipOverdue ? "danger" : undefined}
-          >
-            {formatDateTime(timeline.shipDueAt)}
-          </MRow>
+          {/* 시안은 세 줄 — 기한을 넘겼을 때만 발송기한을 덧붙인다 */}
+          {overlays.shipOverdue && (
+            <MRow label="발송기한" tone="danger">
+              {formatDateTime(timeline.shipDueAt)} · 경과
+            </MRow>
+          )}
           <MRow label="소비자 취소" tone="warn">
             아직 가능
           </MRow>
@@ -846,12 +861,12 @@ function StatusMeta(props: { detail: OrderDetailResponse }) {
           <MRow label="경과">
             {formatElapsedHours(hoursSince(timeline.prepareStartedAt) ?? 0)}
           </MRow>
-          <MRow
-            label="발송기한"
-            tone={overlays.shipOverdue ? "danger" : undefined}
-          >
-            {formatDateTime(timeline.shipDueAt)}
-          </MRow>
+          {/* 시안은 세 줄 — 기한을 넘겼을 때만 발송기한을 덧붙인다 */}
+          {overlays.shipOverdue && (
+            <MRow label="발송기한" tone="danger">
+              {formatDateTime(timeline.shipDueAt)} · 경과
+            </MRow>
+          )}
           <MRow label="소비자 취소">닫힘 · 반품으로만 가능</MRow>
         </>
       )
@@ -917,6 +932,9 @@ function StatusMeta(props: { detail: OrderDetailResponse }) {
           >
             <B>{timeline.deliveredSourceLabel ?? "—"}</B>
           </MRow>
+          {timeline.deliveredSourceLabel === "운영자 처리" && (
+            <MRow label="처리자">운영자</MRow>
+          )}
           <MRow label="구매확정 예정">
             {timeline.confirmDueAt
               ? formatDateTime(timeline.confirmDueAt)
@@ -953,6 +971,12 @@ function StatusMeta(props: { detail: OrderDetailResponse }) {
           {timeline.cancelReasonLabel && (
             <MRow label="취소 사유">{timeline.cancelReasonLabel}</MRow>
           )}
+          {/* 준비 시작 전 소비자 취소만 PG 자동 — 승인·직권은 운영자가 집행한다(E5 · E6) */}
+          <MRow label="환불">
+            {timeline.cancelTypeLabel?.startsWith("소비자 취소")
+              ? "전액 완료 · PG 자동"
+              : "전액 · 운영자 실행"}
+          </MRow>
           <MRow label="배송비">환불 포함</MRow>
         </>
       )
@@ -998,6 +1022,16 @@ function StatusHint(props: {
 
   switch (status) {
     case "NEW":
+      if (detail.items.some(item => item.cancelled)) {
+        return (
+          <StHint>
+            <b>취소된 항목은 준비하지 마세요.</b> 취소는 <b>PG 자동 취소</b>로
+            이미 환불돼 브랜드가 할 일이 없습니다.{" "}
+            <b>배송비는 재계산되지 않습니다</b> — 남은 항목이 있어 배송이 그대로
+            나가기 때문입니다.
+          </StHint>
+        )
+      }
       return (
         <StHint>
           <b>준비를 시작하면 소비자가 단순 취소할 수 없습니다.</b> 되돌릴 수
@@ -1335,6 +1369,10 @@ function InlineInvoice(props: {
 function ShippingBox(props: { detail: OrderDetailResponse }) {
   const { detail } = props
   const { timeline, status, overlays } = detail
+  // 구매확정은 배송이 끝난 건 — 시안 C10처럼 상태 상자의 배송완료 행으로 충분하다
+  if (status === "CONFIRMED") {
+    return null
+  }
   if (!timeline.trackingNumber && !timeline.deliveredAt) {
     return null
   }
@@ -1374,7 +1412,9 @@ function ShippingBox(props: { detail: OrderDetailResponse }) {
         )}
         {timeline.trackingNumber && (
           <ShipRow label="송장번호">
-            <span className="tabular-nums">{timeline.trackingNumber}</span>
+            <span className="tabular-nums">
+              {formatTrackingNumber(timeline.trackingNumber)}
+            </span>
           </ShipRow>
         )}
         {timeline.deliveredAt && (

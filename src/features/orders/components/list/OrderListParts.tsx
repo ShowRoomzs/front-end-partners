@@ -277,7 +277,10 @@ export function OrderEmptyState(props: {
     )
   }
 
-  const tabLabel = ORDER_TABS.find(item => item.value === tab)?.label ?? "전체"
+  // 문장 안에서는 괄호 보충을 뺀다 — 시안 「신규 탭에서 … 찾지 못했습니다」
+  const tabLabel = (
+    ORDER_TABS.find(item => item.value === tab)?.label ?? "전체"
+  ).replace(/\(.*\)$/, "")
   const trimmed = keyword.trim()
   return (
     <GbEmpty

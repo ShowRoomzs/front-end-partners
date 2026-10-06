@@ -12,6 +12,7 @@ import {
 import {
   CANCEL_REQUEST_WARN_HOURS,
   CARRIERS,
+  hasShipDueSort,
 } from "@/features/orders/constants/params"
 import type {
   DeliveryCarrier,
@@ -26,6 +27,7 @@ import {
   optionText,
   sanitizeTrackingNumber,
   splitLabel,
+  formatTrackingNumber,
 } from "@/features/orders/utils/view"
 import { cn } from "@/lib/utils"
 import { Fragment, type ReactNode } from "react"
@@ -241,7 +243,7 @@ function buildColumns(
     header: (
       <span title={SHIP_DUE_TITLE}>
         발송기한
-        {tab === "NEW" || tab === "PREPARING" ? (
+        {hasShipDueSort(tab) ? (
           <button
             type="button"
             onClick={ctx.onToggleShipDueSort}
@@ -445,7 +447,8 @@ function buildColumns(
                 {row.cancelRequest?.reasonLabel ?? "—"}
               </span>
               {row.cancelRequest?.reasonDetail && (
-                <TNote className="truncate">
+                // 시안처럼 줄바꿈해 다 보인다 — 길면 세 줄까지만(소비자 입력 상한이 있다)
+                <TNote className="line-clamp-3 break-words leading-[1.55]">
                   {row.cancelRequest.reasonDetail}
                 </TNote>
               )}
@@ -564,7 +567,7 @@ function buildColumns(
           width: 144,
           render: row => (
             <span className="block truncate tabular-nums">
-              {row.trackingNumber ?? "—"}
+              {formatTrackingNumber(row.trackingNumber)}
             </span>
           ),
         },
@@ -853,7 +856,7 @@ function TrackingCell(props: { row: OrderListItem; ctx: OrderTableContext }) {
   }
   return (
     <span className="block truncate tabular-nums">
-      {row.trackingNumber ?? "—"}
+      {formatTrackingNumber(row.trackingNumber)}
     </span>
   )
 }
@@ -922,7 +925,8 @@ function ExpandedItems(props: { row: OrderListItem }) {
           <td className="w-[60px] px-3 py-2 text-center">수량</td>
           <td className="w-[92px] px-3 py-2 text-center">공구가</td>
           <td className="w-[96px] px-3 py-2 text-center">금액</td>
-          <td className="w-[92px] px-3 py-2 text-center">항목 상태</td>
+          {/* 서버 문구가 「신규(준비 대기)」까지 길어진다 — 배지가 잘리지 않는 폭 */}
+          <td className="w-[124px] px-3 py-2 text-center">항목 상태</td>
         </tr>
       </thead>
       <tbody>

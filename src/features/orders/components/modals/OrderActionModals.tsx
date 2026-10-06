@@ -278,6 +278,13 @@ export function ApproveCancelModal(props: {
         {formatNumber(request.totalRefundAmount)}원)
         <br />· 소비자 요청 건이라 <b>취소율에는 반영되지 않습니다</b>
         <br />· 이미 출고했다면 승인 대신 <b>거부하고 반품으로 안내</b>하세요
+        {!isWhole && (
+          <div className="mt-2.5">
+            · <b>전 항목이 요청된 경우</b>에만 주문이 <b>취소로 종결</b>되고{" "}
+            <b>취소 탭</b>으로 이동합니다 — 보낼 것이 없어 배송 큐에 남지
+            않습니다
+          </div>
+        )}
       </ConsentNotice>
     </GbModal>
   )
