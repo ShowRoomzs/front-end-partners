@@ -295,7 +295,8 @@ export function SuspensionRequestModal(
               <br />
             </>
           ) : null}
-          {fee !== null && (
+          {/* 지급비가 없으면(0원) 회수 문장 자체가 의미 없다 */}
+          {fee !== null && fee > 0 && (
             <>
               {/* 시안 C4는 문장 전체, C2는 금액부터 굵게 */}
               {beforeStart ? (
