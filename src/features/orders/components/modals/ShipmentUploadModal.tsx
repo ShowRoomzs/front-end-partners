@@ -9,7 +9,10 @@ import {
   MWarn,
 } from "@/features/groupBuy/components/shared/GbParts"
 import { ActBtn } from "@/features/orders/components/shared/OrderParts"
-import { SHIPMENT_UPLOAD_MAX_ROWS } from "@/features/orders/constants/params"
+import {
+  carrierLabelOf,
+  SHIPMENT_UPLOAD_MAX_ROWS,
+} from "@/features/orders/constants/params"
 import { useParseShipments } from "@/features/orders/hooks/useOrderMutations"
 import { orderService, saveFile } from "@/features/orders/services/orderService"
 import type { ShipmentParseResponse } from "@/features/orders/types"
@@ -329,7 +332,8 @@ function downloadErrorRows(rows: Array<ParsedRow>, fileName: string) {
     ...rows.map(row => [
       String(row.rowNumber),
       row.orderNumber ?? "",
-      row.carrier ?? "",
+      // 코드(CJ)가 아니라 양식에 적는 이름(CJ대한통운)으로 — 고쳐서 그대로 다시 올린다
+      carrierLabelOf(row.carrier),
       row.trackingNumber ?? "",
       row.message ?? "",
     ]),

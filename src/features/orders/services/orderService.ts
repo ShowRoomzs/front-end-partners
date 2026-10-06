@@ -17,6 +17,7 @@ import type {
   ShipmentRow,
 } from "@/features/orders/types"
 import { isAxiosError, type AxiosResponse } from "axios"
+import dayjs from "dayjs"
 import toast from "react-hot-toast"
 
 const BASE_URL = "/seller/orders"
@@ -125,7 +126,8 @@ export const orderService = {
           responseType: "blob",
           suppressErrorToast: true,
         }),
-      "발주서.xlsx"
+      // 서버 CORS가 Content-Disposition을 노출하지 않으면 헤더를 못 읽는다 — 서버와 같은 규칙으로 짓는다
+      `발주서_${dayjs().format("YYYYMMDD_HHmmss")}.xlsx`
     ),
 
   /** 송장 등록 확정 — 셀 입력과 엑셀 채우기가 공유하는 유일한 확정 지점 */
