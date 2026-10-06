@@ -59,7 +59,8 @@ export function NumberField({
         className={authInputClass(
           hasError,
           `[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
-            suffix ? "pr-9" : ""
+            // 「영업일」처럼 세 글자 단위는 두 글자 폭(pr-9)으로는 숫자와 겹친다
+            suffix ? (suffix.length >= 3 ? "pr-[52px]" : "pr-9") : ""
           }`
         )}
       />

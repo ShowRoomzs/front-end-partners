@@ -15,13 +15,22 @@ import {
   StoreButtonRow,
   StoreField,
   StoreFormCard,
+  StoreHint,
   StoreSection,
   STORE_BUTTON_CLASS,
   STORE_INPUT_CLASS,
 } from "@/features/storeManagement/components/StoreFormLayout/StoreFormLayout"
 import { useGetAccountInfo } from "@/features/storeManagement/hooks/useGetAccountInfo"
 import { basicInfoService } from "@/features/storeManagement/services/basicInfoService"
+import WithdrawalCard from "@/features/storeManagement/components/Withdrawal/WithdrawalCard"
+import { BASIC_INFO_QUERY_KEYS } from "@/features/storeManagement/constants/queryKeys"
+import {
+  withdrawalService,
+  type WithdrawalRequestBody,
+} from "@/features/storeManagement/services/withdrawalService"
+import { DEV_MOCK_ENABLED } from "@/common/utils/devMock"
 import { cn } from "@/lib/utils"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import toast from "react-hot-toast"
 
@@ -42,6 +51,37 @@ export default function AccountTab() {
   const [formError, setFormError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
+
+  // 브랜드 탈퇴 신청(4-F~4-I) — API가 없어 개발 서버에서만 목업(withdrawalService)
+  const queryClient = useQueryClient()
+  const withdrawalQuery = useQuery({
+    queryKey: [BASIC_INFO_QUERY_KEYS.WITHDRAWAL],
+    queryFn: () => withdrawalService.getStatus(data?.loginEmail ?? ""),
+    enabled: DEV_MOCK_ENABLED && !!data,
+  })
+  const invalidateWithdrawal = () =>
+    queryClient.invalidateQueries({
+      queryKey: [BASIC_INFO_QUERY_KEYS.WITHDRAWAL],
+    })
+  const requestWithdrawal = useMutation({
+    mutationFn: (body: WithdrawalRequestBody) =>
+      withdrawalService.request(body, data?.loginEmail ?? ""),
+    onSuccess: () => {
+      toast.success(
+        "탈퇴 신청이 접수되었습니다. 운영자 확인 후 이메일로 안내드립니다."
+      )
+      invalidateWithdrawal()
+    },
+  })
+  const cancelWithdrawal = useMutation({
+    mutationFn: withdrawalService.cancel,
+    onSuccess: () => {
+      toast.success("탈퇴 신청을 취소했습니다.")
+      invalidateWithdrawal()
+    },
+  })
+  /** 4-I — 검토 중에는 신원(이메일·비밀번호) 변경을 잠근다 */
+  const isWithdrawalPending = !!withdrawalQuery.data?.pendingRequest
 
   /**
    * 로그인 이메일을 바꾸면 그 세션은 더 못 쓴다 — 화면에 남겨두면 안 된다.
@@ -78,7 +118,8 @@ export default function AccountTab() {
         ? "비밀번호가 일치하지 않습니다."
         : undefined,
   }
-  const isFormValid = Object.values(errors).every(e => !e)
+  const isFormValid =
+    Object.values(errors).every(e => !e) && !isWithdrawalPending
 
   const touch = (field: PasswordField) =>
     setTouched(prev => ({ ...prev, [field]: true }))
@@ -138,135 +179,178 @@ export default function AccountTab() {
 
   return (
     <>
-      <StoreFormCard>
-        {/* 4-E — 월 1회 제한을 이미 쓴 상태. 조치가 필요한 게 아니라 안내라서 정보색·버튼 없음 */}
-        {!data.emailChangeable && (
-          <RequestBanner
-            tone="info"
-            title="이번 달 이메일 변경 완료"
-            body={
-              <>
-                {formatDateTimeShort(data.lastEmailChangedAt)} 변경 · 로그인
-                이메일은 <b className="text-sz-n-900">월 1회</b>만 변경할 수
-                있어요. 다음 변경 가능일은{" "}
-                <b className="text-sz-n-900">
-                  {formatDateOnly(data.nextEmailChangeableAt)}
+      <div className={cn(isWithdrawalPending && "opacity-[.72]")}>
+        <StoreFormCard>
+          {isWithdrawalPending && (
+            <div className="border-b border-sz-n-200 px-5 py-3 text-[11px] text-sz-n-500">
+              탈퇴 검토 중 · 변경 잠금
+            </div>
+          )}
+          {/* 4-E — 월 1회 제한을 이미 쓴 상태. 조치가 필요한 게 아니라 안내라서 정보색·버튼 없음 */}
+          {!data.emailChangeable && (
+            <RequestBanner
+              tone="info"
+              title="이번 달 이메일 변경 완료"
+              body={
+                <>
+                  {formatDateTimeShort(data.lastEmailChangedAt)} 변경 · 로그인
+                  이메일은 <b className="text-sz-n-900">월 1회</b>만 변경할 수
+                  있어요. 다음 변경 가능일은{" "}
+                  <b className="text-sz-n-900">
+                    {formatDateOnly(data.nextEmailChangeableAt)}
+                  </b>
+                  입니다.
+                </>
+              }
+            />
+          )}
+
+          <StoreSection>
+            <StoreField
+              label="로그인 이메일"
+              hint={
+                isWithdrawalPending ? (
+                  <>
+                    <b className="font-semibold text-sz-n-700">
+                      탈퇴 검토 중에는 변경할 수 없습니다.
+                    </b>{" "}
+                    신원이 바뀌면 검토를 다시 시작해야 합니다.
+                  </>
+                ) : data.emailChangeable ? (
+                  "현재 비밀번호 확인 후 즉시 변경됩니다. 월 1회만 변경할 수 있어요."
+                ) : (
+                  `${formatDateOnly(data.nextEmailChangeableAt)}부터 다시 변경할 수 있어요.`
+                )
+              }
+            >
+              <div className="flex gap-2">
+                <input
+                  disabled
+                  value={data.loginEmail}
+                  className={cn(
+                    "w-full rounded-[6px] border border-sz-n-200 bg-sz-n-100 text-[13px] text-sz-n-500",
+                    STORE_INPUT_CLASS
+                  )}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className={cn("shrink-0", STORE_BUTTON_CLASS)}
+                  disabled={!data.emailChangeable || isWithdrawalPending}
+                  onClick={() => setIsEmailModalOpen(true)}
+                >
+                  변경
+                </Button>
+              </div>
+            </StoreField>
+          </StoreSection>
+
+          <StoreSection title="비밀번호 변경">
+            {isWithdrawalPending && (
+              <StoreHint className="mt-0 mb-3">
+                <b className="font-semibold text-sz-n-700">
+                  탈퇴 검토 중에는 변경할 수 없습니다.
                 </b>
-                입니다.
-              </>
-            }
-          />
-        )}
+              </StoreHint>
+            )}
+            <StoreField
+              label="현재 비밀번호"
+              required
+              error={errorOf("currentPassword")}
+            >
+              <div className="relative flex items-center">
+                <PasswordInput
+                  value={currentPassword}
+                  onChange={e => {
+                    setCurrentPassword(e.target.value)
+                    // 고치기 시작하면 이전 실패 문구는 더 이상 사실이 아니다
+                    setPasswordMismatch(null)
+                  }}
+                  onBlur={() => touch("currentPassword")}
+                  placeholder="현재 비밀번호"
+                  disabled={isWithdrawalPending}
+                  hasError={!!errorOf("currentPassword")}
+                  className={STORE_INPUT_CLASS}
+                />
+              </div>
+            </StoreField>
+            <StoreField
+              label="새 비밀번호"
+              required
+              error={errorOf("newPassword")}
+            >
+              <div className="relative flex items-center">
+                <PasswordInput
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  onBlur={() => touch("newPassword")}
+                  placeholder="8~16자 영문·숫자·특수문자 조합"
+                  disabled={isWithdrawalPending}
+                  hasError={!!errorOf("newPassword")}
+                  className={STORE_INPUT_CLASS}
+                />
+              </div>
+            </StoreField>
+            <StoreField
+              label="새 비밀번호 재입력"
+              required
+              error={errorOf("newPasswordConfirm")}
+            >
+              <div className="relative flex items-center">
+                <PasswordInput
+                  value={newPasswordConfirm}
+                  onChange={e => setNewPasswordConfirm(e.target.value)}
+                  onBlur={() => touch("newPasswordConfirm")}
+                  placeholder="비밀번호를 다시 입력하세요"
+                  disabled={isWithdrawalPending}
+                  hasError={!!errorOf("newPasswordConfirm")}
+                  className={STORE_INPUT_CLASS}
+                />
+              </div>
+            </StoreField>
+          </StoreSection>
 
-        <StoreSection>
-          <StoreField
-            label="로그인 이메일"
-            hint={
-              data.emailChangeable
-                ? "현재 비밀번호 확인 후 즉시 변경됩니다. 월 1회만 변경할 수 있어요."
-                : `${formatDateOnly(data.nextEmailChangeableAt)}부터 다시 변경할 수 있어요.`
-            }
-          >
-            <div className="flex gap-2">
-              <input
-                disabled
-                value={data.loginEmail}
-                className={cn(
-                  "w-full rounded-[6px] border border-sz-n-200 bg-sz-n-100 text-[13px] text-sz-n-500",
-                  STORE_INPUT_CLASS
-                )}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className={cn("shrink-0", STORE_BUTTON_CLASS)}
-                disabled={!data.emailChangeable}
-                onClick={() => setIsEmailModalOpen(true)}
-              >
-                변경
-              </Button>
-            </div>
-          </StoreField>
-        </StoreSection>
+          {formError && (
+            <p
+              role="alert"
+              className="px-5 pt-1 text-right text-[12px] text-sz-danger-text"
+            >
+              {formError}
+            </p>
+          )}
 
-        <StoreSection title="비밀번호 변경">
-          <StoreField
-            label="현재 비밀번호"
-            required
-            error={errorOf("currentPassword")}
-          >
-            <div className="relative flex items-center">
-              <PasswordInput
-                value={currentPassword}
-                onChange={e => {
-                  setCurrentPassword(e.target.value)
-                  // 고치기 시작하면 이전 실패 문구는 더 이상 사실이 아니다
-                  setPasswordMismatch(null)
-                }}
-                onBlur={() => touch("currentPassword")}
-                placeholder="현재 비밀번호"
-                hasError={!!errorOf("currentPassword")}
-                className={STORE_INPUT_CLASS}
-              />
-            </div>
-          </StoreField>
-          <StoreField
-            label="새 비밀번호"
-            required
-            error={errorOf("newPassword")}
-          >
-            <div className="relative flex items-center">
-              <PasswordInput
-                value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
-                onBlur={() => touch("newPassword")}
-                placeholder="8~16자 영문·숫자·특수문자 조합"
-                hasError={!!errorOf("newPassword")}
-                className={STORE_INPUT_CLASS}
-              />
-            </div>
-          </StoreField>
-          <StoreField
-            label="새 비밀번호 재입력"
-            required
-            error={errorOf("newPasswordConfirm")}
-          >
-            <div className="relative flex items-center">
-              <PasswordInput
-                value={newPasswordConfirm}
-                onChange={e => setNewPasswordConfirm(e.target.value)}
-                onBlur={() => touch("newPasswordConfirm")}
-                placeholder="비밀번호를 다시 입력하세요"
-                hasError={!!errorOf("newPasswordConfirm")}
-                className={STORE_INPUT_CLASS}
-              />
-            </div>
-          </StoreField>
-        </StoreSection>
+          <StoreButtonRow>
+            <Button
+              type="button"
+              size="sm"
+              className={STORE_BUTTON_CLASS}
+              disabled={!isFormValid}
+              isLoading={isSaving}
+              onClick={handleChangePassword}
+            >
+              변경 저장
+            </Button>
+          </StoreButtonRow>
+        </StoreFormCard>
+      </div>
 
-        {formError && (
-          <p
-            role="alert"
-            className="px-5 pt-1 text-right text-[12px] text-sz-danger-text"
-          >
-            {formError}
-          </p>
-        )}
-
-        <StoreButtonRow>
-          <Button
-            type="button"
-            size="sm"
-            className={STORE_BUTTON_CLASS}
-            disabled={!isFormValid}
-            isLoading={isSaving}
-            onClick={handleChangePassword}
-          >
-            변경 저장
-          </Button>
-        </StoreButtonRow>
-      </StoreFormCard>
+      <WithdrawalCard
+        conditions={withdrawalQuery.data?.conditions}
+        pendingRequest={withdrawalQuery.data?.pendingRequest}
+        isLoading={withdrawalQuery.isLoading}
+        isSubmitting={requestWithdrawal.isPending}
+        isCanceling={cancelWithdrawal.isPending}
+        onRequest={async body => {
+          try {
+            await requestWithdrawal.mutateAsync(body)
+            return true
+          } catch {
+            return false
+          }
+        }}
+        onCancel={() => cancelWithdrawal.mutate()}
+      />
 
       <EmailChangeModal
         isOpen={isEmailModalOpen}

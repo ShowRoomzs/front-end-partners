@@ -45,6 +45,14 @@ type OnboardingFormValues = {
 const DEFAULT_RETURN_FEE = "3000"
 const DEFAULT_EXCHANGE_FEE = "6000"
 
+// 발송 기한 = 공구 마감 시각 + N영업일(기본 3 · 1~7). 상품 상세에 「공구 마감 후 N영업일 이내 발송」으로 고지된다.
+// 서버 필드명은 아직 `shippingLeadDays`(구 「출고 소요일」)다.
+const DEFAULT_SHIP_DUE_DAYS = "3"
+const SHIP_DUE_MIN_DAYS = 1
+const SHIP_DUE_MAX_DAYS = 7
+const SHIP_DUE_HELP =
+  "공구 마감 후 기준 · 최대 7영업일 · 소비자 상품 상세에 「공구 마감 후 N영업일 이내 발송」으로 자동 표시됩니다 · 영업일 = 주말·공휴일 제외. 연휴가 끼면 기한이 그만큼 늦어집니다"
+
 // 수취인 이름에서 허용하지 않는 문자(이모지·숫자·특수문자)
 const RECIPIENT_NAME_FILTER = /[^가-힣a-zA-Z\s]/g
 
@@ -97,7 +105,7 @@ export default function OnboardingGatePage() {
       defaultDeliveryFee: "",
       freeShippingThreshold: "",
       remoteAreaSurcharge: "",
-      shippingLeadDays: "",
+      shippingLeadDays: DEFAULT_SHIP_DUE_DAYS,
       returnFee: DEFAULT_RETURN_FEE,
       exchangeFee: DEFAULT_EXCHANGE_FEE,
     },
@@ -455,33 +463,46 @@ export default function OnboardingGatePage() {
           control={control}
           name="shippingLeadDays"
           rules={{
-            required: "출고 소요일을 입력해 주세요.",
-            // 서버가 @Min(1)이라 0을 보내면 거부된다
-            validate: value =>
-              Number(value) >= 1 || "출고 소요일은 1일 이상으로 입력해 주세요.",
+            required: "발송 기한을 입력해 주세요.",
+            // 서버는 @Min(1)만 검사한다 — 상한 7영업일은 운영정책(시안 [근거 대기])이라 화면에서 막는다
+            validate: value => {
+              const days = Number(value)
+              return (
+                (days >= SHIP_DUE_MIN_DAYS && days <= SHIP_DUE_MAX_DAYS) ||
+                `발송 기한은 ${SHIP_DUE_MIN_DAYS}~${SHIP_DUE_MAX_DAYS}영업일로 입력해 주세요.`
+              )
+            },
           }}
           render={({ field }) => (
             <FormField
               label={
                 <>
-                  출고 소요일
+                  발송 기한
                   <Required />
                 </>
               }
               htmlFor="shippingLeadDays"
               error={errors.shippingLeadDays?.message}
-              help="영업일 기준"
+              help={SHIP_DUE_HELP}
             >
-              <NumberField
-                id="shippingLeadDays"
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-                hasError={!!errors.shippingLeadDays}
-                placeholder="3"
-                disabled={isSubmitting}
-                suffix="일"
-              />
+              {/* 시안: 「공구 마감 후 [N 영업일] 이내」 한 줄 */}
+              <div className="flex w-full items-center gap-2">
+                <span className="shrink-0 text-[12px] text-sz-n-600">
+                  공구 마감 후
+                </span>
+                <div className="min-w-0 flex-1">
+                  <NumberField
+                    id="shippingLeadDays"
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    hasError={!!errors.shippingLeadDays}
+                    disabled={isSubmitting}
+                    suffix="영업일"
+                  />
+                </div>
+                <span className="shrink-0 text-[12px] text-sz-n-600">이내</span>
+              </div>
             </FormField>
           )}
         />

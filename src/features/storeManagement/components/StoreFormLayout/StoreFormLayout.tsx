@@ -58,7 +58,8 @@ export function StoreSection(props: StoreSectionProps) {
 }
 
 interface StoreFieldProps {
-  label: string
+  /** 「(선택)」 같은 보조 표기를 라벨 옆에 붙일 때는 노드로 넘긴다 */
+  label: ReactNode
   required?: boolean
   hint?: ReactNode
   error?: string
