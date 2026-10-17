@@ -96,6 +96,33 @@ export interface ChangeEmailRequest {
   newEmail: string
 }
 
+/**
+ * 배송·반품 정책(`GET /v1/seller/basic-info/delivery-policy`). 반품비·교환비는 따로 없다 —
+ * 반품 배송비 차감과 교환 재발송비는 기본 배송비 기준이다. 반품 수취 주소는 담당자·CS 탭.
+ */
+export interface DeliveryPolicyResponse {
+  /** 발송 기한 N — 공구 마감 후 N영업일(주말·공휴일 제외 · 1~7) */
+  shippingLeadDays: number
+  /** 소비자 상품 상세에 자동 표시되는 문구 — 「공구 마감 후 3영업일 이내 발송 (주말·공휴일 제외)」 */
+  shipDueText: string
+  /** 미입력 계정은 null일 수 있다(`Market` 컬럼이 nullable) */
+  defaultDeliveryFee: number | null
+  /** 없으면 null = 무료배송 없음 */
+  freeShippingThreshold: number | null
+  remoteAreaSurcharge: number | null
+}
+
+/** 네 값을 한 번에 저장 — 이후 접수되는 주문에만 적용(이미 접수된 주문은 주문 시점 값) */
+export interface UpdateDeliveryPolicyRequest {
+  /** 1~7 */
+  shippingLeadDays: number
+  defaultDeliveryFee: number
+  /** 비우면(null) 무료배송 없음 — 0을 보내면 모든 주문이 무료배송이 된다 */
+  freeShippingThreshold: number | null
+  /** 비우면(null) 0 */
+  remoteAreaSurcharge: number | null
+}
+
 export const basicInfoService = {
   getBusinessInfo: async () => {
     const { data } = await apiInstance.get<BusinessInfoResponse>(
@@ -124,6 +151,21 @@ export const basicInfoService = {
 
   updateManagerInfo: async (request: UpdateManagerInfoRequest) => {
     await apiInstance.put("/seller/basic-info/manager", request)
+  },
+
+  getDeliveryPolicy: async () => {
+    const { data } = await apiInstance.get<DeliveryPolicyResponse>(
+      "/seller/basic-info/delivery-policy"
+    )
+    return data
+  },
+
+  /**
+   * 검증 실패는 400 `INVALID_INPUT` + 필드 문구(「발송 기한은 1~7영업일로 입력해 주세요.」 등) — 화면이 같은 규칙을
+   * 먼저 막고, 그래도 오면 인터셉터가 서버 문구를 토스트로 띄운다.
+   */
+  updateDeliveryPolicy: async (request: UpdateDeliveryPolicyRequest) => {
+    await apiInstance.put("/seller/basic-info/delivery-policy", request)
   },
 
   getAccountInfo: async () => {

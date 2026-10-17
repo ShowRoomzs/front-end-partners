@@ -15,6 +15,7 @@ import { useGetThreadSummary } from "@/features/connections/hooks/useGetThreadSu
 import { useGetContractSummary } from "@/features/contracts/hooks/useContractQueries"
 import { useGetGroupBuySummary } from "@/features/groupBuy/hooks/useGroupBuyQueries"
 import { useGetOrderSummary } from "@/features/orders/hooks/useOrderQueries"
+import { useGetSettlementSummary } from "@/features/settlement/hooks/useSettlementQueries"
 
 /**
  * 메뉴에는 없지만 브레드크럼 하위 이름이 필요한 화면들.
@@ -165,6 +166,10 @@ export default function MainLayout() {
       orderSummary.actionBar.incomingCheck +
       orderSummary.actionBar.reshipExchange
     : 0
+  // 정산 GNB 배지 — 조정 요청 창이 열린 정산 확인 중 건수(서버 attentionCount)
+  const { data: settlementSummary } = useGetSettlementSummary(
+    menuType === "SELLER"
+  )
 
   return (
     <div className="flex h-screen bg-sz-n-50">
@@ -176,6 +181,7 @@ export default function MainLayout() {
           contract: contractSummary?.actionRequiredCount ?? 0,
           groupbuy: groupBuySummary?.actionRequiredCount ?? 0,
           sales: salesActionCount,
+          settlement: settlementSummary?.attentionCount ?? 0,
         }}
       />
 

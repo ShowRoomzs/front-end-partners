@@ -1,7 +1,6 @@
 import NotReady from "@/common/components/NotReady/NotReady"
 import Notice from "@/common/components/Notice/Notice"
 import StatusBadge from "@/common/components/StatusBadge/StatusBadge"
-import { DEV_MOCK_ENABLED } from "@/common/utils/devMock"
 import Btn from "@/features/contracts/components/shared/Btn"
 import { Grp } from "@/features/settlement/components/detail/DetailParts"
 import {
@@ -14,27 +13,27 @@ import {
   SummaryBar,
   TaxInvoiceCard,
 } from "@/features/settlement/components/detail/SettlementSections"
-import { SettlementPageHeader } from "@/features/settlement/components/list/SettlementListParts"
+import {
+  SETTLEMENT_PAGE_CLASS,
+  SettlementPageHeader,
+} from "@/features/settlement/components/list/SettlementListParts"
 import AdjustmentRequestModal from "@/features/settlement/components/modals/AdjustmentRequestModal"
 import {
   PERFORMANCE_PATH,
   SETTLEMENT_LIST_PATH,
-  SETTLEMENT_STATUS_LABEL,
-  SETTLEMENT_STATUS_VARIANT,
+  SETTLEMENT_TONE_VARIANT,
 } from "@/features/settlement/constants/params"
-import {
-  useGetSettlementDetail,
-  useRequestSettlementAdjustment,
-} from "@/features/settlement/hooks/useSettlementQueries"
+import { useGetSettlementDetail } from "@/features/settlement/hooks/useSettlementQueries"
+import { settlementService } from "@/features/settlement/services/settlementService"
 import type {
-  SettlementAdjustmentRequest,
   SettlementDetail,
+  SettlementTaxDocument,
 } from "@/features/settlement/types"
 import {
   formatMonthDayTime,
   formatPeriod,
 } from "@/features/settlement/utils/format"
-import dayjs from "dayjs"
+import { isAxiosError } from "axios"
 import { Loader2 } from "lucide-react"
 import { useState } from "react"
 import toast from "react-hot-toast"
@@ -52,34 +51,22 @@ const NAV_BTN_CLASS =
  *
  * 「금액이 어떻게 나왔는지」가 화면의 전부다. 금액을 바꾸는 경로는 정산 확인 기간의
  * [정산 조정 요청](C1) 하나뿐이고, 협의 응답은 이슈 스레드에서만 한다.
+ * 버튼 열림은 서버 `actions`가 정한다(화면이 조건식을 들지 않는다).
  */
 export default function SettlementDetailPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { settlementId } = useRouteParams()
   const id = Number(settlementId)
-  const { data: detail, isLoading, isError } = useGetSettlementDetail(id)
+  const {
+    data: detail,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useGetSettlementDetail(id)
 
   const goList = () => navigate(`${SETTLEMENT_LIST_PATH}${location.search}`)
-
-  if (!DEV_MOCK_ENABLED) {
-    return (
-      <div>
-        <SettlementPageHeader
-          title="정산 상세"
-          description="공구별 정산 금액과 지급 내역을 확인합니다."
-          right={
-            <button type="button" className={NAV_BTN_CLASS} onClick={goList}>
-              목록으로
-            </button>
-          }
-        />
-        <div className="overflow-hidden rounded-[8px] border border-sz-n-200 bg-white">
-          <NotReady title="정산 상세 화면은 준비 중입니다" />
-        </div>
-      </div>
-    )
-  }
 
   if (isLoading) {
     return (
@@ -90,18 +77,40 @@ export default function SettlementDetailPage() {
   }
 
   if (isError || !detail) {
+    // 남의 정산 · 없는 정산은 서버가 404로 존재를 알리지 않는다 — 그 밖의 실패는 다시 시도할 수 있게
+    const notFound =
+      !Number.isFinite(id) ||
+      (isAxiosError(error) && error.response?.status === 404)
     return (
       <div className="overflow-hidden rounded-[8px] border border-sz-n-200 bg-white">
-        <NotReady
-          title="정산 내역을 찾을 수 없습니다"
-          action={
-            <Btn variant="secondary" onClick={goList}>
-              목록으로
-            </Btn>
-          }
-        >
-          삭제되었거나 접근 권한이 없는 정산입니다.
-        </NotReady>
+        {notFound ? (
+          <NotReady
+            title="정산 내역을 찾을 수 없습니다"
+            action={
+              <Btn variant="secondary" onClick={goList}>
+                목록으로
+              </Btn>
+            }
+          >
+            삭제되었거나 접근 권한이 없는 정산입니다.
+          </NotReady>
+        ) : (
+          <NotReady
+            title="정산 내역을 불러오지 못했습니다"
+            action={
+              <div className="flex gap-1.5">
+                <Btn variant="secondary" onClick={goList}>
+                  목록으로
+                </Btn>
+                <Btn variant="primary" onClick={() => refetch()}>
+                  다시 시도
+                </Btn>
+              </div>
+            }
+          >
+            네트워크 상태를 확인한 뒤 다시 시도해 주세요.
+          </NotReady>
+        )}
       </div>
     )
   }
@@ -122,17 +131,11 @@ function SettlementDetailView(props: {
 }) {
   const { detail, onGoList, onGoPerformance } = props
   const [adjustOpen, setAdjustOpen] = useState(false)
-  const adjustMutation = useRequestSettlementAdjustment(detail.settlementId)
+  const [statementDownloading, setStatementDownloading] = useState(false)
+  const [taxDownloadingId, setTaxDownloadingId] = useState<number | null>(null)
 
-  // 확인 기간(3영업일째 23:59)이 지나면 버튼만 비활성 — 에러 문구 없음(§41-3)
-  const canRequestAdjustment =
-    detail.status === "REVIEWING" &&
-    !dayjs().isAfter(dayjs(detail.reviewDeadlineAt))
-
-  const handleDownloadMock = (label: string) =>
-    toast(
-      `개발용 목업이라 ${label} 파일이 없습니다. 정산 API가 연결되면 내려받을 수 있습니다.`
-    )
+  // 확인 기간이 지나거나 협의가 이미 있으면 버튼만 비활성 — 에러 문구 없음(§41-3)
+  const canRequestAdjustment = detail.actions.canRequestAdjustment
 
   // 이슈 스레드(ui-partner-14) 화면이 아직 없다 — 생기면 adjustment.threadId로 보낸다
   const handleOpenThread = () =>
@@ -140,36 +143,46 @@ function SettlementDetailView(props: {
       "이슈 스레드 화면은 준비 중입니다. 화면이 열리면 이곳에서 조정 협의를 이어갈 수 있습니다."
     )
 
-  const handleSubmitAdjustment = (body: SettlementAdjustmentRequest) =>
-    adjustMutation.mutate(body, {
-      onSuccess: () => {
-        setAdjustOpen(false)
-        toast.success(
-          "정산 조정을 요청했습니다. 이 공구 정산이 전액 보류되고 이슈 스레드가 열렸습니다."
-        )
-      },
-      onError: error => {
-        if (error instanceof Error && error.message === "REVIEW_CLOSED") {
-          setAdjustOpen(false)
-          toast.error(
-            "정산 확인 기간이 지나 조정을 요청할 수 없습니다. 화면을 새로 고쳐 주세요."
-          )
-          return
-        }
-        toast.error("정산 조정을 요청하지 못했습니다. 다시 시도해 주세요.")
-      },
-    })
+  // 실패 문구는 서비스가 서버 메시지로 띄운다(파일 응답이라 공용 인터셉터는 끈다)
+  const handleDownloadStatement = async () => {
+    setStatementDownloading(true)
+    try {
+      await settlementService.downloadStatement(
+        detail.settlementId,
+        detail.settlementNumber
+      )
+    } catch {
+      // 토스트 처리됨
+    } finally {
+      setStatementDownloading(false)
+    }
+  }
+
+  const handleDownloadTaxDocument = async (document: SettlementTaxDocument) => {
+    setTaxDownloadingId(document.documentId)
+    try {
+      await settlementService.downloadTaxDocument(
+        detail.settlementId,
+        document.documentId,
+        detail.settlementNumber
+      )
+    } catch {
+      // 토스트 처리됨
+    } finally {
+      setTaxDownloadingId(null)
+    }
+  }
 
   return (
-    <div>
+    <div className={SETTLEMENT_PAGE_CLASS}>
       <SettlementPageHeader
-        title={detail.groupBuyTitle}
+        title={detail.groupBuy.title}
         description={
           <span className="inline-flex flex-wrap items-center gap-1.5">
-            {detail.creatorShowroomName} · 정산 대상 기간{" "}
-            {formatPeriod(detail.periodStart, detail.periodEnd, true)}
-            <StatusBadge variant={SETTLEMENT_STATUS_VARIANT[detail.status]}>
-              {SETTLEMENT_STATUS_LABEL[detail.status]}
+            {detail.influencer.showroomName} · 정산 대상 기간{" "}
+            {formatPeriod(detail.periodStartAt, detail.periodEndAt, true)}
+            <StatusBadge variant={SETTLEMENT_TONE_VARIANT[detail.statusTone]}>
+              {detail.statusLabel}
             </StatusBadge>
           </span>
         }
@@ -190,7 +203,7 @@ function SettlementDetailView(props: {
         <Notice tone="info" className="mb-3 flex items-center gap-2">
           <div className="flex-1">
             <b className="font-semibold">
-              {formatMonthDayTime(detail.reviewDeadlineAt)}까지 금액을 확인하고
+              {formatMonthDayTime(detail.dates.reviewDueAt)}까지 금액을 확인하고
               필요하면 정산 조정을 요청할 수 있습니다.
             </b>{" "}
             요청이 없으면 다음 날 자동 확정됩니다. 확인 기간은{" "}
@@ -212,7 +225,7 @@ function SettlementDetailView(props: {
 
       <AdjustmentCard detail={detail} onOpenThread={handleOpenThread} />
 
-      <Grp title="금액" sub="어떻게 이 금액이 나왔나" first />
+      <Grp title="금액" sub="어떻게 이 금액이 나왔나" />
       <BreakdownCard detail={detail} />
 
       <Grp title="분배 · 지급" sub="누구에게 얼마가 갔고 언제 들어왔나" />
@@ -222,21 +235,30 @@ function SettlementDetailView(props: {
       </div>
 
       <Grp title="증빙" sub="세금 처리" />
-      <TaxInvoiceCard detail={detail} onDownload={handleDownloadMock} />
+      <TaxInvoiceCard
+        detail={detail}
+        downloadingId={taxDownloadingId}
+        onDownload={handleDownloadTaxDocument}
+      />
       <ShippingFeeCard detail={detail} />
 
       <Grp title="명세" sub="주문 단위로 확인" />
       <StatementCard
         detail={detail}
-        onDownload={() => handleDownloadMock("정산 명세")}
+        isDownloading={statementDownloading}
+        onDownload={handleDownloadStatement}
       />
 
       {adjustOpen && canRequestAdjustment && (
         <AdjustmentRequestModal
           detail={detail}
-          isPending={adjustMutation.isPending}
           onClose={() => setAdjustOpen(false)}
-          onSubmit={handleSubmitAdjustment}
+          onRequested={() => {
+            setAdjustOpen(false)
+            toast.success(
+              "정산 조정을 요청했습니다. 이 공구 정산이 전액 보류되고 이슈 스레드가 열렸습니다."
+            )
+          }}
         />
       )}
     </div>

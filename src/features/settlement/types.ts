@@ -1,245 +1,415 @@
 import type { BaseParams } from "@/common/types/page"
 
 /*
-  정산 관리(ui-partner-13 rev.4 · 요구사항 §41 · §42 · §43) 화면 모델.
+  정산 관리(ui-partner-13 rev.4) — 서버 응답 그대로의 타입.
 
-  ⚠️ 백엔드에 정산 API가 아직 없다 — 이 타입은 시안·요구사항에서 역산한 **요청 사양**이다.
-  API가 생기면 서버 DTO와 대조해 이름을 맞추고 `services/settlementService.ts` 본문만 바꾼다.
+  원본: back-end `SellerSettlementDto`(목록·요약·상세·명세) · `SettlementPartyDto`(KPI·분해 행·조정 내역 —
+  스튜디오와 공용) · `SettlementAdjustmentDto`(조정 미리보기·요청). 이름은 서버를 따른다.
 
-  정산은 공구의 주문이 전부 종결된 뒤에 생긴다 — 그래서 금액이 미확정인 행(구 「정산 대기」)이 없다.
-  브랜드가 금액을 바꾸는 경로는 정산 확인 기간의 [정산 조정 요청] 하나뿐이다(§42-1).
+  - 날짜: `LocalDateTime`은 "2026-10-05T23:59:59", `LocalDate`는 "2026-10-12" 문자열(시간대 없음)
+  - 요율: 분해 행의 `rate`는 **비율**(0.0300 = 3%)이고 명세 행의 `rewardRate`만 **% 값**(10.0 = 10%)이다
+  - 라벨·톤은 서버가 정한다(`statusLabel` · `statusTone` · `turnLabel` …) — 화면은 그대로 그린다
+  - 응답에 없는 것은 서버가 안 내리는 것이다: 고정 지급비 · 인플루언서 원천징수 분해 · 이력 · 소비자 식별 정보
 */
 
 /**
- * 정산 확인 중(정보) · 조정 협의(경고) · 지급 예정(중립) · 지급 완료(성공) — §41-2.
- * 「분배 실패」는 어드민 전용 상태라 파트너센터에는 오지 않는다.
+ * 정산 확인 중 · 조정 협의 · 지급 예정 · 지급 완료. 분배 실패(`PAYOUT_FAILED`)는 어드민 전용이라
+ * 서버가 지급 완료로 접어서 내린다 — 필터로 보내면 400이다.
  */
 export const SETTLEMENT_STATUSES = [
   "REVIEWING",
   "ADJUSTING",
-  "SCHEDULED",
+  "PAYOUT_SCHEDULED",
   "PAID",
 ] as const
 
 export type SettlementStatus = (typeof SETTLEMENT_STATUSES)[number]
 
-/** 정산 생성일 최신순(기본) · 수취액 높은순 */
-export type SettlementSort = "CREATED_AT_DESC" | "RECEIVABLE_DESC"
+export type SettlementTone =
+  | "NEUTRAL"
+  | "INFO"
+  | "WARNING"
+  | "SUCCESS"
+  | "DANGER"
 
+/** 정산 생성일 최신순(기본) · 브랜드 수취액 높은순 */
+export const SETTLEMENT_SORTS = ["CREATED_DESC", "PAYOUT_DESC"] as const
+
+export type SettlementPartySort = (typeof SETTLEMENT_SORTS)[number]
+
+/** `GET /v1/seller/settlements` — `status`는 복수(생략하면 전부) · `page`는 1부터 · `size` 1~100 */
 export interface SettlementListParams extends BaseParams {
-  statuses: Array<SettlementStatus>
+  status: Array<SettlementStatus>
   keyword: string
-  sort: SettlementSort
+  sort: SettlementPartySort
+}
+
+export interface SettlementInfluencer {
+  creatorId: number
+  showroomName: string
+}
+
+/**
+ * 목록 「지급(예정)일」 칸 — 브랜드 지급 행 기준.
+ * REVIEW_DUE 「09.28까지 확인」 · PAYOUT_DUE 「10.12 예정」 · PAID 「07.24」 · NONE 「—」(date = null)
+ */
+export interface SettlementSchedule {
+  kind: "REVIEW_DUE" | "PAYOUT_DUE" | "PAID" | "NONE"
+  date: string | null
 }
 
 export interface SettlementListItem {
   settlementId: number
+  /** STL-YYMM-NNN */
+  settlementNumber: string
+  groupBuyId: number
   groupBuyTitle: string
-  creatorShowroomName: string
-  /** 정산 대상 기간 = 공구 기간(LocalDate) */
-  periodStart: string
-  periodEnd: string
-  status: SettlementStatus
-  confirmedSales: number
+  influencer: SettlementInfluencer
+  periodStartAt: string
+  periodEndAt: string
+  /** 확정 거래액 */
+  confirmedSalesAmount: number
   /** PG 결제 수수료 + 플랫폼 수수료 */
   feeAmount: number
   rewardAmount: number
-  /** 리워드 부가세 10% 별도 — 목록 리워드 칸에 「+ 부가세」로 병기 */
   rewardVatAmount: number
-  /** 내 수취액(차감 반영 전) */
-  brandReceivable: number
-  /** 정산 확인 중 — 확인 기간 마감(LocalDateTime) */
-  reviewDeadlineAt: string | null
-  /** 지급 예정 = 지급 예정일 · 지급 완료 = 실지급일 · 그 외 null */
-  payoutDate: string | null
+  /** 브랜드 수취액 — 차감 반영 후(이번 지급액) */
+  brandPayoutAmount: number
+  status: SettlementStatus
+  statusLabel: string
+  statusTone: SettlementTone
+  schedule: SettlementSchedule
 }
 
+/** KPI 칸 — 건수가 0이면 `amount = null`(0원은 실적처럼 읽혀 화면은 「—」) */
+export interface SettlementKpi {
+  amount: number | null
+  count: number
+}
+
+export type SettlementStatusCounts = Record<SettlementStatus, number>
+
+/** `GET /summary` — 마켓 전체 기준(검색어·상태 칩과 무관) */
 export interface SettlementSummary {
-  paidTotal: number
-  paidCount: number
-  /** 지급 예정 건의 이번 지급액 합계(차감 반영 후) */
-  scheduledTotal: number
-  scheduledCount: number
-  /** 지급 예정 건 중 가장 이른 지급 예정일 */
+  /** 누적 지급 — 브랜드 지급 행 PAID */
+  paid: SettlementKpi
+  /** 지급 예정 — 브랜드 지급 행 SCHEDULED · 처리 중 */
+  scheduled: SettlementKpi
   nextPayoutDate: string | null
-  /** 지급 예정 건 중 차감 반영이 있으면 KPI에 「차감 반영 후」를 붙인다 */
-  scheduledHasDeduction: boolean
+  /** 지급 예정 중 차감(이전 회차 환불 회수) 반영 건이 있는가 */
+  scheduledHasClawback: boolean
+  /** 조정 요청 창이 열린 정산 확인 중 건수 */
   reviewingCount: number
-  /** 정산 확인 중 건 중 가장 이른 확인 기간 마감 */
-  nextReviewDeadlineAt: string | null
-  statusCounts: Record<SettlementStatus, number>
+  /** 가장 임박한 확인 마감 */
+  reviewingDueAt: string | null
+  adjustingCount: number
+  /** 상태 칩 숫자 — 분배 실패는 PAID에 포함 */
+  statusCounts: SettlementStatusCounts
+  /** GNB 「정산 관리」 배지 = 요청 창이 열린 정산 확인 중 건수 */
+  attentionCount: number
 }
 
-/** 차감 반영 — 이전 정산 뒤 환불된 주문을 이번 정산에서 뺀다(§41-7) */
-export interface SettlementDeduction {
-  orderNumber: string
-  /** 원 공구 — 한 공구는 한 정산 타임라인이라 다른 공구에서 넘어온 값임을 적는다 */
-  sourceGroupBuyTitle: string
-  reason: string
+/** 금액 + 건수(분해 행) */
+export interface SettlementAmountCount {
   amount: number
-  /** 마이너스 수정세금계산서 — 정산 세금계산서와 같은 수동 발행 규칙 */
-  revisedInvoiceStatus: TaxInvoiceStatus
+  count: number
 }
 
-/** 브랜드 축 금액 분해(§41-4) — 계산 순서 그대로 */
+/** `rate`는 비율 — 0.0300 = 3% */
+export interface SettlementRateAmount {
+  rate: number
+  amount: number
+}
+
+export interface SettlementPlatformFee extends SettlementRateAmount {
+  /** 정상 요율(베타 종료 후) */
+  normalRate: number
+}
+
+/** 차감 반영 — 이전 회차 정산 뒤 환불된 주문의 회수 */
+export interface SettlementClawback {
+  clawbackNumber: string
+  originSettlementNumber: string | null
+  originGroupBuyTitle: string | null
+  orderNumber: string
+  reasonLabel: string
+  amount: number
+  /** 수정세금계산서 상태 */
+  creditInvoiceStatus: TaxDocumentStatus | null
+}
+
+/** 정산 금액 분해 — 브랜드 축 · 계산 순서 */
 export interface SettlementBreakdown {
-  totalOrderAmount: number
-  cancel: { count: number; amount: number }
-  return: { count: number; amount: number }
-  deliveryException: { count: number; amount: number }
-  confirmedSales: number
-  platformFee: number
-  /** 베타 0% · 정상 2% — 백엔드 변수 */
-  platformFeeRate: number
-  pgFee: number
-  /** 카드·간편결제 3.0% 잠정 — [자문대기-PG] */
-  pgFeeRate: number
-  reward: number
-  /** 계약 리워드율 — 조정 내역의 「원래 리워드」 캡션 */
-  rewardRate: number
-  rewardVat: number
-  /** 10% — 백엔드 변수 */
-  rewardVatRate: number
-  /** 교환·반려 재발송비 — 브랜드 수취액에만 더한다(리워드 기준에는 포함하지 않음) */
-  reshipFee: number
-  /** 내 수취액 = 확정 거래액 − PG − 플랫폼 − 리워드 − 리워드 부가세 + 재발송비 */
-  brandReceivable: number
-  deductions: Array<SettlementDeduction>
-  /** 이번 지급액 = 내 수취액 − 차감 반영 합계 */
-  payoutAmount: number
-}
-
-export type AdjustmentParty = "BRAND" | "INFLUENCER"
-
-export interface AdjustmentProposal {
-  seq: number
-  by: AdjustmentParty
-  /** 화면 표기용 이름 — 브랜드명 또는 인플루언서 쇼룸명 */
-  byName: string
-  at: string
+  grossOrderAmount: number
+  cancel: SettlementAmountCount
+  return: SettlementAmountCount
+  deliveryException: SettlementAmountCount
+  confirmedSalesAmount: number
+  pgFee: SettlementRateAmount
+  platformFee: SettlementPlatformFee
+  /** 원래 리워드 — `rewardAmount`와 다르면 조정 합의로 바뀐 것 */
+  originalRewardAmount: number
   rewardAmount: number
-  /** 첫 요청은 필수 · 다른 금액 제안은 선택 */
-  reason: string | null
+  rewardVat: SettlementRateAmount
+  /** 교환·반려 재발송비 — 브랜드 수취액에 가산 */
+  reshipFee: SettlementAmountCount
+  /** 소비자 결제 배송비 — 브랜드 가산(§46 B-6 미결 행) */
+  consumerDeliveryFee: number
+  /** 차감 전 브랜드 수취액 */
+  brandPayoutBeforeClawback: number
+  /** 없으면 [] */
+  clawbacks: Array<SettlementClawback>
+  brandClawbackAmount: number
+  /** 이번 지급액 */
+  brandPayoutAmount: number
 }
 
-/** 조정 협의 — 응답(동의·제안·반대)은 이슈 스레드에서만 한다. 이 화면은 조정 내역 조회만(§43-3) */
-export interface SettlementAdjustment {
-  requestedAt: string
-  /** 요청 + 10영업일 · 연장 없음(§42-3) */
-  deadlineAt: string
-  /** 영업일 기준 남은 일수(D-N) — 서버가 공휴일까지 반영해 계산한다 */
-  remainingBusinessDays: number
-  originalReward: number
-  proposals: Array<AdjustmentProposal>
-  /** 최신 제안을 받은 쪽이 답할 차례 — 내 응답 대기(경고) / 상대 응답 대기(정보) */
-  turn: "MINE" | "THEIRS"
-  /** 이슈 스레드 — 화면이 생기면 [이슈 스레드 열기]가 이리로 간다 */
-  threadId: number | null
+export type SettlementPayee = "BRAND" | "CREATOR" | "PLATFORM"
+
+export type PayoutStatus =
+  | "WAITING"
+  | "HELD"
+  | "BLOCKED"
+  | "SCHEDULED"
+  | "REQUESTED"
+  | "PAID"
+  | "FAILED"
+  | "NOT_APPLICABLE"
+
+/** 3자 분배 행 — 남의 행의 분배 실패는 SCHEDULED로 접혀 오고, 브랜드 행 실패만 FAILED(「지급 확인 중」) */
+export interface SettlementPayout {
+  payee: SettlementPayee
+  /** 브랜드 「우리」 · 인플루언서 쇼룸명 · 「플랫폼」 */
+  label: string
+  amount: number
+  /** 「리워드 548,000 − 원천징수 18,084(3.3%)」 · 플랫폼 「리워드 부가세」 */
+  note: string | null
+  status: PayoutStatus
+  statusLabel: string
+  dueDate: string | null
+  paidAt: string | null
 }
 
-/** 3자 분배(PG 직접 지급) — 정산 확인 중에는 일정·계좌가 정해지지 않아 null */
-export interface SettlementDistribution {
-  creatorIsBusiness: boolean
-  /** 비사업자 3.3% · 사업자 0 */
-  withholdingAmount: number
-  /** 비사업자 = 리워드 − 원천징수 · 사업자 = 리워드 + 부가세 */
-  creatorNetAmount: number
-  /** 비사업자 = 리워드 부가세 + 플랫폼 수수료 · 사업자 = 플랫폼 수수료(부가세는 인플루언서에게) */
-  platformAmount: number
-}
-
-export interface SettlementPayoutInfo {
-  bankName: string
-  maskedAccountNumber: string
-  accountHolder: string
-  /** 조정 협의 중이면 null(보류 해제 후 결정) */
-  scheduledDate: string | null
-  paidDate: string | null
-  /** 지급 시 부여 */
+/** 지급 정보 — 지시 후엔 지급 시점 계좌 스냅샷, 지시 전엔 현재 등록 계좌(뒤 6자리 노출) */
+export interface SettlementPayment {
+  bankName: string | null
+  accountMasked: string | null
+  accountHolder: string | null
+  payoutDueDate: string | null
+  paidAt: string | null
+  /** 브랜드 행 지급 완료 뒤에만 */
   pgReference: string | null
 }
 
-/** 발행 대기(중립) · 발행 완료(성공) — 【MVP】 운영팀이 홈택스에서 수동 발행 */
-export type TaxInvoiceStatus = "WAITING" | "ISSUED"
+export type TaxDocumentStatus = "PENDING_ISSUE" | "ISSUED"
 
-/** SHOWROOMZ → 브랜드 세금계산서 — 정산 1건당 1장 · 공급가액 = 리워드 + 플랫폼 수수료 */
-export interface SettlementTaxInvoice {
+/** SHOWROOMZ 발행 세금계산서 — 브랜드 세금계산서 1행 + 차감이 있으면 수정세금계산서 N행 */
+export interface SettlementTaxDocument {
+  documentId: number
+  type: "BRAND_TAX_INVOICE" | "BRAND_TAX_INVOICE_CREDIT"
+  typeLabel: string
   supplyAmount: number
   vatAmount: number
-  status: TaxInvoiceStatus
-  issuedAt: string | null
-  approvalNumber: string | null
-  /** 발행 기한 = 정산 확정일이 속한 달의 다음 달 10일 — 확정 전이면 null */
+  totalAmount: number
+  status: TaxDocumentStatus
+  /** 「발행 대기 · 운영팀이 11.10까지 발행합니다」 · 「발행 완료」 */
+  statusLabel: string
   dueDate: string | null
+  issuedDate: string | null
+  approvalNumber: string | null
+  downloadable: boolean
 }
 
-/** 인플루언서 세무 — 플랫폼이 처리하고 브랜드 화면은 표시만 한다 */
-export interface SettlementCreatorTax {
-  isBusiness: boolean
-  /** 비사업자 원천징수율(3.3%) — 백엔드 변수 */
-  withholdingRate: number
+/** 인플루언서 세무 — 표시값만(브랜드가 챙길 인플루언서 증빙은 없다) */
+export interface SettlementInfluencerTax {
+  businessType: "INDIVIDUAL" | "BUSINESS"
+  withholdingType: string | null
+  /** 「비사업자 · 원천징수 3.3% · 플랫폼 신고」 */
+  label: string
 }
 
-export type ShippingFeePayer = "CONSUMER" | "BRAND" | "UNDECIDED"
-
-export interface SettlementShippingFee {
-  payer: ShippingFeePayer
-  reasonLabel: string
-  count: number
-  /** 판정 대기는 금액 없음 */
-  amount: number | null
+/** 반품·교환 배송비 — 분해 밖 · 표시 전용 */
+export interface SettlementClaimShipping {
+  /** 소비자 부담 — 반품 배송비 차감 합 · 브랜드 수취 */
+  consumer: SettlementAmountCount
+  /** 브랜드 부담 — 요금표 × 건수 · 정산 대상 아님 */
+  brand: SettlementAmountCount
 }
 
-export type StatementLineStatus =
+export type SettlementItemStatus =
   | "CONFIRMED"
-  | "CANCELED"
+  | "PARTIAL_RETURNED"
   | "RETURNED"
-  | "RETURN_PROCESSING"
+  | "CANCELLED"
+  | "DELIVERY_EXCEPTION"
 
-export interface SettlementStatementLine {
+/** 명세 1행(주문 항목) — 상세 미리보기와 `GET /{id}/items`가 같은 모양 */
+export interface SettlementItem {
   orderNumber: string
-  /** 마스킹된 소비자명(김**) */
-  consumerName: string
-  productOption: string
+  subOrderNumber: string | null
+  consumerNameMasked: string
+  productName: string
+  optionName: string | null
   quantity: number
+  /** 정산 반영 수량 — 부분 반품은 「확정 2/3」 */
+  settledQuantity: number
+  unitPrice: number
   paidAmount: number
-  status: StatementLineStatus
-  /** 처리 중이면 null(미확정) */
-  reflectedAmount: number | null
+  status: SettlementItemStatus
+  statusLabel: string
+  /** 단가 × 반영 수량 */
+  settledAmount: number
+  /** % 값(10.0 = 10%) */
+  rewardRate: number
+  rewardAmount: number
 }
 
+export interface SettlementDates {
+  createdAt: string
+  ordersClosedAt: string
+  reviewDueAt: string
+  confirmedAt: string | null
+  confirmReason: "AUTO" | "AGREED" | "EXPIRED" | null
+  /** 「자동 확정」 · 「합의 확정」 · 「기한 만료 확정」 */
+  confirmReasonLabel: string | null
+  /** 브랜드 행 지급 예정일 */
+  payoutDueDate: string | null
+  /** 브랜드 행 지급 완료 시각 */
+  paidAt: string | null
+  /** 「자동 확정 10.06 + 3영업일 · 10.09 한글날 제외」 — 확정 전 null */
+  payoutBasis: string | null
+}
+
+export type AdjustmentParty = "SELLER" | "CREATOR"
+
+export type AdjustmentProposalStatus =
+  | "PENDING"
+  | "ACCEPTED"
+  | "REJECTED"
+  | "COUNTERED"
+  | "CLOSED"
+
+export interface SettlementAdjustmentProposal {
+  seq: number
+  proposerType: AdjustmentParty
+  /** 내가(브랜드) 낸 제안인가 */
+  mine: boolean
+  rewardAmount: number
+  reason: string | null
+  status: AdjustmentProposalStatus
+  proposedAt: string
+  respondedAt: string | null
+}
+
+/**
+ * 조정 내역 — 협의가 열린 뒤 항상(종결 뒤에도 이력으로) · 없으면 null.
+ * 차례(`turn`) · 내/상대 최신 제안은 나(브랜드) 기준. 응답은 이슈 스레드에서만 한다.
+ */
+export interface SettlementAdjustmentBlock {
+  adjustmentId: number
+  threadId: number
+  status: "OPEN" | "AGREED" | "EXPIRED"
+  statusLabel: string
+  requesterType: AdjustmentParty
+  openedAt: string
+  /** 개설 + 10영업일 23:59:59 · 연장 없음 */
+  deadlineAt: string
+  /** D-N — 종결 뒤 null */
+  remainingBusinessDays: number | null
+  originalRewardAmount: number
+  maxRewardAmount: number
+  agreedRewardAmount: number | null
+  finalRewardAmount: number | null
+  myLatestAmount: number | null
+  counterpartLatestAmount: number | null
+  counterpartLatestAt: string | null
+  turn: "MY_TURN" | "THEIR_TURN" | "OPEN_FLOOR" | "CLOSED"
+  turnLabel: string
+  turnTone: SettlementTone
+  /** seq 오름차순 전량 */
+  proposals: Array<SettlementAdjustmentProposal>
+}
+
+export interface SettlementActions {
+  /** 정산 확인 중 ∧ 마감 전 ∧ 협의 없음 */
+  canRequestAdjustment: boolean
+  /** 조정 협의의 내 차례(MY_TURN · OPEN_FLOOR) */
+  canRespondAdjustment: boolean
+  /** 확정 후만 */
+  canDownloadStatement: boolean
+  /** 브랜드 세금계산서 발행본 등록 후 */
+  canDownloadTaxInvoice: boolean
+}
+
+/** `GET /{id}` — 상태에 따라 블록이 null이 된다(null 블록은 그리지 않는다) */
 export interface SettlementDetail {
   settlementId: number
-  /** STL-YYMM-NNN(체계 임의 · §46 C-12) */
   settlementNumber: string
-  groupBuyId: number | null
-  groupBuyTitle: string
-  creatorShowroomName: string
-  periodStart: string
-  periodEnd: string
+  groupBuy: { groupBuyId: number; title: string }
+  influencer: SettlementInfluencer
+  periodStartAt: string
+  periodEndAt: string
   status: SettlementStatus
-  /** 정산 생성 = 마지막 주문 종결 시점(금액 공개) */
-  createdAt: string
-  /** 정산 확인 기간 마감(3영업일째 23:59) */
-  reviewDeadlineAt: string
-  /** 자동 확정일 — 정산 확인 중이면 예정일(마감 다음 날), 조정 협의면 null */
-  autoConfirmedAt: string | null
-  /** 지급 예정일 계산 근거 — 자동 확정일 + N영업일 */
-  payoutBusinessDays: number
-  /** 지급 예정일 계산에서 건너뛴 공휴일 */
-  excludedHolidays: Array<{ date: string; name: string }>
+  statusLabel: string
+  statusTone: SettlementTone
+  dates: SettlementDates
+  adjustment: SettlementAdjustmentBlock | null
   breakdown: SettlementBreakdown
-  adjustment: SettlementAdjustment | null
-  distribution: SettlementDistribution | null
-  payoutInfo: SettlementPayoutInfo | null
-  taxInvoice: SettlementTaxInvoice
-  creatorTax: SettlementCreatorTax
-  shippingFees: Array<SettlementShippingFee>
-  statementPreview: Array<SettlementStatementLine>
+  /** 확정 전(정산 확인 중 · 조정 협의) null */
+  payouts: Array<SettlementPayout> | null
+  /** 확정 전 null */
+  payment: SettlementPayment | null
+  /** 확정 시 생긴다 · 확정 전 null */
+  taxDocuments: Array<SettlementTaxDocument> | null
+  influencerTax: SettlementInfluencerTax
+  claimShipping: SettlementClaimShipping
+  /** 명세 미리보기 5건 — 주문번호 내림차순 */
+  items: Array<SettlementItem>
+  itemTotalCount: number
+  actions: SettlementActions
 }
 
-/** C1 정산 조정 요청 — 입력은 조정할 리워드 금액 · 사유 둘뿐(근거 첨부는 2026.10.07 삭제) */
+/** 정산 포트의 계산값 — 전 항목 절사 */
+export interface SettlementAdjustmentAmounts {
+  rewardAmount: number
+  rewardVatAmount: number
+  withholdingAmount: number
+  /** 인플루언서 실지급 */
+  creatorNetAmount: number
+  /** 브랜드 수취액 */
+  brandPayoutAmount: number
+}
+
+/** `GET /{id}/adjustment/preview` — 조정 요청 모달의 상한 · 자동 계산 */
+export interface SettlementAdjustmentPreview {
+  settlementId: number
+  settlementNumber: string
+  /** false면 버튼 비활성(에러 문구 없이) */
+  canRequest: boolean
+  cannotRequestReason: "REVIEW_CLOSED" | "ALREADY_ADJUSTING" | null
+  reviewEndsAt: string
+  originalRewardAmount: number
+  /** 「조정 후 브랜드 수취액 ≥ 0」 상한 · 10원 미만 절사 */
+  maxRewardAmount: number
+  /** rewardAmount를 보내지 않으면 null */
+  input: { rewardAmount: number } | null
+  /** 범위 안 입력의 계산 — 입력이 없거나 범위 밖이면 null */
+  preview: SettlementAdjustmentAmounts | null
+  original: SettlementAdjustmentAmounts
+  /** 0 ≤ 입력 ≤ 상한 — 입력이 없으면 null */
+  inRange: boolean | null
+}
+
+/** `POST /{id}/adjustment` — 리워드(공급가) · 사유(필수 · 1,000자). 근거 첨부 칸은 없다 */
 export interface SettlementAdjustmentRequest {
   rewardAmount: number
   reason: string
+}
+
+export interface SettlementAdjustmentRequestResponse {
+  adjustmentId: number
+  /** 자동 개설된 3자 이슈 스레드 */
+  threadId: number
+  proposalId: number
+  deadlineAt: string
 }

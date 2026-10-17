@@ -1,15 +1,13 @@
 import { cn } from "@/lib/utils"
 import type { ReactNode } from "react"
 
-/** 시안 `.grp` — 금액 · 분배·지급 · 증빙 · 명세 묶음 제목 */
-export function Grp(props: { title: string; sub: string; first?: boolean }) {
+/**
+ * 시안 `.grp` — 금액 · 분배·지급 · 증빙 · 명세 묶음 제목. 위 여백은 언제나 20px —
+ * 시안의 `.grp:first-of-type`(16px)은 앞에 같은 div 형제가 있어 실제로는 걸리지 않는다.
+ */
+export function Grp(props: { title: string; sub: string }) {
   return (
-    <div
-      className={cn(
-        "mb-3 flex items-baseline gap-[9px] border-b-[1.5px] border-sz-n-300 pb-2",
-        props.first ? "mt-4" : "mt-5"
-      )}
-    >
+    <div className="mt-5 mb-3 flex items-baseline gap-[9px] border-b-[1.5px] border-sz-n-300 pb-2">
       <span className="text-[16px] font-semibold text-sz-n-900">
         {props.title}
       </span>
@@ -153,7 +151,20 @@ export function ActBtn(props: {
   )
 }
 
-/** [자문대기-…] · [미정] 표시 — 시안의 빨간 굵은 태그 */
+/** [자문대기-…] · [미정] 표시 — 시안의 빨간 굵은 태그(`<b>` 기본 굵기) */
 export function WaitTag({ children }: { children: ReactNode }) {
-  return <b className="font-semibold text-sz-danger-text">{children}</b>
+  return <b className="text-sz-danger-text">{children}</b>
 }
+
+/*
+  시안 `.mtab`(금액 분해 · 조정 내역 · C1 미리보기) — 행 사이 n-100 구분선(시안 전역 `tbody td` 규칙),
+  소계 행은 n-300 · 총계 행은 1.5px n-400. 선은 td에 그어야 border-collapse에서 색이 섞이지 않는다.
+*/
+export const MTAB_TBODY = "[&>tr:first-child>td]:border-t-0"
+export const MTAB_ROW = "[&>td]:border-t [&>td]:border-sz-n-100"
+export const MTAB_MID_ROW =
+  "bg-sz-n-50 font-semibold [&>td]:border-t [&>td]:border-sz-n-300"
+export const MTAB_TOT_ROW =
+  "bg-sz-n-50 text-[16px] font-semibold text-sz-n-900 [&>td]:border-t-[1.5px] [&>td]:border-sz-n-400"
+export const MTAB_CELL = "px-3 py-2.5"
+export const MTAB_AMOUNT = "px-3 py-2.5 text-right tabular-nums"
