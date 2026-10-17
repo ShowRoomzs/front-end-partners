@@ -1,11 +1,10 @@
-import NotReady from "@/common/components/NotReady/NotReady"
 import Pagination from "@/common/components/Pagination/Pagination"
 import { usePaginationInfo } from "@/common/hooks/usePaginationInfo"
 import { useParams } from "@/common/hooks/useParams"
-import { DEV_MOCK_ENABLED } from "@/common/utils/devMock"
 import { SELECT_SM_CLASS } from "@/features/claims/components/list/ClaimListParts"
 import { SELECT_CHEVRON_STYLE } from "@/features/contracts/constants/params"
 import {
+  SETTLEMENT_PAGE_CLASS,
   SettlementEmptyState,
   SettlementFilters,
   SettlementKpis,
@@ -25,7 +24,7 @@ import {
 } from "@/features/settlement/hooks/useSettlementQueries"
 import type {
   SettlementListParams,
-  SettlementSort,
+  SettlementPartySort,
 } from "@/features/settlement/types"
 import { Loader2 } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
@@ -37,28 +36,8 @@ const DESCRIPTION = "공구별 정산 금액과 지급 내역을 확인합니다
  *
  * 이 화면이 금액의 단일 소스다 — 성과 관리의 수취 예정액 분해도 같은 로직을 쓴다(성과는 해석,
  * 정산은 돈의 사실). 조회 전용이라 금액 수정·지급 실행·정산 승인 액션이 존재하지 않는다.
- *
- * 정산 API가 아직 없어 개발 서버에서만 목업으로 채운다 — 배포본은 「준비 중」(가짜 금액 금지).
  */
 export default function SettlementListPage() {
-  if (!DEV_MOCK_ENABLED) {
-    return (
-      <div>
-        <SettlementPageHeader title="정산 관리" description={DESCRIPTION} />
-        <div className="overflow-hidden rounded-[8px] border border-sz-n-200 bg-white">
-          <NotReady title="정산 관리 화면은 준비 중입니다">
-            공구별 정산 금액과 지급 내역은 정산 기능이 열리면 이곳에서 확인할 수
-            있습니다.
-          </NotReady>
-        </div>
-      </div>
-    )
-  }
-
-  return <SettlementList />
-}
-
-function SettlementList() {
   const navigate = useNavigate()
   const location = useLocation()
   const {
@@ -86,10 +65,10 @@ function SettlementList() {
   const neverHadSettlements = !!summary && totalCount === 0
   const hasCondition =
     params.keyword.trim() !== "" ||
-    params.statuses.length < SETTLEMENT_INITIAL_PARAMS.statuses.length
+    params.status.length < SETTLEMENT_INITIAL_PARAMS.status.length
 
   return (
-    <div>
+    <div className={SETTLEMENT_PAGE_CLASS}>
       <SettlementPageHeader title="정산 관리" description={DESCRIPTION} />
 
       <SettlementKpis summary={summary} />
@@ -116,7 +95,7 @@ function SettlementList() {
                 value={params.sort}
                 onChange={event =>
                   updateParams({
-                    sort: event.target.value as SettlementSort,
+                    sort: event.target.value as SettlementPartySort,
                     page: 1,
                   })
                 }

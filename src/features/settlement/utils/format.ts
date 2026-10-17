@@ -28,12 +28,20 @@ export function formatFullDate(date: string | null) {
   return date ? dayjs(date).format("YYYY.MM.DD") : "—"
 }
 
-/** 목록 08.20 ~ 08.26 · 상세 2026.08.20 ~ 08.26 */
+/** 목록 08.20 ~ 08.26 · 상세 2026.08.20 ~ 08.26 — 서버는 기간을 LocalDateTime으로 내린다(날짜만 쓴다) */
 export function formatPeriod(start: string, end: string, withYear = false) {
   const head = withYear ? formatFullDate(start) : formatMonthDay(start)
   const sameYear = dayjs(start).year() === dayjs(end).year()
   const tail = withYear && !sameYear ? formatFullDate(end) : formatMonthDay(end)
   return `${head} ~ ${tail}`
+}
+
+/**
+ * 서버 분해 행의 비율(0.0300) → % 값(3). 0.033 × 100 같은 부동소수 오차(3.3000000000000003)를
+ * 없애려고 소수 둘째 자리에서 반올림한다.
+ */
+export function ratioToPercent(ratio: number) {
+  return Math.round(ratio * 10000) / 100
 }
 
 /** 3 → "3.0" · 3.3 → "3.3" — 요율은 시안대로 소수 한 자리 */
