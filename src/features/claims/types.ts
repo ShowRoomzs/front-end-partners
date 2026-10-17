@@ -128,6 +128,23 @@ export interface ClaimOrderItem {
   itemStatusLabel: string
 }
 
+/** 재발송비 상태(서버 ClaimChargeStatus) */
+export type ClaimChargeStatus =
+  | "PENDING"
+  | "PAID"
+  | "DEDUCTED"
+  | "COVERED"
+  | "VOID"
+  | "REFUNDED"
+
+export interface ClaimReshipFee {
+  amount: number
+  status: ClaimChargeStatus
+  statusLabel: string
+  /** 반려 재발송비 결제 기한 — 결제가 필요 없거나 판정 중이면 null */
+  dueAt: string | null
+}
+
 export interface ClaimListItem {
   claimId: number
   claimNumber: string
@@ -163,6 +180,8 @@ export interface ClaimListItem {
   reshipCarrier: DeliveryCarrier | null
   reshipCarrierLabel: string | null
   reshipTrackingNumber: string | null
+  /** 재발송비 — 청구가 없으면 null(브랜드 귀책 교환 · 반려 판정 전) */
+  reshipFee: ClaimReshipFee | null
   rejectReasonLabel: string | null
   sellerEvidenceCount: number
   rejectedAt: string | null
@@ -252,9 +271,23 @@ export interface ClaimBatchResponse {
   skipped: Array<{ claimId: number; code: string; message: string }>
 }
 
+/** 검수 반려 법적 근거 — 전자상거래법 제17조② 각 호(서버 ClaimRejectLegalBasis) */
+export type ClaimRejectLegalBasis =
+  | "ART17_2_1"
+  | "ART17_2_2"
+  | "ART17_2_3"
+  | "ART17_2_5"
+
+/** 검수 반려 6항목(서버 SellerClaimRejectRequest) — 사유·상세·법적 근거·소비자 메시지·증빙은 필수 */
 export interface ClaimRejectBody {
   reasonCode: ClaimRejectReason
   detail: string
+  legalBasis: ClaimRejectLegalBasis
+  /** 생략하거나 신청 수량과 같으면 전체 반려, 작으면 일부 반려 */
+  rejectedQuantity?: number
+  /** true 면 브랜드 귀책으로 인정(반품 배송비 차감 환원 · 반려 재발송비 브랜드 부담) */
+  faultChangedToSeller?: boolean
+  consumerMessage: string
   evidenceImageUrls: Array<string>
 }
 

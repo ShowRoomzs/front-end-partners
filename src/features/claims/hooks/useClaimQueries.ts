@@ -59,29 +59,35 @@ export function useGetReshipTemplate(enabled: boolean) {
 export function useClaimMutations() {
   const queryClient = useQueryClient()
 
-  const refreshLists = () => {
-    queryClient.invalidateQueries({ queryKey: [CLAIM_QUERY_KEYS.LIST] })
-    queryClient.invalidateQueries({ queryKey: [CLAIM_QUERY_KEYS.SUMMARY] })
-    queryClient.invalidateQueries({ queryKey: ["sellerOrderSummary"] })
-  }
+  /**
+   * 목록 · 요약을 다시 읽고 끝날 때까지 기다린다. onSuccess가 이 약속을 돌려주면 mutateAsync도
+   * 다시 읽기가 끝난 뒤에 풀린다 — 그 전에 행 잠금이 풀리면 처리 전 행(버튼)이 그대로 남아 보인다.
+   */
+  const refreshLists = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: [CLAIM_QUERY_KEYS.LIST] }),
+      queryClient.invalidateQueries({ queryKey: [CLAIM_QUERY_KEYS.SUMMARY] }),
+      queryClient.invalidateQueries({ queryKey: ["sellerOrderSummary"] }),
+    ])
   const applyDetail = (detail: ClaimDetailResponse) => {
     queryClient.setQueryData(
       [CLAIM_QUERY_KEYS.DETAIL, detail.summary.claimId],
       detail
     )
-    refreshLists()
+    return refreshLists()
   }
 
   const receive = useMutation({
     mutationFn: (claimIds: Array<number>) => claimService.receive(claimIds),
-    onSuccess: (_data, claimIds) => {
-      claimIds.forEach(id =>
-        queryClient.invalidateQueries({
-          queryKey: [CLAIM_QUERY_KEYS.DETAIL, id],
-        })
-      )
-      refreshLists()
-    },
+    onSuccess: (_data, claimIds) =>
+      Promise.all([
+        ...claimIds.map(id =>
+          queryClient.invalidateQueries({
+            queryKey: [CLAIM_QUERY_KEYS.DETAIL, id],
+          })
+        ),
+        refreshLists(),
+      ]),
   })
 
   const pass = useMutation({
@@ -98,14 +104,15 @@ export function useClaimMutations() {
   const registerReshipments = useMutation({
     mutationFn: (items: Array<ReshipItem>) =>
       claimService.registerReshipments(items),
-    onSuccess: (_data, items) => {
-      items.forEach(item =>
-        queryClient.invalidateQueries({
-          queryKey: [CLAIM_QUERY_KEYS.DETAIL, item.claimId],
-        })
-      )
-      refreshLists()
-    },
+    onSuccess: (_data, items) =>
+      Promise.all([
+        ...items.map(item =>
+          queryClient.invalidateQueries({
+            queryKey: [CLAIM_QUERY_KEYS.DETAIL, item.claimId],
+          })
+        ),
+        refreshLists(),
+      ]),
   })
 
   const updateReshipment = useMutation({
