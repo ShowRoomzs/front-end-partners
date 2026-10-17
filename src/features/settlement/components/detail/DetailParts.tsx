@@ -81,7 +81,7 @@ export function Note(props: { children: ReactNode; className?: string }) {
 /** 시안 `.mnote` — 셀 안 보조 줄 */
 export function MNote({ children }: { children: ReactNode }) {
   return (
-    <span className="mt-0.5 block text-[11px] font-normal text-sz-n-500">
+    <span className="mt-0.5 block text-[11px] font-normal text-sz-n-500 normal-nums">
       {children}
     </span>
   )
@@ -103,12 +103,14 @@ export function ReadRow(props: {
   sub?: ReactNode
   first?: boolean
   muted?: boolean
+  className?: string
 }) {
   return (
     <div
       className={cn(
         "flex gap-3 border-b border-sz-n-100 py-[9px] text-[12px] last:border-b-0",
-        props.first && "pt-0"
+        props.first && "pt-0",
+        props.className
       )}
     >
       <div className="w-[140px] shrink-0 text-sz-n-500">{props.label}</div>
@@ -131,16 +133,7 @@ export function ReadRow(props: {
 export const LTAB_HEAD =
   "border-b border-sz-n-200 bg-sz-n-50 px-3 py-[9px] text-[11px] font-semibold text-sz-n-600"
 /** 시안 `.ltab` 몸 칸 */
-export const LTAB_CELL = "border-t border-sz-n-100 px-3 py-2.5 align-top"
-
-/** 시안 `.pb` — 「예정」 표시 */
-export function PlanBadge() {
-  return (
-    <span className="ml-[5px] inline-block rounded-[3px] bg-sz-n-100 px-[5px] py-px align-middle text-[10px] font-normal text-sz-n-500">
-      예정
-    </span>
-  )
-}
+export const LTAB_CELL = "border-t border-sz-n-100 px-3 py-2.5 align-middle"
 
 /** 시안 `.act-btn` — 표 안 작은 버튼 */
 export function ActBtn(props: {

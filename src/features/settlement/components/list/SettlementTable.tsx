@@ -1,4 +1,5 @@
 import StatusBadge from "@/common/components/StatusBadge/StatusBadge"
+import { MNote } from "@/features/settlement/components/detail/DetailParts"
 import {
   SETTLEMENT_STATUS_LABEL,
   SETTLEMENT_STATUS_VARIANT,
@@ -17,7 +18,7 @@ const CELL_CLASS = "px-4 py-[13px] text-[12px] align-middle"
 
 /**
  * 시안 L1 표 — 열은 **확정 거래액 → 수수료 → 리워드 → 내 수취액** 계산 순서 그대로.
- * 조회 전용이라 체크박스·관리 열이 없다. 정산 대기 행은 금액이 없으니 흐리게 두고 「—」.
+ * 리워드 칸에는 별도로 붙는 부가세를 병기한다. 조회 전용이라 체크박스·관리 열이 없다.
  */
 export default function SettlementTable(props: {
   rows: Array<SettlementListItem>
@@ -40,7 +41,7 @@ export default function SettlementTable(props: {
           <td className={cn(HEAD_CLASS, "w-[104px] text-center")}>수수료</td>
           <td className={cn(HEAD_CLASS, "w-[104px] text-center")}>리워드</td>
           <td className={cn(HEAD_CLASS, "w-[116px] text-center")}>내 수취액</td>
-          <td className={cn(HEAD_CLASS, "w-[96px] text-center")}>상태</td>
+          <td className={cn(HEAD_CLASS, "w-[124px] text-center")}>상태</td>
           <td className={cn(HEAD_CLASS, "w-[104px] text-center")}>
             지급(예정)일
           </td>
@@ -55,47 +56,38 @@ export default function SettlementTable(props: {
   )
 }
 
+/** 지급(예정)일 칸 — 정산 확인 중 「MM.DD까지 확인」 · 조정 협의 「—」 · 지급 예정 「MM.DD 예정」 · 지급 완료 날짜 */
+function payoutCell(row: SettlementListItem) {
+  switch (row.status) {
+    case "REVIEWING":
+      return `${formatMonthDay(row.reviewDeadlineAt)}까지 확인`
+    case "SCHEDULED":
+      return `${formatMonthDay(row.payoutDate)} 예정`
+    case "PAID":
+      return formatMonthDay(row.payoutDate)
+    default:
+      return null
+  }
+}
+
 function Row(props: {
   row: SettlementListItem
   onClick: (row: SettlementListItem) => void
 }) {
   const { row, onClick } = props
-  const pending = row.status === "PENDING"
-  const money = (value: number | null, bold = false) =>
-    value === null ? (
-      <span className="text-sz-n-400">—</span>
-    ) : bold ? (
-      <b className="font-semibold">{formatWon(value)}</b>
-    ) : (
-      formatWon(value)
-    )
+  const payout = payoutCell(row)
 
   return (
     <tr
       onClick={() => onClick(row)}
-      className={cn(
-        "group cursor-pointer border-t border-sz-n-100 first:border-t-0 hover:bg-sz-accent-50",
-        pending && "opacity-[.62]"
-      )}
+      className="group cursor-pointer border-t border-sz-n-100 first:border-t-0 hover:bg-sz-accent-50"
     >
       <td className={CELL_CLASS}>
-        <span
-          className={cn(
-            "block truncate font-medium group-hover:text-sz-accent-600",
-            pending ? "text-sz-n-500" : "text-sz-n-900"
-          )}
-          title={
-            pending
-              ? "모든 주문 처리가 끝나면 정산 금액이 확정됩니다"
-              : undefined
-          }
-        >
+        <span className="block truncate font-medium text-sz-n-900 group-hover:text-sz-accent-600">
           {row.groupBuyTitle}
         </span>
       </td>
-      <td className={cn(CELL_CLASS, "truncate", pending && "text-sz-n-500")}>
-        {row.creatorShowroomName}
-      </td>
+      <td className={cn(CELL_CLASS, "truncate")}>{row.creatorShowroomName}</td>
       <td
         className={cn(
           CELL_CLASS,
@@ -105,16 +97,17 @@ function Row(props: {
         {formatPeriod(row.periodStart, row.periodEnd)}
       </td>
       <td className={cn(CELL_CLASS, "text-center tabular-nums")}>
-        {money(row.confirmedSales)}
+        {formatWon(row.confirmedSales)}
       </td>
       <td className={cn(CELL_CLASS, "text-center tabular-nums")}>
-        {money(row.feeAmount)}
+        {formatWon(row.feeAmount)}
       </td>
       <td className={cn(CELL_CLASS, "text-center tabular-nums")}>
-        {money(row.rewardAmount)}
+        {formatWon(row.rewardAmount)}
+        <MNote>+ 부가세 {formatWon(row.rewardVatAmount)}</MNote>
       </td>
       <td className={cn(CELL_CLASS, "text-center tabular-nums")}>
-        {money(row.payoutAmount, true)}
+        <b className="font-semibold">{formatWon(row.brandReceivable)}</b>
       </td>
       <td className={cn(CELL_CLASS, "text-center")}>
         <StatusBadge variant={SETTLEMENT_STATUS_VARIANT[row.status]}>
@@ -124,16 +117,11 @@ function Row(props: {
       <td
         className={cn(
           CELL_CLASS,
-          "text-center whitespace-nowrap tabular-nums text-sz-n-500"
+          "text-center whitespace-nowrap tabular-nums",
+          payout === null ? "text-sz-n-400" : "text-sz-n-500"
         )}
       >
-        {row.payoutDate === null ? (
-          <span className="text-sz-n-400">—</span>
-        ) : row.status === "CONFIRMED" ? (
-          `${formatMonthDay(row.payoutDate)} 예정`
-        ) : (
-          formatMonthDay(row.payoutDate)
-        )}
+        {payout ?? "—"}
       </td>
     </tr>
   )

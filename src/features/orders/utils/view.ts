@@ -7,6 +7,7 @@ import {
 import type {
   OrderBadgeTone,
   OrderItem,
+  OrderListItem,
   OrderListParams,
   OrderQueryParams,
   OrderTab,
@@ -150,16 +151,22 @@ export function toneToVariant(tone: OrderBadgeTone): StatusBadgeVariant {
 /**
  * 항목 상태 배지 — 문구는 서버(`itemStatusLabel`), 색은 항목 축으로 고른다.
  * 취소 요청 대상은 하위주문 상태가 아니라 「취소 요청」으로 짚는다(C11).
+ * 같은 하위주문에 요청이 걸려 있으면 요청 대상이 아닌 항목도 「발송 보류」다 — 같은 박스로
+ * 나가는 주문이라 요청을 처리하기 전엔 어느 항목도 송장을 등록할 수 없기 때문이다.
  */
 export function itemBadge(
   item: OrderItem,
-  groupTone: OrderBadgeTone
+  groupTone: OrderBadgeTone,
+  groupCancelRequested = false
 ): { label: string; variant: StatusBadgeVariant } {
   if (item.cancelled) {
     return { label: item.itemStatusLabel, variant: "neutral" }
   }
   if (item.cancelRequested) {
     return { label: "취소 요청", variant: "warning" }
+  }
+  if (groupCancelRequested) {
+    return { label: "발송 보류", variant: "neutral" }
   }
   if (item.itemStatusLabel === "구매확정") {
     return { label: item.itemStatusLabel, variant: "success" }
@@ -168,6 +175,18 @@ export function itemBadge(
     return { label: item.itemStatusLabel, variant: "neutral" }
   }
   return { label: item.itemStatusLabel, variant: toneToVariant(groupTone) }
+}
+
+/**
+ * 상품준비중에서 취소 요청이 걸린 행은 송장 셀을 잠근다(10b) — 같은 박스로 나가므로 항목만 잠그면
+ * 분리 발송이 생긴다. 서버가 이 행을 탭에서 빼 주지만, 요청이 들어온 뒤 아직 새로 고치지 않은
+ * 목록이 남아 있을 수 있어 화면에서도 막는다.
+ */
+export function isInvoiceLocked(
+  tab: OrderTab,
+  row: Pick<OrderListItem, "overlays">
+) {
+  return tab === "PREPARING" && row.overlays.cancelRequested
 }
 
 /** 옵션 표기 — 단일 상품(옵션 없음)은 시안처럼 「단품」 */

@@ -6,7 +6,6 @@ import {
   LTAB_HEAD,
   MNote,
   Note,
-  PlanBadge,
   ReadRow,
   Sec,
   SecEmpty,
@@ -15,6 +14,8 @@ import {
 import {
   SETTLEMENT_ACCOUNT_PATH,
   STATEMENT_LINE_LABEL,
+  TAX_INVOICE_STATUS_LABEL,
+  TAX_INVOICE_STATUS_VARIANT,
 } from "@/features/settlement/constants/params"
 import type {
   SettlementDetail,
@@ -24,6 +25,8 @@ import {
   formatFullDate,
   formatMinusWon,
   formatMonthDay,
+  formatMonthDayTime,
+  formatPercent,
   formatPlusWon,
   formatRate,
   formatWon,
@@ -34,190 +37,105 @@ import { Link } from "react-router-dom"
 
 type Props = { detail: SettlementDetail }
 
-const isPending = (detail: SettlementDetail) => detail.status === "PENDING"
+const B = ({ children }: { children: ReactNode }) => (
+  <b className="font-semibold">{children}</b>
+)
 
-/** 상단 요약 바 — 날짜만 있으면 왜 그 날인지 알 수 없어 정산 근거를 함께 적는다 */
+/** 「자동 확정 10.06 + 3영업일 · 10.09 한글날 제외」 — 날짜만 있으면 왜 그 날인지 알 수 없다 */
+function payoutBasis(detail: SettlementDetail) {
+  const holidays = detail.excludedHolidays
+    .map(holiday => ` · ${formatMonthDay(holiday.date)} ${holiday.name} 제외`)
+    .join("")
+  return `자동 확정 ${formatMonthDay(detail.autoConfirmedAt)} + ${detail.payoutBusinessDays}영업일${holidays}`
+}
+
+/** D-4 · 남은 영업일이 0이면 D-day */
+function dDay(days: number) {
+  return days > 0 ? `D-${days}` : "D-day"
+}
+
+/** 상단 요약 바 — 상태별 날짜 2개 + 정산 근거(또는 지급 보류) */
 export function SummaryBar({ detail }: Props) {
-  const pending = isPending(detail)
-  const lag = detail.settlementLagDays
-  const payoutDate =
-    detail.status === "PAID"
-      ? detail.payoutInfo?.paidDate
-      : detail.payoutInfo?.scheduledDate
+  const items: Array<{ label: string; value: ReactNode; warn?: boolean }> =
+    (() => {
+      switch (detail.status) {
+        case "REVIEWING":
+          return [
+            { label: "정산 생성", value: formatFullDate(detail.createdAt) },
+            {
+              label: "확인 기간",
+              value: `~ ${formatMonthDayTime(detail.reviewDeadlineAt)}`,
+            },
+            {
+              label: "자동 확정",
+              value: formatMonthDay(detail.autoConfirmedAt),
+            },
+          ]
+        case "ADJUSTING": {
+          const adjustment = detail.adjustment
+          return [
+            {
+              label: "조정 요청",
+              value: formatFullDate(adjustment?.requestedAt ?? null),
+            },
+            {
+              label: "합의 기한",
+              value: adjustment
+                ? `${formatMonthDay(adjustment.deadlineAt)} · ${dDay(adjustment.remainingBusinessDays)}`
+                : "—",
+              warn: true,
+            },
+            { label: "지급", value: "전액 보류", warn: true },
+          ]
+        }
+        case "SCHEDULED":
+          return [
+            {
+              label: "자동 확정",
+              value: formatFullDate(detail.autoConfirmedAt),
+            },
+            {
+              label: "지급 예정일",
+              value: formatFullDate(detail.payoutInfo?.scheduledDate ?? null),
+            },
+            { label: "정산 근거", value: payoutBasis(detail) },
+          ]
+        case "PAID":
+          return [
+            {
+              label: "자동 확정",
+              value: formatFullDate(detail.autoConfirmedAt),
+            },
+            {
+              label: "지급일",
+              value: formatFullDate(detail.payoutInfo?.paidDate ?? null),
+            },
+            { label: "정산 근거", value: payoutBasis(detail) },
+          ]
+      }
+    })()
 
   return (
     <Sec bodyClassName="flex flex-wrap items-center gap-6 px-4 py-3">
-      <SummaryItem label="정산 확정일">
-        {pending ? (
-          <b className="font-semibold text-sz-n-500">미확정</b>
-        ) : (
-          <b className="font-semibold text-sz-n-900 tabular-nums">
-            {formatFullDate(detail.confirmedAt)}
+      {items.map(item => (
+        <span key={item.label} className="text-[12px] text-sz-n-600">
+          {item.label}{" "}
+          <b
+            className={cn(
+              "font-semibold tabular-nums",
+              item.warn ? "text-sz-warning-text" : "text-sz-n-900"
+            )}
+          >
+            {item.value}
           </b>
-        )}
-      </SummaryItem>
-      <SummaryItem label="지급일">
-        {pending ? (
-          <b className="font-semibold text-sz-n-500">미정</b>
-        ) : detail.status === "ON_HOLD" ? (
-          <b className="font-semibold text-sz-warning-text">보류 중</b>
-        ) : (
-          <b className="font-semibold text-sz-n-900 tabular-nums">
-            {formatFullDate(payoutDate ?? null)}
-            {detail.status === "CONFIRMED" && " 예정"}
-          </b>
-        )}
-      </SummaryItem>
-      <SummaryItem label="정산 근거">
-        <b className="font-semibold text-sz-n-900">
-          {detail.lastPurchaseConfirmedAt
-            ? `마지막 구매확정 ${formatMonthDay(detail.lastPurchaseConfirmedAt)} + ${lag}일`
-            : `마지막 구매확정 + ${lag}일`}
-        </b>
-      </SummaryItem>
-    </Sec>
-  )
-}
-
-function SummaryItem(props: { label: string; children: ReactNode }) {
-  return (
-    <span className="text-[12px] text-sz-n-600">
-      {props.label} {props.children}
-    </span>
-  )
-}
-
-/** D4 — 왜 멈췄고 무엇이 풀려야 지급되는지. 해제는 운영자 소관이라 브랜드 액션은 [운영자 문의] 하나 */
-export function HoldCard(props: Props & { onContactOperator: () => void }) {
-  const hold = props.detail.hold
-  if (!hold) return null
-
-  return (
-    <Sec
-      title="보류 사유"
-      tone="warning"
-      note={`운영자 처리 · ${formatFullDate(hold.heldAt)} 보류`}
-    >
-      <ReadRow label="사유" first sub={hold.reasonDetail}>
-        {hold.reason}
-      </ReadRow>
-      <ReadRow label="해제 조건" sub={hold.releaseDetail}>
-        {hold.releaseCondition}
-      </ReadRow>
-      <ReadRow label="보류 대상">
-        전액{" "}
-        <span className="text-[11px] text-sz-n-500">
-          {formatWon(hold.heldAmount)} · 부분 지급은 하지 않습니다
         </span>
-      </ReadRow>
-      <div className="mt-3 flex justify-end">
-        <Btn variant="secondary" onClick={props.onContactOperator}>
-          운영자 문의
-        </Btn>
-      </div>
+      ))}
     </Sec>
   )
 }
 
 const MTAB_CELL = "px-3 py-2.5"
 const MTAB_AMOUNT = "px-3 py-2.5 text-right tabular-nums"
-
-/**
- * 정산 금액 분해 — 계산 순서 그대로 세로로. 소계(확정 거래액)와 총계(내 수취액)를 가른다.
- * PG 결제 수수료는 PG사가 먼저 떼므로 리워드보다 위. 플랫폼 수수료는 베타 0%라도 행을 남긴다.
- * 정산 대기는 「예정」 배지 + 회색(미확정 금액은 값처럼 보이지 않게).
- */
-export function BreakdownCard({ detail }: Props) {
-  const b = detail.breakdown
-  const pending = isPending(detail)
-  const planValue = (value: ReactNode) => (
-    <span className={pending ? "text-sz-n-500" : undefined}>{value}</span>
-  )
-
-  return (
-    <Sec
-      title="정산 금액 분해"
-      note={pending ? "미확정 · 처리 결과에 따라 변동" : "확정"}
-    >
-      <table className="w-full border-collapse text-[12px]">
-        <tbody>
-          <tr>
-            <td className={MTAB_CELL}>총 주문 금액</td>
-            <td className={MTAB_AMOUNT}>{formatWon(b.totalOrderAmount)}</td>
-          </tr>
-          <SubRow
-            label="취소 차감"
-            note={`${b.cancel.count}건`}
-            amount={formatMinusWon(b.cancel.amount)}
-          />
-          <SubRow
-            label="반품 차감"
-            note={
-              b.return.processingCount > 0
-                ? `${b.return.count}건 · 처리 중 ${b.return.processingCount}건 포함`
-                : `${b.return.count}건`
-            }
-            amount={formatMinusWon(b.return.amount)}
-          />
-          <SubRow
-            label="배송 예외 차감"
-            note={`${b.deliveryException.count}건`}
-            amount={formatMinusWon(b.deliveryException.amount)}
-          />
-          <tr className="border-t border-sz-n-300 bg-sz-n-50 font-semibold">
-            <td className={MTAB_CELL}>
-              확정 거래액
-              {pending && <PlanBadge />}
-            </td>
-            <td className={MTAB_AMOUNT}>
-              {planValue(formatWon(b.confirmedSales))}
-            </td>
-          </tr>
-          <SubRow
-            label="플랫폼 수수료"
-            amount={formatMinusWon(b.platformFee)}
-          />
-          <SubRow
-            label={
-              <>
-                PG 결제 수수료
-                {pending && <PlanBadge />}
-              </>
-            }
-            note={
-              <>
-                카드·간편결제 {formatRate(b.pgFeeRate)}%{" "}
-                <WaitTag>[자문대기-PG]</WaitTag> 요율 확정 대기
-              </>
-            }
-            amount={planValue(formatMinusWon(b.pgFee))}
-          />
-          <SubRow
-            label={
-              <>
-                인플루언서 리워드
-                {pending && <PlanBadge />}
-              </>
-            }
-            amount={planValue(formatMinusWon(b.reward))}
-          />
-          <SubRow
-            label="재발송비"
-            note={`교환·반려 재발송 · 브랜드 수취액에만 가산 · 리워드 기준 판매금액에 포함하지 않음${b.reshipFee === 0 ? " · 이 공구 해당 없음" : ""}`}
-            amount={planValue(formatPlusWon(b.reshipFee))}
-          />
-          <tr className="border-t-[1.5px] border-sz-n-400 bg-sz-n-50 text-[16px] font-semibold text-sz-n-900">
-            <td className={MTAB_CELL}>
-              내 수취액
-              {pending && <PlanBadge />}
-            </td>
-            <td className={MTAB_AMOUNT}>{planValue(formatWon(b.payout))}</td>
-          </tr>
-        </tbody>
-      </table>
-    </Sec>
-  )
-}
 
 /** 시안 `.mtab tr.sub` — 보조 줄(`.mnote`)은 라벨 아래 블록으로 */
 function SubRow(props: {
@@ -236,35 +154,217 @@ function SubRow(props: {
   )
 }
 
+/** 시안 `.mtab tr.tot` — 총계(내 수취액 · 이번 지급액) */
+function TotalRow(props: { label: string; amount: number }) {
+  return (
+    <tr className="border-t-[1.5px] border-sz-n-400 bg-sz-n-50 text-[16px] font-semibold text-sz-n-900">
+      <td className={MTAB_CELL}>{props.label}</td>
+      <td className={MTAB_AMOUNT}>{formatWon(props.amount)}</td>
+    </tr>
+  )
+}
+
+/**
+ * D4 조정 내역 — 원래 → 요청 → 다른 금액 제안 → 진행. 협의는 이슈 스레드에서 양측이 직접 하고
+ * 이 화면은 내역만 보여준다 — 동의·제안·반대 버튼을 두지 않는다(같은 행동이 두 화면에 있으면
+ * 어느 쪽이 기록인지 흐려진다 · §43-3).
+ */
+export function AdjustmentCard(props: Props & { onOpenThread: () => void }) {
+  const adjustment = props.detail.adjustment
+  if (props.detail.status !== "ADJUSTING" || !adjustment) return null
+  const mine = adjustment.turn === "MINE"
+
+  return (
+    <Sec
+      title="조정 내역"
+      tone="warning"
+      note="이슈 스레드 진행 중 · 운영팀은 열람만 합니다"
+    >
+      <table className="w-full border-collapse text-[12px]">
+        <tbody>
+          <tr>
+            <td className={MTAB_CELL}>
+              원래 리워드
+              <MNote>
+                계약 리워드율 {formatPercent(props.detail.breakdown.rewardRate)}
+              </MNote>
+            </td>
+            <td className={MTAB_AMOUNT}>
+              {formatWon(adjustment.originalReward)}
+            </td>
+          </tr>
+          {adjustment.proposals.map((proposal, index) => (
+            <SubRow
+              key={proposal.seq}
+              label={index === 0 ? "조정 요청" : "다른 금액 제안"}
+              note={[
+                proposal.byName,
+                formatMonthDay(proposal.at),
+                proposal.reason,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+              amount={formatWon(proposal.rewardAmount)}
+            />
+          ))}
+          <tr>
+            <td className={MTAB_CELL}>진행</td>
+            <td
+              className={cn(
+                MTAB_AMOUNT,
+                mine ? "text-sz-warning-text" : "text-sz-info-text"
+              )}
+            >
+              {mine ? "내 응답 대기" : "상대 응답 대기"}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div className="mt-3 flex items-center gap-2.5">
+        <span className="flex-1 text-[11px] text-sz-n-500">
+          합의되면 금액이 바로 반영되고 지급 예정으로 넘어갑니다.{" "}
+          {formatMonthDay(adjustment.deadlineAt)}까지 합의가 없으면 원래 금액(
+          {formatWon(adjustment.originalReward)})으로 확정됩니다.
+        </span>
+        <Btn variant="primary" onClick={props.onOpenThread}>
+          이슈 스레드 열기
+        </Btn>
+      </div>
+    </Sec>
+  )
+}
+
+/**
+ * 정산 금액 분해(§41-4 브랜드 축) — 계산 순서 그대로 세로로. 소계(확정 거래액)와 총계(내 수취액)를
+ * 가른다. PG 결제 수수료는 PG사가 먼저 떼므로 리워드보다 위, 플랫폼 수수료는 베타 0%라도 행을 남긴다.
+ * 정산은 금액이 확정된 뒤에만 생기므로 「예정」 표시가 없다. 이전 정산 뒤 환불분은 「차감 반영」 행으로
+ * 빼고 「이번 지급액」을 따로 적는다.
+ */
+export function BreakdownCard({ detail }: Props) {
+  const b = detail.breakdown
+  const reviewing = detail.status === "REVIEWING"
+
+  return (
+    <Sec
+      title="정산 금액 분해"
+      note={
+        reviewing ? "확정 금액 · 조정 요청이 없으면 이 금액으로 지급" : "확정"
+      }
+    >
+      <table className="w-full border-collapse text-[12px]">
+        <tbody>
+          <tr>
+            <td className={MTAB_CELL}>총 주문 금액</td>
+            <td className={MTAB_AMOUNT}>{formatWon(b.totalOrderAmount)}</td>
+          </tr>
+          <SubRow
+            label="취소 차감"
+            note={`${b.cancel.count}건`}
+            amount={formatMinusWon(b.cancel.amount)}
+          />
+          <SubRow
+            label="반품 차감"
+            note={`${b.return.count}건${reviewing ? " · 종결" : ""}`}
+            amount={formatMinusWon(b.return.amount)}
+          />
+          <SubRow
+            label="배송 예외 차감"
+            note={`${b.deliveryException.count}건`}
+            amount={formatMinusWon(b.deliveryException.amount)}
+          />
+          <tr className="border-t border-sz-n-300 bg-sz-n-50 font-semibold">
+            <td className={MTAB_CELL}>확정 거래액</td>
+            <td className={MTAB_AMOUNT}>{formatWon(b.confirmedSales)}</td>
+          </tr>
+          <SubRow
+            label="플랫폼 수수료"
+            amount={formatMinusWon(b.platformFee)}
+          />
+          <SubRow
+            label="PG 결제 수수료"
+            note={
+              <>
+                카드·간편결제 {formatRate(b.pgFeeRate)}%{" "}
+                <WaitTag>[자문대기-PG]</WaitTag> 요율 확정 대기
+              </>
+            }
+            amount={formatMinusWon(b.pgFee)}
+          />
+          <SubRow label="인플루언서 리워드" amount={formatMinusWon(b.reward)} />
+          <SubRow
+            label="리워드 부가세"
+            note={`${formatPercent(b.rewardVatRate)} · 별도 · SHOWROOMZ 세금계산서 발행분`}
+            amount={formatMinusWon(b.rewardVat)}
+          />
+          <SubRow
+            label="재발송비"
+            note={`교환·반려 재발송 · 브랜드 수취액에만 가산 · 리워드 기준 판매금액에 포함하지 않음${b.reshipFee === 0 ? " · 이 공구 해당 없음" : ""}`}
+            amount={formatPlusWon(b.reshipFee)}
+          />
+          <TotalRow label="내 수취액" amount={b.brandReceivable} />
+          {b.deductions.map(deduction => (
+            <SubRow
+              key={deduction.orderNumber}
+              label="차감 반영"
+              note={
+                <>
+                  {deduction.orderNumber} · {deduction.sourceGroupBuyTitle} ·{" "}
+                  {deduction.reason} ·{" "}
+                  <B>
+                    수정세금계산서{" "}
+                    {TAX_INVOICE_STATUS_LABEL[deduction.revisedInvoiceStatus]}
+                  </B>
+                </>
+              }
+              amount={formatMinusWon(deduction.amount)}
+            />
+          ))}
+          {b.deductions.length > 0 && (
+            <TotalRow label="이번 지급액" amount={b.payoutAmount} />
+          )}
+        </tbody>
+      </table>
+      <Note>
+        간이과세자·면세사업자 브랜드는{" "}
+        <B>부가세 매입세액 공제가 제한될 수 있습니다.</B> 사업자 구분은 기본정보
+        관리 › 사업자·정산 정보 기준입니다.
+      </Note>
+    </Sec>
+  )
+}
+
 /**
  * 3자 분배 — 플랫폼이 대금을 보관했다 나눠주는 구조가 아니라 **PG가 각 수령자에게 직접 지급**한다.
- * 정산 대기는 아직 돈이 움직이지 않았으므로 값 대신 안내만.
+ * 리워드는 SHOWROOMZ 명의로 지급된다. 정산 확인 중에는 일정·계좌가 정해지지 않아 값 대신 안내만,
+ * 조정 협의 중에는 모든 몫이 「보류 중」(차액 선지급 없음).
  */
 export function DistributionCard({ detail }: Props) {
-  if (isPending(detail) || !detail.withholding) {
+  const dist = detail.distribution
+  if (detail.status === "REVIEWING" || !dist) {
     return (
       <Sec title="3자 분배 내역" note="정산 확정 후 표시" className="mb-0">
         <SecEmpty>
           정산이 확정되면 수령자별 지급 내역이 표시됩니다. 소비자 결제 금액은
-          PG사에서 각 수령자에게 직접 지급됩니다.
+          PG사에서 각 수령자에게 직접 분배되며, 인플루언서 리워드는 SHOWROOMZ
+          명의로 지급됩니다.
         </SecEmpty>
       </Sec>
     )
   }
 
   const b = detail.breakdown
-  const w = detail.withholding
-  const statusText =
-    detail.status === "PAID"
+  const held = detail.status === "ADJUSTING"
+  const statusText = held
+    ? "보류 중"
+    : detail.status === "PAID"
       ? `${formatMonthDay(detail.payoutInfo?.paidDate ?? null)} 지급 완료`
-      : detail.status === "ON_HOLD"
-        ? "보류 중"
-        : `${formatMonthDay(detail.payoutInfo?.scheduledDate ?? null)} 지급 예정`
-  const statusClass = cn(
-    LTAB_CELL,
-    "text-center",
-    detail.status === "ON_HOLD" && "text-sz-n-500"
-  )
+      : `${formatMonthDay(detail.payoutInfo?.scheduledDate ?? null)} 지급 예정`
+  const statusClass = cn(LTAB_CELL, "text-center", held && "text-sz-n-500")
+  const deducted = b.deductions.reduce((sum, d) => sum + d.amount, 0)
+  const platformFeeNote =
+    b.platformFee === 0
+      ? "플랫폼 수수료 0원(베타)"
+      : `플랫폼 수수료 ${formatWon(b.platformFee)} 포함`
 
   return (
     <Sec title="3자 분배 내역" note="PG 직접 지급" className="mb-0">
@@ -283,7 +383,10 @@ export function DistributionCard({ detail }: Props) {
               <MNote>우리</MNote>
             </td>
             <td className={cn(LTAB_CELL, "text-right tabular-nums")}>
-              <b className="font-semibold">{formatWon(b.payout)}</b>
+              <b className="font-semibold">
+                {formatWon(b.payoutAmount)}
+                {deducted > 0 && <MNote>차감 {formatWon(deducted)} 반영</MNote>}
+              </b>
             </td>
             <td className={statusClass}>{statusText}</td>
           </tr>
@@ -293,46 +396,39 @@ export function DistributionCard({ detail }: Props) {
               <MNote>{detail.creatorShowroomName}</MNote>
             </td>
             <td className={cn(LTAB_CELL, "text-right tabular-nums")}>
-              {formatWon(w.creatorNetAmount)}
+              {formatWon(dist.creatorNetAmount)}
               <MNote>
-                {w.creatorIsBusiness
-                  ? "사업자 · 원천징수 없음"
-                  : `리워드 ${formatWon(b.reward)} − 원천징수 ${formatWon(w.withholdingAmount)} (${w.withholdingRate}%)`}
+                {dist.creatorIsBusiness
+                  ? `사업자 · 원천징수 없음 · 부가세 포함 지급(리워드 ${b.reward.toLocaleString("ko-KR")} + 부가세 ${b.rewardVat.toLocaleString("ko-KR")})`
+                  : `리워드 ${formatWon(b.reward)} − 원천징수 ${formatWon(dist.withholdingAmount)} (${formatPercent(detail.creatorTax.withholdingRate)})`}
               </MNote>
             </td>
             <td className={statusClass}>{statusText}</td>
           </tr>
           <tr>
             <td className={LTAB_CELL}>플랫폼</td>
-            <td
-              className={cn(
-                LTAB_CELL,
-                "text-right tabular-nums",
-                b.platformFee === 0 && "text-sz-n-500"
-              )}
-            >
-              {formatWon(b.platformFee)}
+            <td className={cn(LTAB_CELL, "text-right tabular-nums")}>
+              {formatWon(dist.platformAmount)}
             </td>
-            <td
-              className={cn(
-                LTAB_CELL,
-                "text-center",
-                b.platformFee === 0 && "text-sz-n-500"
-              )}
-            >
-              {b.platformFee === 0 ? "베타 기간 수수료 0%" : statusText}
+            <td className={LTAB_CELL}>
+              {dist.creatorIsBusiness
+                ? "사업자 건 · 부가세는 인플루언서에게 지급"
+                : "리워드 부가세 · 플랫폼 신고·납부"}{" "}
+              <MNote>
+                {held && !dist.creatorIsBusiness
+                  ? "보류 중 · 합의 후 확정"
+                  : platformFeeNote}
+              </MNote>
             </td>
           </tr>
         </tbody>
       </table>
       <Note>
-        소비자 결제 금액은{" "}
-        <b className="font-semibold">PG사에서 각 수령자에게 직접 지급</b>
-        됩니다. 플랫폼이 대금을 보관했다가 나누어 지급하지 않습니다.{" "}
-        <b className="font-semibold">
-          PG 결제 수수료는 PG사가 결제금에서 먼저 차감
-        </b>
-        한 뒤 남은 금액을 분배합니다.
+        소비자 결제 금액은 <B>PG사에서 각 수령자에게 직접 분배</B>됩니다.
+        인플루언서 리워드는 <B>SHOWROOMZ 명의로 지급</B>되며, 리워드 부가세와
+        원천징수액은 플랫폼이 신고·납부합니다.{" "}
+        <B>PG 결제 수수료는 PG사가 결제금에서 먼저 차감</B>한 뒤 남은 금액을
+        분배합니다.
       </Note>
     </Sec>
   )
@@ -340,7 +436,7 @@ export function DistributionCard({ detail }: Props) {
 
 export function PayoutInfoCard({ detail }: Props) {
   const info = detail.payoutInfo
-  if (isPending(detail) || !info) {
+  if (detail.status === "REVIEWING" || !info) {
     return (
       <Sec title="지급 정보" className="mb-0">
         <SecEmpty>
@@ -350,7 +446,7 @@ export function PayoutInfoCard({ detail }: Props) {
     )
   }
 
-  const held = detail.status === "ON_HOLD"
+  const held = detail.status === "ADJUSTING"
 
   return (
     <Sec title="지급 정보" className="mb-0">
@@ -371,142 +467,104 @@ export function PayoutInfoCard({ detail }: Props) {
       >
         {info.bankName} {info.maskedAccountNumber}
       </ReadRow>
-      <ReadRow label="지급 예정일" muted={!info.scheduledDate}>
+      <ReadRow label="지급 예정일" muted={held}>
         {info.scheduledDate
           ? formatMonthDay(info.scheduledDate)
           : held
             ? "보류 해제 후 결정"
             : "—"}
       </ReadRow>
-      <ReadRow label="실지급일" muted={!info.paidDate}>
+      <ReadRow label="실지급일" muted={held}>
         {info.paidDate ? formatMonthDay(info.paidDate) : "—"}
       </ReadRow>
-      <ReadRow label="PG 거래 참조번호" muted={!info.pgReference}>
-        {info.pgReference ?? "지급 시 부여"}
+      <ReadRow label="PG 거래 참조번호" muted={held}>
+        {info.pgReference ?? (held ? "지급 시 부여" : "—")}
       </ReadRow>
     </Sec>
   )
 }
 
 /**
- * 세금계산서 · 원천징수 — 인플루언서가 비사업자면 3.3% 원천징수 + 원천징수영수증(D1),
- * 사업자면 전액 지급 + 세금계산서 수취(D3). 발행은 인플루언서 쪽 행위라 「수취 대기」(중립)만
- * 보여주고 재촉·발행 요청 액션을 두지 않는다.
+ * SHOWROOMZ 발행 세금계산서 — 브랜드가 받는 증빙은 언제나 이 1장이다(사업자 인플루언서 건도 같다).
+ * 【MVP】 운영팀이 홈택스에서 발행하고 발행본을 올리면 [다운로드]가 열린다. 인플루언서 세무
+ * (원천징수 · 세금계산서 수취)는 플랫폼이 처리하므로 표시만 한다.
  */
-export function TaxCard(
+export function TaxInvoiceCard(
   props: Props & { onDownload: (label: string) => void }
 ) {
   const { detail, onDownload } = props
-  const w = detail.withholding
-  if (isPending(detail) || !w) {
-    return (
-      <Sec title="세금계산서 · 원천징수">
-        <SecEmpty>정산이 확정되면 증빙 발행 상태가 표시됩니다.</SecEmpty>
-      </Sec>
-    )
-  }
-
-  const b = detail.breakdown
-  const paid = detail.status === "PAID"
+  const invoice = detail.taxInvoice
+  const issued = invoice.status === "ISSUED"
+  const waitingNote = invoice.dueDate
+    ? `운영팀이 ${formatFullDate(invoice.dueDate)}까지 발행합니다`
+    : detail.status === "ADJUSTING"
+      ? "합의·확정 후 다음 달 10일까지 발행"
+      : "정산 확정 후 다음 달 10일까지 발행"
+  const tax = detail.creatorTax
 
   return (
-    <Sec title="세금계산서 · 원천징수">
+    <Sec
+      title="SHOWROOMZ 발행 세금계산서"
+      note="정산 1건당 1장 · 공급가액 = 리워드 + 플랫폼 수수료"
+    >
       <table className="w-full border-collapse text-[12px]">
         <thead>
           <tr>
-            <td className={cn(LTAB_HEAD, "w-[210px]")}>발행 구분</td>
-            <td className={cn(LTAB_HEAD, "w-[150px]")}>대상</td>
-            <td className={cn(LTAB_HEAD, "w-[130px] text-right")}>금액</td>
+            <td className={cn(LTAB_HEAD, "w-[150px]")}>공급가액</td>
+            <td className={cn(LTAB_HEAD, "w-[120px] text-right")}>부가세</td>
+            <td className={cn(LTAB_HEAD, "w-[120px]")}>발행일</td>
+            <td className={cn(LTAB_HEAD, "w-[200px]")}>승인번호</td>
             <td className={LTAB_HEAD}>상태</td>
-            <td className={cn(LTAB_HEAD, "w-[190px]")}>관리</td>
+            <td className={cn(LTAB_HEAD, "w-[120px]")}>관리</td>
           </tr>
         </thead>
         <tbody className="[&>tr:first-child>td]:border-t-0">
           <tr>
-            <td className={LTAB_CELL}>플랫폼 → 브랜드</td>
-            <td className={LTAB_CELL}>중개 수수료</td>
-            <td className={cn(LTAB_CELL, "text-right tabular-nums")}>
-              {formatWon(b.platformFee)}
+            <td className={cn(LTAB_CELL, "tabular-nums")}>
+              {formatWon(invoice.supplyAmount)}
             </td>
-            {b.platformFee === 0 ? (
-              <td className={cn(LTAB_CELL, "text-sz-n-500")}>
-                발행 대상 아님 <MNote>베타 수수료 0원</MNote>
-              </td>
-            ) : (
-              <td className={LTAB_CELL}>발행 완료</td>
-            )}
+            <td className={cn(LTAB_CELL, "text-right tabular-nums")}>
+              {formatWon(invoice.vatAmount)}
+            </td>
+            <td className={cn(LTAB_CELL, "tabular-nums")}>
+              {issued ? formatFullDate(invoice.issuedAt) : "—"}
+            </td>
+            <td className={cn(LTAB_CELL, "tabular-nums")}>
+              {issued ? (invoice.approvalNumber ?? "—") : "—"}
+            </td>
+            <td className={LTAB_CELL}>
+              <StatusBadge variant={TAX_INVOICE_STATUS_VARIANT[invoice.status]}>
+                {TAX_INVOICE_STATUS_LABEL[invoice.status]}
+              </StatusBadge>
+              {!issued && <MNote>{waitingNote}</MNote>}
+            </td>
             <td className={LTAB_CELL}>
               <ActBtn
-                disabled={b.platformFee === 0}
+                disabled={!issued}
                 onClick={() => onDownload("세금계산서")}
               >
                 다운로드
               </ActBtn>
             </td>
           </tr>
-          <tr>
-            <td className={LTAB_CELL}>인플루언서 → 브랜드</td>
-            <td className={LTAB_CELL}>리워드 용역</td>
-            <td className={cn(LTAB_CELL, "text-right tabular-nums")}>
-              {w.creatorIsBusiness ? formatWon(b.reward) : "해당 없음"}
-            </td>
-            {w.creatorIsBusiness ? (
-              <>
-                <td className={LTAB_CELL}>
-                  <StatusBadge
-                    variant={w.taxInvoiceReceived ? "success" : "neutral"}
-                  >
-                    {w.taxInvoiceReceived ? "수취 완료" : "수취 대기"}
-                  </StatusBadge>
-                </td>
-                <td className={cn(LTAB_CELL, "text-sz-n-500")}>
-                  {w.taxInvoiceReceived ? (
-                    <ActBtn onClick={() => onDownload("세금계산서")}>
-                      세금계산서
-                    </ActBtn>
-                  ) : (
-                    "인플루언서 발행 대기"
-                  )}
-                </td>
-              </>
-            ) : (
-              <>
-                <td className={LTAB_CELL}>
-                  비사업자 원천징수 처리
-                  {!paid && <MNote>지급 시 발급</MNote>}
-                </td>
-                <td className={LTAB_CELL}>
-                  <ActBtn
-                    disabled={!paid}
-                    onClick={() => onDownload("원천징수영수증")}
-                  >
-                    원천징수영수증
-                  </ActBtn>
-                </td>
-              </>
-            )}
-          </tr>
         </tbody>
       </table>
       <Note>
-        {w.creatorIsBusiness ? (
-          <>
-            인플루언서가 <b className="font-semibold">사업자</b>인 경우 리워드에
-            대한 <b className="font-semibold">세금계산서를 발행</b>합니다 —{" "}
-            <b className="font-semibold">원천징수는 하지 않습니다.</b> 비사업자
-            개인이면 3.3%를 원천징수하고 원천징수영수증이 발급됩니다.
-          </>
-        ) : (
-          <>
-            인플루언서가 <b className="font-semibold">비사업자 개인</b>이면
-            리워드에서 <b className="font-semibold">3.3%</b>(소득세 3% + 지방세
-            0.3%)를 원천징수하고 원천징수영수증이 발급됩니다. 사업자인 경우
-            세금계산서를 수취합니다.
-          </>
-        )}{" "}
-        <WaitTag>[자문대기-세무]</WaitTag> 원천징수 의무자(브랜드/플랫폼) 확정
-        대기.
+        세금계산서는 <B>운영팀이 홈택스에서 발행</B>하고 발행본을 업로드하면
+        [다운로드]가 열립니다. 홈택스 발행 시 <B>세금계산서 수신 이메일</B>로도
+        발송됩니다. 발행 기한은 공급일(정산 확정일)이 속한 달의{" "}
+        <B>다음 달 10일</B>입니다. 일반과세 브랜드는 이 부가세를{" "}
+        <B>매입세액으로 공제</B>받을 수 있습니다.
       </Note>
+      <ReadRow
+        label="인플루언서 세무"
+        className="mt-3"
+        sub="플랫폼이 처리합니다 — 브랜드가 챙길 인플루언서 증빙은 없습니다"
+      >
+        {tax.isBusiness
+          ? "사업자 · 세금계산서 플랫폼 수취"
+          : `비사업자 · 원천징수 ${formatPercent(tax.withholdingRate)} · 플랫폼 신고`}
+      </ReadRow>
     </Sec>
   )
 }
@@ -535,7 +593,7 @@ const PAYER_TEXT: Record<
   },
 }
 
-/** 반품·교환 배송비 — 주문 결제금과 별도 결제라 분해 표·정산 반영액에 넣지 않는다 */
+/** 반품·교환 배송비(§43-4) — 주문 결제금과 별도 결제라 분해 표·정산 반영액에 넣지 않는다 */
 export function ShippingFeeCard({ detail }: Props) {
   return (
     <Sec
@@ -580,86 +638,28 @@ export function ShippingFeeCard({ detail }: Props) {
         </tbody>
       </table>
       <Note>
-        반품·교환 배송비는{" "}
-        <b className="font-semibold">주문 결제금과 별도로 결제</b>되므로 위 정산
-        금액 분해와 주문 명세의{" "}
-        <b className="font-semibold">정산 반영액에는 포함되지 않습니다.</b> 부담
-        주체는 <b className="font-semibold">사유에 따라 갈립니다</b> —
-        단순변심은 소비자, 불량·오배송은 브랜드입니다(기본정보 관리의 배송·반품
-        정책 기준). <WaitTag>[미정]</WaitTag> 반품비·교환비 금액 산정(왕복 전액
-        vs 회수 편도) 확정 대기.
+        반품·교환 배송비는 <B>주문 결제금과 별도로 결제</B>되므로 위 정산 금액
+        분해와 주문 명세의 <B>정산 반영액에는 포함되지 않습니다.</B> 부담 주체는{" "}
+        <B>사유에 따라 갈립니다</B> — 단순변심은 소비자, 불량·오배송은
+        브랜드입니다(기본정보 관리의 배송·반품 정책 기준).{" "}
+        <WaitTag>[미정]</WaitTag> 반품비·교환비 금액 산정(왕복 전액 vs 회수
+        편도) 확정 대기.
       </Note>
     </Sec>
   )
 }
 
-/** 고정 지급비 — 계약 시 선결제 → 게시 시점 지급되는 별도 트랙이라 분해에 섞지 않고 이력만 */
-export function FixedFeeCard({ detail }: Props) {
-  return (
-    <Sec title="고정 지급비 이력" note="조회 전용 · 정산 금액에 포함되지 않음">
-      {detail.fixedFees.length === 0 ? (
-        <SecEmpty>이 공구 계약에는 고정 지급비가 없습니다.</SecEmpty>
-      ) : (
-        <table className="w-full border-collapse text-[12px]">
-          <thead>
-            <tr>
-              <td className={cn(LTAB_HEAD, "w-[150px] text-right")}>금액</td>
-              <td className={cn(LTAB_HEAD, "w-[160px]")}>브랜드 결제</td>
-              <td className={cn(LTAB_HEAD, "w-[190px]")}>인플루언서 지급</td>
-              <td className={LTAB_HEAD}>비고</td>
-            </tr>
-          </thead>
-          <tbody className="[&>tr:first-child>td]:border-t-0">
-            {detail.fixedFees.map(fee => (
-              <tr key={`${fee.brandPaidAt}-${fee.amount}`}>
-                <td className={cn(LTAB_CELL, "text-right tabular-nums")}>
-                  {formatWon(fee.amount)}
-                </td>
-                <td className={cn(LTAB_CELL, "tabular-nums")}>
-                  {formatFullDate(fee.brandPaidAt)}
-                </td>
-                <td className={cn(LTAB_CELL, "tabular-nums")}>
-                  {fee.creatorPaidAt ? (
-                    <>
-                      {formatFullDate(fee.creatorPaidAt)}
-                      <span className="ml-1">
-                        <StatusBadge variant="success">지급 완료</StatusBadge>
-                      </span>
-                    </>
-                  ) : (
-                    <span className="text-sz-n-500">게시 전</span>
-                  )}
-                </td>
-                <td className={cn(LTAB_CELL, "text-sz-n-500")}>
-                  게시물 게시 시점 지급
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      <Note>
-        고정 지급비는{" "}
-        <b className="font-semibold">
-          계약 시 선결제되어 게시 시점에 지급되는 별도 금액
-        </b>
-        으로, 위 정산 금액에는 포함되지 않습니다.
-      </Note>
-    </Sec>
-  )
-}
-
-/** 정산 명세 — 주문 단위 미리보기 5건. 확정 전 파일은 근거로 돌아다니므로 다운로드를 막는다 */
+/** 정산 명세 — 주문 단위 미리보기 5건. 정산 확인 중에는 자동 확정 후에 파일을 받는다 */
 export function StatementCard(props: Props & { onDownload: () => void }) {
   const { detail, onDownload } = props
-  const pending = isPending(detail)
+  const reviewing = detail.status === "REVIEWING"
 
   return (
     <Sec
       title="정산 명세"
       note={
-        pending
-          ? "정산 확정 후 다운로드"
+        reviewing
+          ? "확정 후 다운로드"
           : `주문 단위 · 미리보기 ${detail.statementPreview.length}건`
       }
     >
@@ -708,16 +708,15 @@ export function StatementCard(props: Props & { onDownload: () => void }) {
       </table>
       <div className="mt-3 flex items-center gap-2.5">
         <span className="flex-1 text-[11px] text-sz-n-500">
-          취소·반품 건은 정산 반영액이 <b className="font-semibold">0원</b>으로
-          표시됩니다.
-          {pending && (
+          취소·반품 건은 정산 반영액이 <B>0원</B>으로 표시됩니다.
+          {reviewing && (
             <>
               {" "}
-              <b className="font-semibold">정산 확정 후 받을 수 있습니다.</b>
+              <B>자동 확정 후 받을 수 있습니다.</B>
             </>
           )}
         </span>
-        <Btn variant="secondary" disabled={pending} onClick={onDownload}>
+        <Btn variant="secondary" disabled={reviewing} onClick={onDownload}>
           전체 명세 다운로드
         </Btn>
       </div>

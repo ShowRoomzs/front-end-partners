@@ -235,7 +235,8 @@ export default function PurchaseOrderModal(props: {
         <span className="text-[12px] leading-[1.55] text-sz-n-900">
           <B>이 구성을 기본값으로 저장</B>
           <span className="mt-[3px] block text-[11px] text-sz-n-500">
-            다음 다운로드부터 이 컬럼과 순서가 미리 선택됩니다.
+            다음 다운로드부터 이 컬럼과 순서가 미리 선택됩니다. 기본정보
+            관리에서 언제든 바꿀 수 있습니다.
           </span>
         </span>
       </div>

@@ -23,6 +23,7 @@ import {
   formatDateTime,
   formatElapsedHours,
   formatNumber,
+  isInvoiceLocked,
   itemBadge,
   optionText,
   sanitizeTrackingNumber,
@@ -88,7 +89,7 @@ interface OrderColumn {
 }
 
 const SHIP_DUE_TITLE =
-  "송장을 등록한 시각으로 판정합니다 · 결제완료 시각부터 기산"
+  "송장을 등록한 시각으로 판정합니다 · 공구 마감 시각부터 기산 · 마감 + 브랜드 설정 N영업일"
 
 /**
  * 탭마다 컬럼이 다르다(rev.5) — 한 표에 모든 상태를 담으면 그 탭에서 필요한 정보가 밀려난다.
@@ -374,7 +375,7 @@ function buildColumns(
                 <input
                   aria-label={`${row.orderNumber} 송장번호`}
                   inputMode="numeric"
-                  placeholder="숫자만 입력"
+                  placeholder="숫자만 10~14자리"
                   value={draft?.trackingNumber ?? ""}
                   onClick={event => event.stopPropagation()}
                   onChange={event =>
@@ -734,12 +735,13 @@ function refundText(row: OrderListItem) {
 
 /**
  * 발송기한 — 이미 발송된 건은 기한이 의미 없어 「—」로 비운다(rev.3).
+ * 취소 요청이 걸린 건도 요청을 처리하기 전엔 발송할 수 없어 「—」다(10e A3).
  * 상품준비중에서 넘긴 기한은 「발송기한 경과」(위험 · 브랜드 귀책) 배지를 단다(A2a).
  */
 function ShipDueCell(props: { row: OrderListItem; tab: OrderTab }) {
   const { row, tab } = props
   const workable = row.status === "NEW" || row.status === "PREPARING"
-  if (!workable || !row.shipDueAt) {
+  if (!workable || !row.shipDueAt || row.overlays.cancelRequested) {
     return <span className="text-sz-n-300">—</span>
   }
   if (row.overlays.shipOverdue && tab === "PREPARING") {
@@ -931,7 +933,11 @@ function ExpandedItems(props: { row: OrderListItem }) {
       </thead>
       <tbody>
         {row.items.map(item => {
-          const badge = itemBadge(item, row.statusTone)
+          const badge = itemBadge(
+            item,
+            row.statusTone,
+            row.overlays.cancelRequested
+          )
           return (
             <tr
               key={item.orderProductId}
@@ -1016,8 +1022,12 @@ export default function OrderTable(props: {
         </thead>
         <tbody>
           {rows.map((row, index) => {
+            const locked = isInvoiceLocked(ctx.tab, row)
+            // 잠긴 행은 입력이 없으니 채움 배경도 없다
             const invoice =
-              ctx.tab === "PREPARING" ? ctx.invoiceOf(row) : undefined
+              ctx.tab === "PREPARING" && !locked
+                ? ctx.invoiceOf(row)
+                : undefined
             const selected = ctx.selectedIds.has(row.deliveryGroupId)
             const expanded = ctx.expandedIds.has(row.deliveryGroupId)
             return (
@@ -1031,19 +1041,49 @@ export default function OrderTable(props: {
                     !invoice?.filled && selected && "bg-sz-accent-50"
                   )}
                 >
-                  {columns.map(column => (
-                    <td
-                      key={column.key}
-                      className={cn(
-                        "px-4 py-[13px] align-middle text-[12px] text-sz-n-900",
-                        index > 0 && "border-t border-sz-n-100",
-                        column.center && "text-center",
-                        column.cellClassName
-                      )}
-                    >
-                      {column.render(row)}
-                    </td>
-                  ))}
+                  {columns.map(column => {
+                    const cellClassName = cn(
+                      "px-4 py-[13px] align-middle text-[12px] text-sz-n-900",
+                      index > 0 && "border-t border-sz-n-100",
+                      column.center && "text-center",
+                      column.cellClassName
+                    )
+                    if (locked) {
+                      // 택배사·송장번호 두 칸을 합쳐 잠금 사유를 적는다(10b) — 송장번호 칸은 건너뛴다
+                      if (column.key === "carrierInput") {
+                        return (
+                          <td
+                            key={column.key}
+                            colSpan={2}
+                            className={cn(
+                              cellClassName,
+                              "text-[11px] text-sz-warning-text"
+                            )}
+                          >
+                            <StatusBadge variant="warning">
+                              취소 요청
+                            </StatusBadge>{" "}
+                            취소 요청 처리 후 등록할 수 있습니다 (하위주문 전체)
+                          </td>
+                        )
+                      }
+                      if (column.key === "trackingInput") {
+                        return null
+                      }
+                      if (column.key === "manage") {
+                        return (
+                          <td key={column.key} className={cellClassName}>
+                            <ActBtn disabled>송장 등록</ActBtn>
+                          </td>
+                        )
+                      }
+                    }
+                    return (
+                      <td key={column.key} className={cellClassName}>
+                        {column.render(row)}
+                      </td>
+                    )
+                  })}
                 </tr>
                 {expanded && (
                   <tr>
