@@ -5,9 +5,9 @@ import Btn from "@/features/contracts/components/shared/Btn"
 import {
   ERR_CLASS,
   FLINK_CLASS,
+  INPUT_CLASS,
   SELECT_CLASS,
   TEXTAREA_CLASS,
-  WTAG_CLASS,
 } from "@/features/contracts/components/shared/styles"
 import { FORM_SELECT_CHEVRON_STYLE } from "@/features/contracts/constants/params"
 import {
@@ -16,6 +16,7 @@ import {
   EVIDENCE_MAX_BYTES,
   EVIDENCE_MAX_COUNT,
   OPERATOR_THREAD_PATH,
+  REJECT_CONSUMER_MESSAGE_MAX,
   REJECT_LEGAL_BASIS_OPTIONS,
   REJECT_REASON_OPTIONS,
   SELLER_BORNE_REASONS,
@@ -34,6 +35,7 @@ import {
 } from "@/features/claims/hooks/useClaimQueries"
 import type {
   ClaimDetailResponse,
+  ClaimRejectLegalBasis,
   ClaimRejectReason,
   DeliveryCarrier,
 } from "@/features/claims/types"
@@ -68,9 +70,6 @@ const HISTORY_TONE: Record<string, string> = {
 }
 
 /** 서버 반려 요청에 아직 없는 입력 — 화면에는 두되 제출되지 않는다는 것을 밝힌다 */
-function PendingTag() {
-  return <span className={WTAG_CLASS}>서버 연동 전 · 제출되지 않음</span>
-}
 
 function FieldLabel(props: {
   children: ReactNode
@@ -428,6 +427,7 @@ function DetailBody(props: { detail: ClaimDetailResponse }) {
             {rejectOpen && actions.canReject && (
               <RejectForm
                 claimId={summary.claimId}
+                claimedQuantity={summary.quantity}
                 onCancel={() => setRejectOpen(false)}
               />
             )}
@@ -500,18 +500,25 @@ interface Evidence {
 }
 
 /**
- * 시안 B1r — 검수 반려 폼. 사유·설명·증빙이 모두 필수다(제출 = 즉시 확정, 소비자에게 그대로 전달).
+ * 시안 B1r — 검수 반려 6항목(서버 SellerClaimRejectRequest · 소비자 C10-5와 1:1).
+ * 사유·상세·법적 근거·소비자 메시지·증빙은 필수, 반려 범위·귀책 변경은 선택이다(제출 = 즉시 확정).
  * 미입력은 에러 문구 없이 버튼만 비활성이다(전역 규칙).
- *
- * 반려 범위·법적 근거·귀책 변경·소비자 메시지는 시안(소비자 C10-5와 1:1)에 있지만 서버 반려 요청에
- * 필드가 없다 — 화면에 두되 비활성으로 「제출되지 않음」을 밝힌다(백엔드 요청 대상).
  */
-function RejectForm(props: { claimId: number; onCancel: () => void }) {
-  const { claimId, onCancel } = props
+function RejectForm(props: {
+  claimId: number
+  claimedQuantity: number
+  onCancel: () => void
+}) {
+  const { claimId, claimedQuantity, onCancel } = props
   const mutations = useClaimMutations()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [reasonCode, setReasonCode] = useState<ClaimRejectReason | "">("")
   const [detailText, setDetailText] = useState("")
+  const [legalBasis, setLegalBasis] = useState<ClaimRejectLegalBasis | "">("")
+  const [partial, setPartial] = useState(false)
+  const [rejectedQuantity, setRejectedQuantity] = useState("")
+  const [faultChangedToSeller, setFaultChangedToSeller] = useState(false)
+  const [consumerMessage, setConsumerMessage] = useState("")
   const [evidences, setEvidences] = useState<Array<Evidence>>([])
   const [uploadError, setUploadError] = useState<string | null>(null)
 
@@ -519,9 +526,19 @@ function RejectForm(props: { claimId: number; onCancel: () => void }) {
   const uploaded = evidences.filter(
     (item): item is Evidence & { url: string } => item.url !== null
   )
+  const partialQuantity = Number(rejectedQuantity)
+  // 일부 반려는 1 이상 · 신청 수량 미만 — 신청 수량과 같으면 전체 반려와 같다
+  const quantityValid =
+    !partial ||
+    (Number.isInteger(partialQuantity) &&
+      partialQuantity >= 1 &&
+      partialQuantity < claimedQuantity)
   const canSubmit =
     !!reasonCode &&
     detailText.trim() !== "" &&
+    !!legalBasis &&
+    consumerMessage.trim() !== "" &&
+    quantityValid &&
     uploaded.length > 0 &&
     !uploading &&
     !mutations.reject.isPending
@@ -548,29 +565,45 @@ function RejectForm(props: { claimId: number; onCancel: () => void }) {
       const key = `${file.name}-${file.size}-${Date.now()}`
       setEvidences(prev => [...prev, { key, name: file.name, url: null }])
       try {
-        // 클레임 증빙 전용 이미지 타입이 아직 없다 — 소비자에게 보여야 하는 공개 이미지라 MARKET을 쓴다
-        const data = (await fileService.upload(file, "MARKET")) as {
-          imageUrl: string
-        }
+        // CLAIM 타입은 정사각형 제한이 없다. 응답이 오지 않아도 계속 돌지 않게 시간 제한을 둔다
+        const data = (await fileService.upload(file, "CLAIM", {
+          timeoutMs: 60_000,
+          suppressErrorToast: true,
+        })) as { imageUrl?: string }
+        if (!data?.imageUrl) throw new Error("EMPTY_IMAGE_URL")
+        const imageUrl = data.imageUrl
         setEvidences(prev =>
           prev.map(item =>
-            item.key === key ? { ...item, url: data.imageUrl } : item
+            item.key === key ? { ...item, url: imageUrl } : item
           )
         )
-      } catch {
+      } catch (error) {
         setEvidences(prev => prev.filter(item => item.key !== key))
+        const serverMessage = isAxiosError(error)
+          ? (error.response?.data as { message?: string } | undefined)?.message
+          : undefined
+        setUploadError(
+          serverMessage ??
+            (isAxiosError(error) && error.code === "ECONNABORTED"
+              ? `${file.name} 업로드 시간이 초과됐습니다. 다시 시도해 주세요.`
+              : `${file.name}을(를) 올리지 못했습니다. 다시 시도해 주세요.`)
+        )
       }
     }
   }
 
   const handleSubmit = async () => {
-    if (!reasonCode) return
+    if (!reasonCode || !legalBasis) return
     try {
       await mutations.reject.mutateAsync({
         claimId,
         body: {
           reasonCode,
           detail: detailText.trim(),
+          legalBasis,
+          rejectedQuantity: partial ? partialQuantity : undefined,
+          faultChangedToSeller,
+          consumerMessage: consumerMessage.trim(),
           evidenceImageUrls: uploaded.map(item => item.url),
         },
       })
@@ -620,47 +653,105 @@ function RejectForm(props: { claimId: number; onCancel: () => void }) {
         value={detailText}
         onChange={event => setDetailText(event.target.value)}
         className={cn(TEXTAREA_CLASS, "min-h-16")}
-        placeholder="소비자에게 그대로 전달되는 내용입니다"
+        placeholder="브랜드·운영자 기록용 상세 설명입니다"
       />
 
-      <FieldLabel extra={<PendingTag />}>반려 범위</FieldLabel>
-      <div className="flex gap-3.5 text-[12px] text-sz-n-400">
-        <label className="flex items-center gap-[5px]">
-          <input type="radio" disabled defaultChecked name="reject-scope" />
+      <FieldLabel>반려 범위</FieldLabel>
+      <div className="flex flex-wrap items-center gap-3.5 text-[12px] text-sz-n-700">
+        <label className="flex cursor-pointer items-center gap-[5px]">
+          <input
+            type="radio"
+            name="reject-scope"
+            checked={!partial}
+            onChange={() => setPartial(false)}
+          />
           전체 반려
         </label>
-        <label className="flex items-center gap-[5px]">
-          <input type="radio" disabled name="reject-scope" />
-          일부 반려 <span>· 수량 지정</span>
+        <label
+          className={cn(
+            "flex items-center gap-[5px]",
+            claimedQuantity > 1 ? "cursor-pointer" : "text-sz-n-400"
+          )}
+        >
+          <input
+            type="radio"
+            name="reject-scope"
+            checked={partial}
+            disabled={claimedQuantity <= 1}
+            onChange={() => setPartial(true)}
+          />
+          일부 반려 <span className="text-sz-n-500">· 수량 지정</span>
         </label>
+        {partial && (
+          <span className="flex items-center gap-1.5">
+            <input
+              type="text"
+              inputMode="numeric"
+              aria-label="반려 수량"
+              value={rejectedQuantity}
+              onChange={event =>
+                setRejectedQuantity(event.target.value.replace(/[^0-9]/g, ""))
+              }
+              className={cn(INPUT_CLASS, "h-[30px] w-16 text-right")}
+            />
+            <span className="text-sz-n-500">/ {claimedQuantity}개</span>
+          </span>
+        )}
       </div>
+      {partial && rejectedQuantity !== "" && !quantityValid && (
+        <p className={ERR_CLASS}>
+          반려 수량은 1개 이상, 신청 수량({claimedQuantity}개)보다 적어야
+          합니다.
+        </p>
+      )}
+      {partial && (
+        <Hint>
+          나머지 수량은 검수 통과로 처리되고, 반품이면 바로 환불됩니다.
+        </Hint>
+      )}
 
-      <FieldLabel extra={<PendingTag />}>법적 근거</FieldLabel>
+      <FieldLabel required>법적 근거</FieldLabel>
       <select
-        disabled
+        value={legalBasis}
+        onChange={event =>
+          setLegalBasis(event.target.value as ClaimRejectLegalBasis | "")
+        }
         style={FORM_SELECT_CHEVRON_STYLE}
         className={cn(SELECT_CLASS, "h-[34px] w-full")}
       >
-        <option>선택하세요</option>
+        <option value="">선택하세요</option>
         {REJECT_LEGAL_BASIS_OPTIONS.map(option => (
-          <option key={option}>{option}</option>
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
         ))}
       </select>
 
-      <FieldLabel extra={<PendingTag />}>귀책 변경</FieldLabel>
+      <FieldLabel>귀책 변경</FieldLabel>
       <select
-        disabled
+        value={faultChangedToSeller ? "SELLER" : "KEEP"}
+        onChange={event =>
+          setFaultChangedToSeller(event.target.value === "SELLER")
+        }
         style={FORM_SELECT_CHEVRON_STYLE}
         className={cn(SELECT_CLASS, "h-[34px] w-full")}
       >
-        <option>변경 없음 · 소비자 귀책</option>
-        <option>브랜드 귀책으로 인정</option>
+        <option value="KEEP">변경 없음 · 소비자 귀책</option>
+        <option value="SELLER">브랜드 귀책으로 인정</option>
       </select>
+      {faultChangedToSeller && (
+        <Hint>
+          반품 배송비 차감이 환불에 돌아가고, 반려 재발송비는 브랜드가
+          부담합니다.
+        </Hint>
+      )}
 
-      <FieldLabel extra={<PendingTag />}>소비자에게 보낼 메시지</FieldLabel>
+      <FieldLabel required>소비자에게 보낼 메시지</FieldLabel>
       <textarea
-        disabled
-        className={cn(TEXTAREA_CLASS, "min-h-16 disabled:bg-sz-n-100")}
+        value={consumerMessage}
+        maxLength={REJECT_CONSUMER_MESSAGE_MAX}
+        onChange={event => setConsumerMessage(event.target.value)}
+        className={cn(TEXTAREA_CLASS, "min-h-16")}
         placeholder="소비자 화면(C10-5)에 그대로 표시됩니다"
       />
 

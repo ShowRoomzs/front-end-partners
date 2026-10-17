@@ -184,25 +184,33 @@ const noActionCol: ColumnDef = {
   cell: () => <span className={DIM}>—</span>,
 }
 
-/** 재발송비 — 서버 금액이 없어 부담 주체만 밝힌다(사유의 부담 주체는 서버 ClaimReason 값이다) */
+/**
+ * 재발송비 — 서버 reshipFee(금액 · 결제 상태)를 그대로 쓴다.
+ * 청구가 없거나(null) 0원이면 브랜드 부담이다 — 브랜드 귀책 교환 · 귀책 변경 반려 등.
+ */
 function reshipFeeCell(row: ClaimListItem) {
-  if (row.reshipReason === "REJECT_RETURN") {
+  const fee = row.reshipFee
+  if (!fee || fee.amount === 0) {
     return (
       <>
-        결제됨<span className={NOTE}>소비자 재배송비</span>
-      </>
-    )
-  }
-  if (SELLER_BORNE_REASONS.includes(row.reasonCode)) {
-    return (
-      <>
-        브랜드 부담<span className={NOTE}>{row.reasonLabel}</span>
+        브랜드 부담
+        <span className={NOTE}>
+          {SELLER_BORNE_REASONS.includes(row.reasonCode)
+            ? row.reasonLabel
+            : "소비자 결제 없음"}
+        </span>
       </>
     )
   }
   return (
     <>
-      결제됨<span className={NOTE}>교환 신청 시 선결제</span>
+      <span className="tabular-nums">{formatWon(fee.amount)}</span>
+      <span className={NOTE}>
+        {fee.statusLabel}
+        {row.reshipReason === "REJECT_RETURN"
+          ? " · 소비자 재배송비"
+          : " · 교환 신청 시 선결제"}
+      </span>
     </>
   )
 }
