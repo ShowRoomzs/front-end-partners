@@ -320,16 +320,22 @@ export const mainRoutes: Array<RouteObject> = [
             element: <SettlementDetailPage />,
           },
           {
-            path: "by-product",
-            element: <div>aasdf</div>,
-          },
-          {
             path: "vat",
-            element: <div>aasdf</div>,
+            element: (
+              <ComingSoonPage
+                title="부가세 신고 내역"
+                description="부가세 신고 내역은 아직 준비 중입니다."
+              />
+            ),
           },
           {
             path: "commission",
-            element: <div>aasdf</div>,
+            element: (
+              <ComingSoonPage
+                title="상품별 커미션 내역"
+                description="상품별 커미션 내역은 아직 준비 중입니다."
+              />
+            ),
           },
         ],
       },

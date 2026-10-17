@@ -526,7 +526,11 @@ function ItemsBox(props: { detail: OrderDetailResponse }) {
         </thead>
         <tbody>
           {detail.items.map((item, index) => {
-            const badge = itemBadge(item, detail.statusTone)
+            const badge = itemBadge(
+              item,
+              detail.statusTone,
+              detail.overlays.cancelRequested
+            )
             return (
               <tr
                 key={item.orderProductId}
@@ -559,6 +563,17 @@ function ItemsBox(props: { detail: OrderDetailResponse }) {
                         · <B className="text-sz-warning-text">취소 요청 대상</B>
                       </>
                     )}
+                    {!item.cancelRequested &&
+                      !item.cancelled &&
+                      detail.overlays.cancelRequested && (
+                        <>
+                          {" "}
+                          ·{" "}
+                          <span className="text-sz-n-600">
+                            취소 요청 처리 대기
+                          </span>
+                        </>
+                      )}
                   </div>
                 </td>
                 {[item.quantity, item.price, item.amount].map(

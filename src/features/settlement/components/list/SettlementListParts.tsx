@@ -1,7 +1,11 @@
 import Btn from "@/features/contracts/components/shared/Btn"
 import { INPUT_CLASS } from "@/features/contracts/components/shared/styles"
 import { SETTLEMENT_STATUS_LABEL } from "@/features/settlement/constants/params"
-import { formatMonthDay, formatWon } from "@/features/settlement/utils/format"
+import {
+  formatMonthDay,
+  formatMonthDayTime,
+  formatWon,
+} from "@/features/settlement/utils/format"
 import {
   SETTLEMENT_STATUSES,
   type SettlementListParams,
@@ -34,8 +38,9 @@ export function SettlementPageHeader(props: {
 }
 
 /**
- * 시안 `.kgrid.c3` — 누적 지급 · 지급 예정 · 정산 대기.
+ * 시안 `.kgrid.c3` — 누적 지급 · 지급 예정 · 정산 확인 중(§43-1).
  * 건수가 0이면 금액도 0원이 아니라 「—」 — 0원은 실적처럼 읽힌다(L2). 배포본(요약 없음)도 「—」.
+ * 지급 예정은 이번 지급액(차감 반영 후) 합계라 차감이 있으면 그 사실을 붙인다.
  */
 export function SettlementKpis(props: {
   summary: SettlementSummary | undefined
@@ -43,7 +48,7 @@ export function SettlementKpis(props: {
   const { summary } = props
   const paidCount = summary?.paidCount ?? 0
   const scheduledCount = summary?.scheduledCount ?? 0
-  const pendingCount = summary?.pendingCount ?? 0
+  const reviewingCount = summary?.reviewingCount ?? 0
 
   return (
     <div className="mb-4 grid grid-cols-3 gap-3">
@@ -59,14 +64,18 @@ export function SettlementKpis(props: {
         }
         sub={
           scheduledCount > 0
-            ? `확정 ${scheduledCount}건 · ${formatMonthDay(summary?.nextPayoutDate ?? null)} 지급 예정`
+            ? `${scheduledCount}건 · ${formatMonthDay(summary?.nextPayoutDate ?? null)} 지급 예정${summary?.scheduledHasDeduction ? " · 차감 반영 후" : ""}`
             : "예정 없음"
         }
       />
       <Kpi
-        label="정산 대기"
-        value={pendingCount > 0 ? `${pendingCount}건` : "—"}
-        sub="공구 종료 후 처리 진행 중"
+        label="정산 확인 중"
+        value={reviewingCount > 0 ? `${reviewingCount}건` : "—"}
+        sub={
+          reviewingCount > 0
+            ? `${formatMonthDayTime(summary?.nextReviewDeadlineAt ?? null)}까지 조정 요청 가능`
+            : "주문 종결 후 3영업일 확인"
+        }
       />
     </div>
   )
@@ -247,6 +256,9 @@ export function SettlementEmptyState(props: {
       <div className="text-[12px] text-sz-n-500">
         공구가 종료되고 <b className="font-semibold">모든 주문 처리가 끝나면</b>{" "}
         정산 내역이 표시됩니다.
+        <br />
+        주문 종결을 기다리는 공구는 <b className="font-semibold">공구 관리</b>
+        에서 확인할 수 있습니다.
       </div>
       <Btn variant="secondary" className="mt-4" onClick={onGoGroupBuy}>
         공구 관리로 이동

@@ -64,7 +64,11 @@ import type {
   ShipmentParseResponse,
   ShipmentRow,
 } from "@/features/orders/types"
-import { formatRangeCompact, toQueryParams } from "@/features/orders/utils/view"
+import {
+  formatRangeCompact,
+  isInvoiceLocked,
+  toQueryParams,
+} from "@/features/orders/utils/view"
 import { cn } from "@/lib/utils"
 import { X } from "lucide-react"
 import {
@@ -261,9 +265,13 @@ export default function OrderListPage() {
 
   const changeDraft = useCallback(
     (
-      row: Pick<OrderListItem, "deliveryGroupId" | "orderNumber">,
+      row: Pick<OrderListItem, "deliveryGroupId" | "orderNumber" | "overlays">,
       patch: Partial<Pick<InvoiceDraft, "carrier" | "trackingNumber">>
     ) => {
+      // 취소 요청이 걸린 행은 서버가 이 탭에서 빼 주지만, 새로 고치지 않은 목록이 남아 있을 수 있어 막는다
+      if (isInvoiceLocked(tab, row)) {
+        return
+      }
       const current = drafts.get(row.deliveryGroupId) ?? {
         orderNumber: row.orderNumber,
         carrier: "",
@@ -289,7 +297,7 @@ export default function OrderListPage() {
         setSelectedIds(previous => new Set(previous).add(row.deliveryGroupId))
       }
     },
-    [drafts]
+    [tab, drafts]
   )
 
   const registrable = useMemo(() => {
@@ -388,7 +396,9 @@ export default function OrderListPage() {
       return
     }
     // 한 번에 보내는 건들은 택배사가 거의 같다 — 행마다 고르는 반복 노동을 없앤다
-    rows.forEach(row => changeDraft(row, { carrier: bulkCarrier }))
+    rows
+      .filter(row => !row.overlays.cancelRequested)
+      .forEach(row => changeDraft(row, { carrier: bulkCarrier }))
     setDrafts(previous => {
       const next = new Map(previous)
       next.forEach((draft, id) =>
@@ -401,11 +411,21 @@ export default function OrderListPage() {
   const fillFromUpload = useCallback(
     (parsed: ShipmentParseResponse["rows"]) => {
       const visible = new Set(rows.map(row => row.deliveryGroupId))
+      // 취소 요청이 걸린 행은 서버가 이 탭에서 빼 주지만, 새로 고치지 않은 목록이 남아 있을 수 있어 막는다
+      const locked = new Set(
+        rows
+          .filter(row => isInvoiceLocked(tab, row))
+          .map(row => row.deliveryGroupId)
+      )
+      const fillable = parsed.filter(
+        row => row.deliveryGroupId === null || !locked.has(row.deliveryGroupId)
+      )
+      const lockedCount = parsed.length - fillable.length
       let missingCarrier = 0
       let offPage = 0
       setDrafts(previous => {
         const next = new Map(previous)
-        parsed.forEach(row => {
+        fillable.forEach(row => {
           if (row.deliveryGroupId === null) {
             return
           }
@@ -429,7 +449,7 @@ export default function OrderListPage() {
       })
       setSelectedIds(previous => {
         const next = new Set(previous)
-        parsed.forEach(row => {
+        fillable.forEach(row => {
           if (row.deliveryGroupId !== null) {
             next.add(row.deliveryGroupId)
           }
@@ -441,18 +461,20 @@ export default function OrderListPage() {
         tone: "info",
         content: (
           <>
-            <B>엑셀에서 {parsed.length}건을 목록에 채웠습니다.</B> 아직 상태는
+            <B>엑셀에서 {fillable.length}건을 목록에 채웠습니다.</B> 아직 상태는
             바뀌지 않았습니다 — 값을 확인한 뒤 <B>[송장 등록]</B>을 눌러야
             배송중으로 확정됩니다.
             {offPage > 0 &&
               ` 그중 ${offPage}건은 지금 목록(조회 기간·페이지) 밖에 있어 보이지 않지만 함께 등록됩니다.`}
             {missingCarrier > 0 &&
               ` 택배사 칸이 빈 ${missingCarrier}건은 택배사를 고른 뒤 등록하세요.`}
+            {lockedCount > 0 &&
+              ` 취소 요청이 걸린 ${lockedCount}건은 처리 후 등록할 수 있어 제외했습니다.`}
           </>
         ),
       })
     },
-    [rows]
+    [tab, rows]
   )
 
   // ── 배송중 「집화 확인 필요」 셀 수정 ──────────────
@@ -911,6 +933,15 @@ export default function OrderListPage() {
             >
               <X className="size-3.5" aria-hidden />
             </button>
+          </Notice>
+        )}
+
+        {/* 시안 A2f 안내 중 「1영업일 · 자동 승인 · PG 즉시 환불」 문장은 뺐다 — 응답 기한·자동 승인 필드가 서버에 없고 환불은 운영자가 집행한다 */}
+        {tab === "CANCEL_REQUESTED" && (
+          <Notice tone="warn" className="mb-3">
+            요청이 걸린 <B>하위주문 전체</B>가 송장을 등록할 수 없습니다 — 같은
+            박스로 나가므로 항목만 잠그면 분리 발송이 생깁니다. 처리하면 주문은{" "}
+            <B>원래 탭(신규·상품준비중)</B>으로 돌아갑니다.
           </Notice>
         )}
 

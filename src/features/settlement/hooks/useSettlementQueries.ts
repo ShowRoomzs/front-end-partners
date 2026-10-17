@@ -1,8 +1,16 @@
 import { DEV_MOCK_ENABLED } from "@/common/utils/devMock"
 import { SETTLEMENT_QUERY_KEYS } from "@/features/settlement/constants/params"
 import { settlementService } from "@/features/settlement/services/settlementService"
-import type { SettlementListParams } from "@/features/settlement/types"
-import { keepPreviousData, useQuery } from "@tanstack/react-query"
+import type {
+  SettlementAdjustmentRequest,
+  SettlementListParams,
+} from "@/features/settlement/types"
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 
 /** 배포본에서는 호출하지 않는다 — API가 없어 화면이 「준비 중」을 띄운다 */
 export function useGetSettlementList(params: SettlementListParams) {
@@ -29,5 +37,27 @@ export function useGetSettlementDetail(settlementId: number) {
     queryFn: () => settlementService.getDetail(settlementId),
     enabled: DEV_MOCK_ENABLED && Number.isFinite(settlementId),
     retry: false,
+  })
+}
+
+/**
+ * C1 정산 조정 요청 — 응답은 갱신된 상세(조정 협의)다. 상세 캐시를 그 값으로 바꾸고
+ * 목록·KPI는 상태 건수가 바뀌므로 다시 읽는다.
+ */
+export function useRequestSettlementAdjustment(settlementId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (body: SettlementAdjustmentRequest) =>
+      settlementService.requestAdjustment(settlementId, body),
+    onSuccess: detail => {
+      queryClient.setQueryData(
+        [SETTLEMENT_QUERY_KEYS.DETAIL, settlementId],
+        detail
+      )
+      queryClient.invalidateQueries({ queryKey: [SETTLEMENT_QUERY_KEYS.LIST] })
+      queryClient.invalidateQueries({
+        queryKey: [SETTLEMENT_QUERY_KEYS.SUMMARY],
+      })
+    },
   })
 }

@@ -370,6 +370,7 @@ export function RejectCancelModal(props: {
       </MHint>
 
       <MWarn>
+        거부하면 <B className="text-sz-n-900">환불은 일어나지 않습니다</B>.{" "}
         <B className="text-sz-n-900">
           거부하면 전 항목이 살아난 채 배송이 그대로 진행됩니다.
         </B>{" "}

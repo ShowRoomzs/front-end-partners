@@ -18,6 +18,11 @@ export function formatMonthDay(date: string | null) {
   return date ? dayjs(date).format("MM.DD") : "—"
 }
 
+/** 09.24 23:59 — 정산 확인 기간 마감 */
+export function formatMonthDayTime(date: string | null) {
+  return date ? dayjs(date).format("MM.DD HH:mm") : "—"
+}
+
 /** 2026.08.31 */
 export function formatFullDate(date: string | null) {
   return date ? dayjs(date).format("YYYY.MM.DD") : "—"
@@ -34,4 +39,9 @@ export function formatPeriod(start: string, end: string, withYear = false) {
 /** 3 → "3.0" · 3.3 → "3.3" — 요율은 시안대로 소수 한 자리 */
 export function formatRate(rate: number) {
   return rate.toFixed(1)
+}
+
+/** 10 → "10" · 3.3 → "3.3" — 「10%」 · 「3.3%」처럼 정수면 소수점을 붙이지 않는다 */
+export function formatPercent(rate: number) {
+  return `${Number.isInteger(rate) ? rate : rate.toFixed(1)}%`
 }
