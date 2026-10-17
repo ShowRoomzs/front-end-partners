@@ -54,6 +54,9 @@ const GRID_SELECT =
 const GRID_INPUT =
   "h-[30px] w-full rounded-[6px] border border-sz-n-300 bg-white px-[9px] text-[12px] tabular-nums text-sz-n-900 outline-none placeholder:text-sz-n-400 focus:border-sz-accent-500"
 
+/** 너비 없는(남는 폭을 받는) 열이 좁은 화면에서도 지키는 최소 폭 */
+const FLEX_COL_MIN_WIDTH = 100
+
 interface ColumnDef {
   key: string
   label: string
@@ -901,9 +904,22 @@ export default function ClaimTable(props: ClaimTableProps) {
     )
   }
 
+  // 시안 열 너비는 1440px 기준이다 — 좁은 화면(1280px 등)에서 너비 없는 열(상품 · 옵션)이 0으로
+  // 줄어 머리글이 옆 칸에 겹치지 않게 최소 폭을 보장하고, 모자라면 가로 스크롤로 넘긴다.
+  const tableMinWidth =
+    34 +
+    (expandable ? 26 : 0) +
+    columns.reduce(
+      (sum, column) => sum + (column.width ?? FLEX_COL_MIN_WIDTH),
+      0
+    )
+
   return (
     <div className="overflow-x-auto">
-      <table className="w-full table-fixed border-collapse">
+      <table
+        className="w-full table-fixed border-collapse"
+        style={{ minWidth: tableMinWidth }}
+      >
         <colgroup>
           <col style={{ width: 34 }} />
           {expandable && <col style={{ width: 26 }} />}
