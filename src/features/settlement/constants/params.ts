@@ -17,6 +17,19 @@ export const SETTLEMENT_QUERY_KEYS = {
   DETAIL: "sellerSettlementDetail",
   ITEMS: "sellerSettlementItems",
   ADJUSTMENT_PREVIEW: "sellerSettlementAdjustmentPreview",
+  COMPANY_INFO: "commonCompanyInfo",
+} as const
+
+/**
+ * 세금계산서 공급자(기-35 · 시안 13 rev.9) — 서버 `GET /v1/common/company-info`가 개발 서버에 배포되기 전에 쓰는 값.
+ * 배포되면 서버 값이 우선한다(설정값 `company.*`). 「(주)」는 붙이지 않는다.
+ */
+export const TAX_INVOICE_SUPPLIER_FALLBACK = {
+  name: "쇼룸즈",
+  representative: "소병서",
+  registrationNumber: "791-12-03353",
+  address:
+    "경기도 용인시 수지구 죽전로 152, 글로컬산학협력단 B211-3호(죽전동, 단국대학교)",
 } as const
 
 /**
@@ -105,5 +118,7 @@ export const STATEMENT_PAGE_SIZE = 20
 
 /** 성과 관리 · 기본정보 관리(정산 계좌) · 공구 관리 */
 export const PERFORMANCE_PATH = "/performance"
+/** 연결·소통 — 이슈 스레드는 `?threadId=`로 연다 */
+export const CONNECTIONS_PATH = "/connections"
 export const SETTLEMENT_ACCOUNT_PATH = "/store/basic?tab=settlement"
 export const GROUP_BUY_LIST_PATH = "/group-buy"

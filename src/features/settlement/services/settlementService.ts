@@ -82,7 +82,24 @@ async function download(url: string, fallbackName: string) {
   }
 }
 
+/** 운영자 사업자 정보(`GET /v1/common/company-info` · 인증 불요) — 세금계산서 공급자 줄에 쓰는 필드만 */
+export interface CompanyInfo {
+  name: string
+  representative: string
+  registrationNumber: string
+  address: string
+}
+
 export const settlementService = {
+  /** 배포 전 서버는 404 — 화면이 기본값(시안 값)으로 그리므로 토스트를 끈다 */
+  getCompanyInfo: async () => {
+    const { data } = await apiInstance.get<CompanyInfo>(
+      "/common/company-info",
+      { suppressErrorToast: true }
+    )
+    return data
+  },
+
   getList: async (params: SettlementListParams) => {
     const { data } = await apiInstance.get<PageResponse<SettlementListItem>>(
       BASE_URL,

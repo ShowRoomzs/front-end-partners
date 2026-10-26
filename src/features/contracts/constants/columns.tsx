@@ -2,8 +2,12 @@ import StatusBadge from "@/common/components/StatusBadge/StatusBadge"
 import type { Columns } from "@/common/components/Table/types"
 import { formatDateOnly } from "@/common/utils/formatDate"
 import type { ContractListItem } from "@/features/contracts/types"
+import { SanctionHoldBadge } from "@/features/suspension"
 import { periodText } from "@/features/contracts/utils/format"
-import { toneToVariant } from "@/features/contracts/utils/statusBadge"
+import {
+  contractStatusLabel,
+  toneToVariant,
+} from "@/features/contracts/utils/statusBadge"
 
 /**
  * 시안 A1 컬럼 6종 — 폭도 시안 그대로다(나머지 / 150 / 82 / 280 / 118 / 124).
@@ -76,10 +80,34 @@ export const CONTRACT_COLUMNS: Columns<ContractListItem> = [
     label: "상태",
     width: 124,
     align: "center",
+    // 시안 15 S4 — 정지 보류는 상태를 바꾸지 않고 옆에 보조 배지만 붙인다(좁은 열이라 줄바꿈 허용)
     render: (value, record) => (
-      <StatusBadge variant={toneToVariant(record.statusTone)}>
-        {value as string}
-      </StatusBadge>
+      <span className="inline-flex flex-wrap justify-center gap-1">
+        <StatusBadge variant={toneToVariant(record.statusTone)}>
+          {contractStatusLabel(record.status, value as string)}
+        </StatusBadge>
+        <SanctionHoldBadge hold={record.sanctionHold} />
+      </span>
     ),
   },
 ]
+
+/**
+ * 정지 보류 배지가 있는 페이지만 상태 열을 넓힌다. 시안 폭(124px)은 상태 배지 하나 기준이라
+ * 「공구 생성 보류 · 계정 이용 정지」가 옆에 붙으면 셀 밖으로 잘린다(공용 Table은 셀을 넘치지 않게 자른다).
+ * 배지가 없는 평소 화면은 시안 폭 그대로다. 공구 목록도 같은 이유로 쓴다.
+ */
+export const SANCTION_HOLD_STATUS_WIDTH = 196
+
+export function widenStatusForHold<T>(
+  columns: Columns<T>,
+  statusKey: string,
+  hasHold: boolean
+): Columns<T> {
+  if (!hasHold) return columns
+  return columns.map(column =>
+    column.key === statusKey
+      ? { ...column, width: SANCTION_HOLD_STATUS_WIDTH }
+      : column
+  )
+}

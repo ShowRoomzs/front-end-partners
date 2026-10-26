@@ -21,9 +21,11 @@ import {
 import ReshipExportModal from "@/features/claims/components/modals/ReshipExportModal"
 import ReshipUploadModal from "@/features/claims/components/modals/ReshipUploadModal"
 import {
+  AUTO_RECEIVE_LABEL,
   CLAIM_INITIAL_PARAMS,
   CLAIM_PAGE_SIZES,
   CLAIM_TAB_LABEL,
+  INSPECT_DUE_LABEL,
 } from "@/features/claims/constants/params"
 import {
   useClaimMutations,
@@ -132,7 +134,7 @@ export default function ClaimListPage() {
         toast.error(result.skipped[0].message)
       } else {
         toast.success(
-          `${row.claimNumber} 입고 확인했습니다. 2영업일 안에 검수를 완료해 주세요.`
+          `${row.claimNumber} 입고 확인했습니다. ${INSPECT_DUE_LABEL} 안에 검수를 완료해 주세요.`
         )
       }
     } catch {
@@ -467,8 +469,12 @@ function TabNotices(props: { tab: ClaimTab }) {
     ),
     INSPECTION: (
       <>
-        <b className="font-semibold">입고 확인 후 2영업일 안에 검수를 완료</b>해
-        주세요. 검수 판정은 상세에서 진행합니다.
+        <b className="font-semibold">
+          입고 확인 후 {INSPECT_DUE_LABEL} 안에 검수를 완료
+        </b>
+        해 주세요. 검수 판정은 상세에서 진행합니다. 택배 도착 후{" "}
+        {AUTO_RECEIVE_LABEL}이 지나도 입고 확인이 없으면{" "}
+        <b className="font-semibold">자동 입고</b> 처리됩니다.
       </>
     ),
     RESHIP: (
@@ -482,7 +488,7 @@ function TabNotices(props: { tab: ClaimTab }) {
     REJECT_HOLD: (
       <>
         <b className="font-semibold">
-          소비자가 재배송비를 결제하면 재발송 탭으로 이동
+          소비자가 재발송 배송비를 결제하면 재발송 탭으로 이동
         </b>
         합니다. 결제가 없으면 플랫폼이 소비자에게{" "}
         <b className="font-semibold">2회 이상 고지</b>하고,{" "}

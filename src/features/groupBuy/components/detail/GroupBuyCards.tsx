@@ -25,6 +25,7 @@ import {
   dt,
   hasNamedOptions,
   lastEventAt,
+  postStatusLabel,
   quantityText,
 } from "@/features/groupBuy/utils/view"
 
@@ -64,13 +65,15 @@ export function GroupBuyInfoCard(props: {
         <span className="tabular-nums">
           {periodText(timeline.startAt, timeline.endAt)}{" "}
           <span className="text-sz-n-500">
-            {isSuspended
-              ? groupBuy.openedAt === null
-                ? "(시작 전 중단)"
-                : `(${timeline.elapsedDays}일차 중단)`
-              : extendedDays
-                ? `(${timeline.totalDays}일 · ${extendedDays}일 연장)`
-                : `(${timeline.totalDays}일)`}
+            {groupBuy.status === "TERMINATED"
+              ? "(시작 전 해지)"
+              : isSuspended
+                ? groupBuy.openedAt === null
+                  ? "(시작 전 중단)"
+                  : `(${timeline.elapsedDays}일차 중단)`
+                : extendedDays
+                  ? `(${timeline.totalDays}일 · ${extendedDays}일 연장)`
+                  : `(${timeline.totalDays}일)`}
           </span>
         </span>
       </FRow>
@@ -157,7 +160,7 @@ export function GroupBuyItemsCard(props: { detail: Detail }) {
       {showNotice && (
         <Notice tone="neutral" className="mt-3">
           공구가·리워드율·최소 물량은 <B>체결된 계약의 확정값</B>이라 공구에서
-          바꿀 수 없습니다. 조건을 바꾸려면 이 공구를 중단하고 새 계약을
+          바꿀 수 없습니다. 조건을 바꾸려면 이 공구를 해지하고 새 계약을
           체결해야 합니다.
         </Notice>
       )}
@@ -269,7 +272,7 @@ function postFooter(detail: Detail) {
     case "SUSPENSION_SCHEDULED":
       return (
         <>
-          게시물은 <B>인플루언서 소관</B>이라 브랜드가 수정·숨김 처리할 수
+          게시물은 <B>인플루언서 소관</B>이라 브랜드가 수정·노출 중지 처리할 수
           없습니다. 사실과 다른 내용이 있으면 <B>스레드에서 수정을 요청</B>하고,
           법령 위반이 의심되면 운영자에게 신고하세요.
         </>
@@ -308,12 +311,20 @@ function postFooter(detail: Detail) {
           있습니다.
         </>
       )
+    case "TERMINATED":
+      // 해지 후 표기는 시안 [근거 대기] — C4 고지 「예약된 게시물은 공개되지 않습니다」를 따른다
+      return (
+        <>
+          계약 해지로 예약된 게시물은 <B>공개되지 않았습니다</B>. 원문은 그대로
+          보관됩니다.
+        </>
+      )
     default:
       return null
   }
 }
 
-/** 게시물 메타 줄(`.pm2`) — 등록 · 오픈 · 반려/숨김/내려감 */
+/** 게시물 메타 줄(`.pm2`) — 등록 · 오픈 · 반려/노출 중지/내려감 */
 function postMeta(detail: Detail) {
   const { post, groupBuy, timeline, closure } = detail
   const parts: Array<ReactNode> = []
@@ -340,6 +351,8 @@ function postMeta(detail: Detail) {
     case "EXPOSED":
       parts.push(`오픈 ${dt(post.openedAt ?? groupBuy.openedAt)}`)
       break
+    // 옛 서버 HIDDEN · 새 서버 EXPOSURE_SUSPENDED(기-08)
+    case "EXPOSURE_SUSPENDED":
     case "HIDDEN":
       parts.push(`오픈 ${dt(post.openedAt ?? groupBuy.openedAt)}`)
       parts.push(
@@ -354,13 +367,15 @@ function postMeta(detail: Detail) {
       }
       const closedAt = dt(post.closedAt ?? groupBuy.endedAt)
       const reason =
-        groupBuy.status === "SUSPENDED"
-          ? closure?.source === "REQUEST" || !closure?.source
-            ? "중단으로 내려감"
-            : "직권 중단으로 내려감"
-          : groupBuy.closeType === "EARLY_CLOSED"
-            ? "조기 마감"
-            : "노출 종료"
+        groupBuy.status === "TERMINATED"
+          ? "계약 해지로 비공개"
+          : groupBuy.status === "SUSPENDED"
+            ? closure?.source === "REQUEST" || !closure?.source
+              ? "중단으로 내려감"
+              : "직권 중단으로 내려감"
+            : groupBuy.closeType === "EARLY_CLOSED"
+              ? "조기 마감"
+              : "노출 종료"
       parts.push(
         groupBuy.status === "SETTLED" ? (
           `${closedAt} ${reason}`
@@ -400,7 +415,9 @@ export function GroupBuyPostCard(props: { detail: Detail }) {
           <div className="rounded-[6px] border border-sz-n-200 px-4 py-3.5">
             <div className="mb-[3px] flex flex-wrap items-center gap-1.5 text-[12px] font-semibold text-sz-n-900">
               {post.title ?? "(제목 없음)"}
-              <GbBadge tone={post.statusTone}>{post.statusLabel}</GbBadge>
+              <GbBadge tone={post.statusTone}>
+                {postStatusLabel(post.status, post.statusLabel)}
+              </GbBadge>
             </div>
             {post.content && (
               <div className="whitespace-pre-line text-[11px] leading-[1.65] text-sz-n-600">

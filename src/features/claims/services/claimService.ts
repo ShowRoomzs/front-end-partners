@@ -1,12 +1,15 @@
 import { apiInstance } from "@/common/lib/apiInstance"
 import type { PageResponse } from "@/common/types/page"
+import { callOrMock, DEV_MOCK_ENABLED } from "@/common/utils/devMock"
 import { paramsToSearchParams } from "@/common/utils/paramsToSearchParams"
 import dayjs from "dayjs"
 import type {
   ClaimBatchResponse,
   ClaimDetailResponse,
+  ClaimFreightPreview,
   ClaimListItem,
   ClaimListParams,
+  ClaimOverturnBody,
   ClaimRejectBody,
   ClaimSummaryResponse,
   ReshipExportBody,
@@ -14,6 +17,17 @@ import type {
   ReshipParseResponse,
   ReshipTemplateResponse,
 } from "@/features/claims/types"
+import { isInspection1021Ready } from "@/features/claims/utils/inspection"
+
+/*
+  1021 검수 판정(기-17 · 기-93)은 백엔드 main에 있고 개발 서버에는 아직 없다(2026-10-24).
+  - 상세: 실호출 그대로. 개발 서버(`pnpm dev`)만 빠진 1021 필드를 목업으로 채운다(`claim.mock.ts`).
+  - 사유 번복: `callOrMock` — 배포본은 404면 ApiNotReadyError, 개발 서버는 목업.
+  - 통과 귀책 변경: 배포 전 서버는 본문을 무시하므로, 그 서버에 브랜드 귀책을 보내는 일은 개발 서버 목업만 받는다
+    (배포본은 화면이 선택지를 열지 않는다 — utils/inspection).
+  - 운임 미리보기: 서버에 원천이 없다 → 개발 서버만 목업 · 배포본 null.
+  `?mock=` 시나리오는 없다 — 상태는 실제 판정 버튼으로 바꾼다.
+*/
 
 const BASE_URL = "/seller/claims"
 
@@ -71,7 +85,23 @@ export const claimService = {
     const { data } = await apiInstance.get<ClaimDetailResponse>(
       `${BASE_URL}/${claimId}`
     )
+    if (DEV_MOCK_ENABLED) {
+      const { applyMock1021 } = await import("./claim.mock")
+      return applyMock1021(data)
+    }
     return data
+  },
+
+  /**
+   * 판정 전 운임 미리보기(B2b · B1r · M1 금액 줄) — 서버 상세에 기본 배송비 · 원래 결제액이 없다.
+   * 배포본은 null을 돌려 금액 줄을 그리지 않는다(안내 문구만). 서버가 값을 내려 주면 이 함수만 바꾼다.
+   */
+  getFreightPreview: async (
+    detail: ClaimDetailResponse
+  ): Promise<ClaimFreightPreview | null> => {
+    if (!DEV_MOCK_ENABLED) return null
+    const { freightPreviewMock } = await import("./claim.mock")
+    return freightPreviewMock(detail)
   },
 
   receive: async (claimIds: Array<number>) => {
@@ -82,12 +112,36 @@ export const claimService = {
     return data
   },
 
-  pass: async (claimId: number) => {
+  /** M1 — 본문을 생략하면 신청 때 귀책 그대로 통과한다 */
+  pass: async (current: ClaimDetailResponse, faultToSeller: boolean) => {
+    if (DEV_MOCK_ENABLED && faultToSeller && !isInspection1021Ready(current)) {
+      const { passWithFaultMock } = await import("./claim.mock")
+      return passWithFaultMock(current)
+    }
     const { data } = await apiInstance.post<ClaimDetailResponse>(
-      `${BASE_URL}/${claimId}/inspection/pass`
+      `${BASE_URL}/${current.summary.claimId}/inspection/pass`,
+      faultToSeller ? { faultToSeller } : undefined
     )
     return data
   },
+
+  /** B2b 사유 번복 — 409 CLAIM_OVERTURN_NOT_APPLICABLE(선불 신청) · 400 증빙 누락 */
+  overturn: (current: ClaimDetailResponse, body: ClaimOverturnBody) =>
+    callOrMock(
+      "검수 사유 번복",
+      async () => {
+        const { data } = await apiInstance.post<ClaimDetailResponse>(
+          `${BASE_URL}/${current.summary.claimId}/inspection/overturn`,
+          body,
+          { suppressErrorToast: true }
+        )
+        return data
+      },
+      async () => {
+        const { overturnMock } = await import("./claim.mock")
+        return overturnMock(current, body)
+      }
+    ),
 
   reject: async (claimId: number, body: ClaimRejectBody) => {
     const { data } = await apiInstance.post<ClaimDetailResponse>(

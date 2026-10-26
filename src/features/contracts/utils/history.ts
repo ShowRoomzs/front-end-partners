@@ -33,20 +33,26 @@ export function toHistoryItems(
       const detail =
         // 반려 사유·확인한 경고 코드(W1…)는 이력 문구에 붙이지 않는다(시안 B3c·B6)
         entry.eventType === "REVIEW_REJECTED" ||
-        entry.eventType === "REVIEW_REQUESTED"
+        entry.eventType === "REVIEW_REQUESTED" ||
+        // 시안 B9 「해지 요청」 — 사유는 해지 사유 카드가 보여준다
+        entry.eventType === "TERMINATION_REQUESTED"
           ? null
           : humanizeHistoryDetail(entry.detail)
       return {
-        // 시안 B8 「계약 취소 · 조건 재검토 필요 · 상대 통지」
+        // 시안 B8 「계약 취소 · 조건 재검토 필요 · 상대 통지」 · B9 「해지 처리 · 공급 일정 차질 · 상대 통지」
         label:
-          entry.eventType === "CANCELED"
+          entry.eventType === "CANCELED" || entry.eventType === "TERMINATED"
             ? `${label}${detail ? ` · ${detail}` : ""} · 상대 통지`
             : detail
               ? `${label} · ${detail}`
               : label,
         processedAt: entry.occurredAt,
         tone: HISTORY_TONE[entry.eventType] ?? "muted",
-        processorName: entry.actorDisplayName ?? ACTOR_LABEL[entry.actorType],
+        // 시안 B5 · B9 — 성립은 운영자가 모두싸인에서 확인한 서명 시각이라 주체를 「모두싸인 확인」으로 쓴다
+        processorName:
+          entry.eventType === "ESTABLISHED"
+            ? "모두싸인 확인"
+            : (entry.actorDisplayName ?? ACTOR_LABEL[entry.actorType]),
       }
     })
 }

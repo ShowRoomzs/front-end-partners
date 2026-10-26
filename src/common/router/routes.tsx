@@ -24,6 +24,9 @@ import GroupBuyListPage from "@/features/groupBuy/pages/GroupBuyListPage"
 import GroupBuyDetailPage from "@/features/groupBuy/pages/GroupBuyDetailPage"
 import OrderListPage from "@/features/orders/pages/OrderListPage"
 import ClaimListPage from "@/features/claims/pages/ClaimListPage"
+import HomePage from "@/features/home/pages/HomePage"
+import PerformanceListPage from "@/features/performance/pages/PerformanceListPage"
+import PerformanceDetailPage from "@/features/performance/pages/PerformanceDetailPage"
 
 export const authRoutes: Array<RouteObject> = [
   {
@@ -60,17 +63,8 @@ export const mainRoutes: Array<RouteObject> = [
     element: <MainLayout />,
     errorElement: <ErrorPage />,
     children: [
-      // GNB #1 "홈" — 대시보드가 생기기 전까지의 자리표시 화면.
-      // 메뉴 항목이 실제로 클릭되는 경로라 빈 div로 둘 수 없다.
-      {
-        index: true,
-        element: (
-          <ComingSoonPage
-            title="홈"
-            description="파트너센터 대시보드는 아직 준비 중입니다."
-          />
-        ),
-      },
+      // GNB #1 홈(ui-partner-16) — 서버 미배포면 화면 안에서 「준비 중」
+      { index: true, element: <HomePage /> },
       // Seller - 기본정보 관리(§15) — 사업자 정보·배송·반품 정책·정산 계좌·담당자·CS·계정 5탭이
       // 전부 한 페이지 안에서 쿼리파라미터(?tab=)로 전환되므로 하위 라우트가 필요 없다.
       {
@@ -101,7 +95,12 @@ export const mainRoutes: Array<RouteObject> = [
           {
             // 크리에이터 메뉴에서만 진입한다(셀러 "상품 관리"는 목록 단일 화면)
             path: "request",
-            element: <div>aasdf</div>,
+            element: (
+              <ComingSoonPage
+                title="상품 등록 요청"
+                description="상품 등록 요청 화면은 아직 준비 중입니다."
+              />
+            ),
           },
         ],
       },
@@ -136,111 +135,98 @@ export const mainRoutes: Array<RouteObject> = [
         path: "group-buy/:groupBuyId",
         element: <GroupBuyDetailPage />,
       },
-      // Seller - 성과 관리 — 아직 화면이 없는 플레이스홀더(GNB #8).
+      // Seller - 성과 관리(ui-partner-12) — 서버 미배포면 화면 안에서 「준비 중」
       {
         path: "performance",
+        element: <PerformanceListPage />,
+      },
+      {
+        path: "performance/:groupBuyId",
+        element: <PerformanceDetailPage />,
+      },
+      /*
+        Creator 메뉴(CREATOR_MENU)가 아직 링크하는 옛 화면 — 인플루언서는 쇼룸 스튜디오로 옮겨 가
+        이 앱에서는 만들지 않는다. 메뉴에서 쓰지 않는 하위 경로(쇼룸 상품 · 게시물 등록 · 굿즈 등)는 지웠다.
+      */
+      {
+        path: "showroom/basic",
         element: (
           <ComingSoonPage
-            title="성과 관리"
-            description="판매·노출 성과 분석 화면은 아직 준비 중입니다."
+            title="쇼룸 기본정보 관리"
+            description="쇼룸 기본정보 관리 화면은 아직 준비 중입니다."
           />
         ),
       },
-      // Creator - 쇼룸 관리
-      {
-        path: "showroom",
-        children: [
-          {
-            path: "basic",
-            element: <div>aasdf</div>,
-          },
-          {
-            path: "product",
-            element: <div>aasdf</div>,
-          },
-          {
-            path: "post",
-            element: <div>aasdf</div>,
-          },
-          {
-            path: "coupon-direct",
-            element: <div>aasdf</div>,
-          },
-          {
-            path: "lottery",
-            element: <div>aasdf</div>,
-          },
-        ],
-      },
-      // Creator - 통계/분석
       {
         path: "analytics",
         children: [
           {
             path: "visitors",
-            element: <div>aasdf</div>,
+            element: (
+              <ComingSoonPage
+                title="방문자 현황"
+                description="방문자 현황 화면은 아직 준비 중입니다."
+              />
+            ),
           },
           {
             path: "conversion",
-            element: <div>aasdf</div>,
+            element: (
+              <ComingSoonPage
+                title="상품별 클릭 전환율"
+                description="상품별 클릭 전환율 화면은 아직 준비 중입니다."
+              />
+            ),
           },
           {
             path: "followers",
-            element: <div>aasdf</div>,
+            element: (
+              <ComingSoonPage
+                title="팔로워 추이"
+                description="팔로워 추이 화면은 아직 준비 중입니다."
+              />
+            ),
           },
         ],
       },
-      // Creator - 게시물 관리
       {
-        path: "post",
-        children: [
-          {
-            path: "list",
-            element: <div>aasdf</div>,
-          },
-          {
-            path: "register",
-            element: <div>aasdf</div>,
-          },
-        ],
+        path: "post/list",
+        element: (
+          <ComingSoonPage
+            title="게시물 목록"
+            description="게시물 목록 화면은 아직 준비 중입니다."
+          />
+        ),
       },
-      // Creator - 쿠폰 관리(추첨)
       {
         path: "lottery",
         children: [
           {
             path: "list",
-            element: <div>aasdf</div>,
+            element: (
+              <ComingSoonPage
+                title="추첨 목록"
+                description="추첨 목록 화면은 아직 준비 중입니다."
+              />
+            ),
           },
           {
             path: "register",
-            element: <div>aasdf</div>,
+            element: (
+              <ComingSoonPage
+                title="추첨 등록"
+                description="추첨 등록 화면은 아직 준비 중입니다."
+              />
+            ),
           },
           {
             path: "winners",
-            element: <div>aasdf</div>,
-          },
-        ],
-      },
-      // Creator - 굿즈 관리
-      {
-        path: "goods",
-        children: [
-          {
-            path: "store",
-            element: <div>aasdf</div>,
-          },
-          {
-            path: "register",
-            element: <div>aasdf</div>,
-          },
-          {
-            path: "list",
-            element: <div>aasdf</div>,
-          },
-          {
-            path: "notice",
-            element: <div>aasdf</div>,
+            element: (
+              <ComingSoonPage
+                title="당첨자 관리"
+                description="당첨자 관리 화면은 아직 준비 중입니다."
+              />
+            ),
           },
         ],
       },
@@ -261,44 +247,12 @@ export const mainRoutes: Array<RouteObject> = [
             path: "claims",
             element: <ClaimListPage />,
           },
-          {
-            path: "purchase-orders",
-            element: <div>aasdf</div>,
-          },
-          {
-            path: "shipping-out",
-            element: <div>aasdf</div>,
-          },
-          {
-            path: "delivery",
-            element: <div>aasdf</div>,
-          },
-          {
-            path: "confirmed",
-            element: <div>aasdf</div>,
-          },
-          {
-            path: "cancel",
-            element: <div>aasdf</div>,
-          },
-          {
-            path: "return",
-            element: <div>aasdf</div>,
-          },
-          {
-            path: "exchange",
-            element: <div>aasdf</div>,
-          },
         ],
       },
       // Common - 쿠폰 관리
       {
         path: "coupon",
         children: [
-          {
-            path: "list",
-            element: <div>aasdf</div>,
-          },
           {
             path: "register-direct",
             element: <RegisterDirect />,
@@ -312,7 +266,6 @@ export const mainRoutes: Array<RouteObject> = [
           {
             path: "history",
             // 공구 관리의 [정산 관리 열기]·[정산 내역 보기 ↗]가 오는 곳(ui-partner-13).
-            // 정산 API가 없어 개발 서버에서만 목업, 배포본은 화면 안에서 「준비 중」을 띄운다.
             element: <SettlementListPage />,
           },
           {
@@ -353,10 +306,6 @@ export const mainRoutes: Array<RouteObject> = [
         path: "inquiry",
         element: <Outlet />,
         children: [
-          {
-            path: "respond",
-            element: <div>aasdf</div>,
-          },
           /*
             상품 문의 관리 (§23) — 목록 · 상세.
             상세는 행 클릭으로만 들어가므로 GNB에 올리지 않는다.
@@ -369,10 +318,6 @@ export const mainRoutes: Array<RouteObject> = [
             path: "product/:inquiryId",
             element: <ProductInquiryDetailPage />,
           },
-          {
-            path: "order",
-            element: <div>aasdf</div>,
-          },
         ],
       },
       // Common - 고객지원
@@ -381,11 +326,21 @@ export const mainRoutes: Array<RouteObject> = [
         children: [
           {
             path: "bug",
-            element: <div>aasdf</div>,
+            element: (
+              <ComingSoonPage
+                title="오류 제보"
+                description="오류 제보 화면은 아직 준비 중입니다."
+              />
+            ),
           },
           {
             path: "feature",
-            element: <div>aasdf</div>,
+            element: (
+              <ComingSoonPage
+                title="기능 제안"
+                description="기능 제안 화면은 아직 준비 중입니다."
+              />
+            ),
           },
         ],
       },

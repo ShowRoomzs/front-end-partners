@@ -71,3 +71,23 @@ export const CONNECTED_THREAD_STATUS_TEXT = "연결됨 · 스레드 열림"
 
 export const OPERATOR_NOTICE_TEXT =
   "이 대화는 분쟁 발생 시 확인을 위해 운영자가 열람할 수 있습니다"
+
+/*
+  이슈 스레드(정산 조정 협의 · ui-partner-14) — 고지 · 입력 잠금 문구는 시안 그대로다.
+  금액은 양측 합의로만 바뀌고 운영팀은 열람만 한다(§42-4).
+*/
+export const ISSUE_NOTICE_TEXT =
+  "이슈 스레드입니다 · 금액은 양측 합의로만 바뀌며 SHOWROOMZ 운영팀은 열람만 합니다 · 대화 내용은 분쟁 기록으로 보관됩니다"
+export const ISSUE_CLOSED_NOTICE_TEXT =
+  "종결된 이슈입니다 · 기록은 삭제되지 않습니다"
+export const ISSUE_CLOSED_INPUT_TEXT =
+  "종결된 이슈에는 메시지를 보낼 수 없습니다"
+
+/** 이 화면을 보는 쪽 — 카드의 「누가」를 내 쪽 · 상대 쪽으로 나눌 때 쓴다 */
+export const VIEWER_PARTY = "SELLER" as const
+
+/** 당사자 호칭 — 「브랜드 요청」 · 「인플루언서 제안」 */
+export const PARTY_LABEL = {
+  SELLER: "브랜드",
+  CREATOR: "인플루언서",
+} as const

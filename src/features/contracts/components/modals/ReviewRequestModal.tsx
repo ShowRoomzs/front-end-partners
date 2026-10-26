@@ -133,8 +133,9 @@ export default function ReviewRequestModal(props: ReviewRequestModalProps) {
         <b className="font-semibold">
           서명은 이 화면이 아니라 전자서명 링크에서
         </b>{" "}
-        하며, 양측 서명이 끝나면 어드민이{" "}
-        <b className="font-semibold">체결 완료 처리</b>합니다.
+        하며, 양측 서명이 끝나면 <b className="font-semibold">계약이 성립</b>
+        하고, 어드민이 확인해 <b className="font-semibold">공구를 생성</b>
+        합니다.
       </Notice>
     </ModalShell>
   )

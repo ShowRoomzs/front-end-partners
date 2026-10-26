@@ -7,6 +7,9 @@ import { FLINK_CLASS } from "@/features/contracts/components/shared/styles"
 import { formatNumber } from "@/features/contracts/utils/format"
 import { NoticeSummary } from "@/features/groupBuy/components/detail/ProgressSection"
 import { B, GbBadge } from "@/features/groupBuy/components/shared/GbParts"
+import { TERMINATION_TEXT } from "@/features/groupBuy/constants/params"
+import { EXTENSION_SUSPENDED_TEXT } from "@/features/groupBuy/constants/suspension"
+import type { ContractTerminationRequest } from "@/features/groupBuy/types"
 import { toGroupBuyHistoryItems } from "@/features/groupBuy/utils/history"
 import {
   type Detail,
@@ -14,8 +17,11 @@ import {
   d,
   dt,
   fixedFeeShort,
+  isExposureSuspended,
   lastEventAt,
+  postStatusLabel,
 } from "@/features/groupBuy/utils/view"
+import { SanctionHoldBadge, SUSPENSION_COPY } from "@/features/suspension"
 import { cn } from "@/lib/utils"
 import type { ReactNode } from "react"
 
@@ -26,8 +32,8 @@ export interface RailActions {
   onExtension: () => void
   onEarlyClose: () => void
   onSuspension: () => void
+  onTermination: () => void
   onAppeal: () => void
-  onOpenIssue: () => void
 }
 
 function Hint(props: { children: ReactNode; className?: string }) {
@@ -107,6 +113,37 @@ function remainingGates(detail: Detail) {
   return alert ? <Warn>{text}</Warn> : text
 }
 
+/** [해지 요청](B3 · C4 · 【잠정】 기-05) — 준비중 · 준비완료에서만, 서버 판정(`canRequestTermination`)으로 */
+function terminationButton(detail: Detail, actions: RailActions) {
+  if (!detail.permissions.canRequestTermination) {
+    return null
+  }
+  return (
+    <Btn
+      key="terminate"
+      variant="danger"
+      className="w-full"
+      onClick={actions.onTermination}
+    >
+      {TERMINATION_TEXT.action}
+    </Btn>
+  )
+}
+
+/** 해지 요청 처리 대기 — 계약 상세의 요청을 읽는다(공구 상세에는 해지 요청 블록이 없다) */
+function TerminationPendingHint(props: {
+  request: ContractTerminationRequest
+}) {
+  return (
+    <Hint>
+      <B>{dt(props.request.requestedAt)}</B>에 해지를 요청했습니다(
+      {props.request.reasonLabel}). 운영자가 <B>상대방 동의를 확인한 뒤</B>{" "}
+      처리하며, 그때까지 공구 일정은 그대로입니다. 공구가 시작되면 요청은
+      닫힙니다. 요청 철회는 <B>계약 상세</B>에서 할 수 있습니다.
+    </Hint>
+  )
+}
+
 /**
  * 우측 레일 「상태」 — 현재 상태 · 메타 · 액션 · 힌트. 버튼 노출은 서버 permissions로만 고른다.
  */
@@ -114,16 +151,31 @@ export function StatusRailCard(props: {
   detail: Detail
   situation: SellingSituation | null
   actions: RailActions
+  /** 원 계약의 해지 요청 — 처리 대기(PENDING)일 때만 표시한다 */
+  termination: ContractTerminationRequest | null
+  /**
+   * 계정 이용 정지(시안 15 S3a) — [기간 연장 요청]만 비활성(판매 기간을 늘리는 새 일).
+   * 조기 마감 · 중단은 판매를 줄이는 쪽이라 그대로 둔다. 서버 permissions는 정지를 반영하지 않아 FE가 막는다.
+   */
+  suspended?: boolean
 }) {
   const { detail, situation, actions } = props
   const { groupBuy, timeline, post, permissions, afterEnd, orderClosure } =
     detail
-  const postBadge = <GbBadge tone={post.statusTone}>{post.statusLabel}</GbBadge>
+  const pendingTermination =
+    props.termination?.status === "PENDING" ? props.termination : null
+  const postBadge = (
+    <GbBadge tone={post.statusTone}>
+      {postStatusLabel(post.status, post.statusLabel)}
+    </GbBadge>
+  )
 
   const rows: Array<{ label: string; value: ReactNode }> = []
   const buttons: Array<ReactNode> = []
   let banner: ReactNode = null
   let hint: ReactNode = null
+  // 버튼 묶음 바로 아래 작은 글씨 — 시안 S3a의 정지 안내 자리(힌트보다 위)
+  let buttonsNote: ReactNode = null
 
   switch (groupBuy.status) {
     case "PREPARING": {
@@ -133,6 +185,12 @@ export function StatusRailCard(props: {
         { label: "게시물", value: postBadge },
         { label: "고정 지급비", value: fixedFeeShort(detail) }
       )
+      if (pendingTermination) {
+        rows.push({
+          label: TERMINATION_TEXT.action,
+          value: dt(pendingTermination.requestedAt),
+        })
+      }
       if (permissions.canOpenPairThread) {
         buttons.push(
           <Btn
@@ -145,8 +203,14 @@ export function StatusRailCard(props: {
           </Btn>
         )
       }
+      const terminate = terminationButton(detail, actions)
+      if (terminate) {
+        buttons.push(terminate)
+      }
       const gates = detail.readiness?.gates ?? []
-      if (gates.some(gate => gate.state === "ACTION_REQUIRED")) {
+      if (pendingTermination) {
+        hint = <TerminationPendingHint request={pendingTermination} />
+      } else if (gates.some(gate => gate.state === "ACTION_REQUIRED")) {
         hint = (
           <Hint>
             시작 전에는 기간을 바꿀 수 없습니다. 조건을 조정하려면{" "}
@@ -169,35 +233,43 @@ export function StatusRailCard(props: {
         { label: "게시물", value: postBadge },
         { label: "고정 지급비", value: fixedFeeShort(detail) }
       )
+      // 기-05 이전에 준비완료에서 보낸 중단 요청(옛 데이터)은 그대로 보여준다
       if (detail.activeRequest) {
         rows.push({
           label: "중단 요청",
           value: dt(detail.activeRequest.requestedAt),
         })
       }
-      if (permissions.canRequestSuspension) {
-        buttons.push(
-          <Btn
-            key="suspend"
-            variant="danger"
-            className="w-full"
-            onClick={actions.onSuspension}
-          >
-            공구 중단 요청
-          </Btn>
-        )
+      if (pendingTermination) {
+        rows.push({
+          label: TERMINATION_TEXT.action,
+          value: dt(pendingTermination.requestedAt),
+        })
+      }
+      // 시작 전에는 「중단」 버튼을 두지 않는다(기-05 — 「중단」은 진행중만). 아직 배포되지 않은 서버가
+      // 준비완료에 canRequestSuspension을 내려도 해지 요청으로만 받는다.
+      const terminate = terminationButton(detail, actions)
+      if (terminate) {
+        buttons.push(terminate)
       }
       hint = detail.activeRequest ? (
         <Hint>
           중단 요청은 <B>취소할 수 없습니다.</B> 운영자 판단이 나올 때까지 이
           화면에서 할 수 있는 조작은 없습니다.
         </Hint>
+      ) : pendingTermination ? (
+        <TerminationPendingHint request={pendingTermination} />
+      ) : terminate ? (
+        <Hint>
+          연장·조기 마감은 <B>진행중일 때만</B> 요청할 수 있습니다 — 아직
+          시작하지 않아 여기서는 불가합니다. <B>{TERMINATION_TEXT.railHint}</B>{" "}
+          요청할 수 있고(운영자 검토), 이때는 <B>주문 환불이 없고</B>, 이미
+          지급된 고정 지급비는 <B>플랫폼이 회수해 주지 않습니다.</B>
+        </Hint>
       ) : (
         <Hint>
           연장·조기 마감은 <B>진행중일 때만</B> 요청할 수 있습니다 — 아직
-          시작하지 않아 여기서는 불가합니다. <B>중단은 시작 전에도</B> 요청할 수
-          있고(운영자 검토), 이때는 <B>주문 환불이 없고</B>, 이미 지급된 고정
-          지급비는 <B>플랫폼이 회수해 주지 않습니다.</B>
+          시작하지 않아 여기서는 불가합니다.
         </Hint>
       )
       break
@@ -300,7 +372,7 @@ export function StatusRailCard(props: {
         break
       }
 
-      if (post.status === "HIDDEN") {
+      if (isExposureSuspended(post.status)) {
         banner = (
           <Notice tone="warn">
             <B>운영자가 게시물 노출을 중지했습니다.</B> 쇼룸에서 게시물이 보이지
@@ -308,7 +380,7 @@ export function StatusRailCard(props: {
             {post.hiddenDays !== null && (
               <>
                 {" "}
-                — 숨김 <B>{post.hiddenDays}일 경과</B>
+                — 노출 중지 <B>{post.hiddenDays}일 경과</B>
               </>
             )}
             . <B>공구는 진행중</B>이라 이미 접수된 주문의 <B>배송·CS는 계속</B>{" "}
@@ -330,11 +402,11 @@ export function StatusRailCard(props: {
         hint = (
           <Hint>
             게시물을 고칠 권한은 <B>인플루언서</B>에게 있고{" "}
-            <B>숨김 해제는 운영자</B>가 합니다(약관 제14조⑤ — 회사는 삭제·노출
-            중지·수정 요청 권한을 가진다). 사유와 해제 조건은 <B>스레드</B>에서
-            확인하세요. 기간 연장·조기 마감·중단 요청은 숨김이 풀린 뒤에 하세요.{" "}
-            <B>재고 소진은 중단이 아니라 조기 마감</B>입니다. 기간 단축은 요청할
-            수 없습니다.
+            <B>노출 중지 해제는 운영자</B>가 합니다(약관 제14조⑤ — 회사는
+            삭제·노출 중지·수정 요청 권한을 가진다). 사유와 해제 조건은{" "}
+            <B>스레드</B>에서 확인하세요. 기간 연장·조기 마감·중단 요청은 노출
+            중지가 풀린 뒤에 하세요. <B>재고 소진은 중단이 아니라 조기 마감</B>
+            입니다. 기간 단축은 요청할 수 없습니다.
           </Hint>
         )
         break
@@ -349,11 +421,20 @@ export function StatusRailCard(props: {
             key="ext"
             variant="secondary"
             className="w-full"
+            disabled={props.suspended}
+            title={props.suspended ? SUSPENSION_COPY.blockedTooltip : undefined}
             onClick={actions.onExtension}
           >
             기간 연장 요청
           </Btn>
         )
+        if (props.suspended) {
+          buttonsNote = (
+            <p className="mt-1.5 text-[11px] leading-[1.6] text-sz-n-500">
+              {EXTENSION_SUSPENDED_TEXT}
+            </p>
+          )
+        }
       }
       if (permissions.canRequestEarlyClose) {
         buttons.push(
@@ -602,18 +683,6 @@ export function StatusRailCard(props: {
             아래 이슈 스레드로 제기하세요.
           </Hint>
         )
-        if (permissions.canOpenIssue) {
-          buttons.push(
-            <Btn
-              key="issue"
-              variant="secondary"
-              className="w-full"
-              onClick={actions.onOpenIssue}
-            >
-              이슈 스레드 열기
-            </Btn>
-          )
-        }
       } else {
         hint = (
           <Hint>
@@ -622,6 +691,21 @@ export function StatusRailCard(props: {
           </Hint>
         )
       }
+      break
+    }
+    case "TERMINATED": {
+      // 해지 후 공구 표기는 시안 [근거 대기](계약 관리 B9와 함께) — 중단(B7) 레일 골격을 빌린다
+      rows.push(
+        { label: "해지 처리", value: dt(groupBuy.endedAt) },
+        { label: "처리자", value: "운영자" },
+        { label: "게시물", value: postBadge }
+      )
+      hint = (
+        <Hint>
+          해지된 공구는 되돌릴 수 없습니다. 다시 진행하려면{" "}
+          <B>새 계약을 체결</B>해야 합니다.
+        </Hint>
+      )
       break
     }
     default:
@@ -639,7 +723,11 @@ export function StatusRailCard(props: {
       <div>
         <div className="flex items-center justify-between gap-2.5 border-b border-sz-n-100 pb-3">
           <span className="shrink-0 text-[12px] text-sz-n-500">현재 상태</span>
-          <GbBadge tone={groupBuy.statusTone}>{groupBuy.statusLabel}</GbBadge>
+          {/* 시안 15 R2 — 정지 보류는 상태 옆 보조 배지(문구 · 색은 서버) */}
+          <span className="inline-flex flex-wrap justify-end gap-1">
+            <GbBadge tone={groupBuy.statusTone}>{groupBuy.statusLabel}</GbBadge>
+            <SanctionHoldBadge hold={detail.sanctionHold} />
+          </span>
         </div>
         <div className="pt-2">
           {rows.map(row => (
@@ -651,6 +739,7 @@ export function StatusRailCard(props: {
         {buttons.length > 0 && (
           <div className="mt-4 flex flex-col gap-2">{buttons}</div>
         )}
+        {buttonsNote}
         {!hintFirst && hint}
       </div>
     </DetailCard>

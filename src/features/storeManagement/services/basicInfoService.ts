@@ -1,5 +1,6 @@
 import { apiInstance } from "@/common/lib/apiInstance"
 import type { ChangeRequestBannerResponse } from "@/features/storeManagement/services/changeRequestService"
+import type { Withdrawal } from "@/features/storeManagement/services/withdrawalService"
 
 export type MarketStatus = "ACTIVE" | "SUSPENDED" | "WITHDRAWN" | string
 
@@ -78,11 +79,22 @@ export interface UpdateManagerInfoRequest {
   detailAddress: string
 }
 
+/** 로그인 정보 잠금 — 탈퇴 신청 심사 중(4-I) */
+export type IdentityLock = "WITHDRAWAL_PENDING"
+
 export interface AccountInfoResponse {
   loginEmail: string
+  /** 월 1회 제한 통과 ∧ 잠금 없음 — 잠금 중에도 false라 월 1회 문구는 잠금이 없을 때만 띄운다 */
   emailChangeable: boolean
   lastEmailChangedAt: string | null
   nextEmailChangeableAt: string | null
+  /*
+    아래 셋은 1021 백엔드(main)에서 생긴 값이라 개발 서버가 새 버전으로 배포되기 전에는 없다(undefined).
+  */
+  passwordChangeable?: boolean
+  identityLock?: IdentityLock | null
+  /** 탈퇴 블록(4-F ~ 4-I) — 마켓이 없는 계정은 null */
+  withdrawal?: Withdrawal | null
 }
 
 export interface ChangePasswordRequest {
@@ -109,6 +121,12 @@ export interface DeliveryPolicyResponse {
   defaultDeliveryFee: number | null
   /** 없으면 null = 무료배송 없음 */
   freeShippingThreshold: number | null
+  /**
+   * 제주 추가비(V200 · 1021) — 개발 서버가 새 버전으로 배포되기 전에는 응답에 없다(undefined).
+   * 없으면 화면이 칸을 두지 않는다 — 옛 서버는 저장 요청의 이 값을 버리기 때문이다.
+   */
+  jejuSurcharge?: number | null
+  /** 도서산간 추가비 — 제주 제외 */
   remoteAreaSurcharge: number | null
 }
 
@@ -119,6 +137,8 @@ export interface UpdateDeliveryPolicyRequest {
   defaultDeliveryFee: number
   /** 비우면(null) 무료배송 없음 — 0을 보내면 모든 주문이 무료배송이 된다 */
   freeShippingThreshold: number | null
+  /** 비우면(null) 0 — 서버가 제주 칸을 모르면(배포 전) 보내지 않는다 */
+  jejuSurcharge?: number | null
   /** 비우면(null) 0 */
   remoteAreaSurcharge: number | null
 }

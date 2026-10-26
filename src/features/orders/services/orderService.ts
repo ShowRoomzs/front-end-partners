@@ -173,6 +173,17 @@ export const orderService = {
     return data
   },
 
+  /**
+   * 소비자 환불 선택 처리(10c C7b · 1021 기-15) — 분실 판정과 같은 효과(하위주문 취소 · PG 자동 환불).
+   * `stallChoice.canRefund`일 때만 부른다. 409 ORDER_STATE_CHANGED는 인터셉터가 알린다.
+   */
+  refundStallChoice: async (deliveryGroupId: number) => {
+    const { data } = await apiInstance.post<OrderDetailResponse>(
+      `${BASE_URL}/${deliveryGroupId}/stall-refund`
+    )
+    return data
+  },
+
   directCancel: async (body: DirectCancelBody) => {
     const { data } = await apiInstance.post<BatchActionResponse>(
       `${BASE_URL}/cancel`,

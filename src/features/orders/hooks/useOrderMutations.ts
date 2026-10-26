@@ -98,6 +98,16 @@ export function useUpdateShipment() {
   })
 }
 
+export function useRefundStallChoice() {
+  const apply = useApplyDetail()
+
+  return useMutation({
+    mutationFn: (deliveryGroupId: number) =>
+      orderService.refundStallChoice(deliveryGroupId),
+    onSuccess: apply,
+  })
+}
+
 export function useDirectCancel() {
   const invalidate = useInvalidateOrders()
 

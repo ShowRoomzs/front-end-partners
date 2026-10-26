@@ -34,16 +34,10 @@ type OnboardingFormValues = {
   detailAddress: string
   defaultDeliveryFee: string
   freeShippingThreshold: string
+  jejuSurcharge: string
   remoteAreaSurcharge: string
   shippingLeadDays: string
-  returnFee: string
-  exchangeFee: string
 }
-
-// 업계 평균값을 기본 제시 — 담당자가 그대로 두거나 수정할 수 있다.
-// 이 두 필드는 "필수"지만 처음부터 채워진 채 시작하므로 초기 상태에서 이미 유효하다.
-const DEFAULT_RETURN_FEE = "3000"
-const DEFAULT_EXCHANGE_FEE = "6000"
 
 // 발송 기한 = 공구 마감 시각 + N영업일(기본 3 · 1~7). 상품 상세에 「공구 마감 후 N영업일 이내 발송」으로 고지된다.
 // 서버 필드명은 아직 `shippingLeadDays`(구 「출고 소요일」)다.
@@ -95,7 +89,8 @@ export default function OnboardingGatePage() {
     setFocus,
     formState: { errors, isValid, isSubmitting },
   } = useForm<OnboardingFormValues>({
-    // 실시간 검증 — 필수 8개가 모두 유효해야 제출 버튼이 켜진다(제출 후 에러 표시 방식 아님)
+    // 실시간 검증 — 필수 6개가 모두 유효해야 제출 버튼이 켜진다(제출 후 에러 표시 방식 아님).
+    // 반품비 · 교환비 입력은 없다 — 상품 배송비로 자동 계산한다(기-18 변경)
     mode: "onChange",
     defaultValues: {
       recipientName: "",
@@ -104,10 +99,9 @@ export default function OnboardingGatePage() {
       detailAddress: "",
       defaultDeliveryFee: "",
       freeShippingThreshold: "",
+      jejuSurcharge: "",
       remoteAreaSurcharge: "",
       shippingLeadDays: DEFAULT_SHIP_DUE_DAYS,
-      returnFee: DEFAULT_RETURN_FEE,
-      exchangeFee: DEFAULT_EXCHANGE_FEE,
     },
   })
 
@@ -161,10 +155,9 @@ export default function OnboardingGatePage() {
       detailAddress: v.detailAddress.trim(),
       defaultDeliveryFee: Number(v.defaultDeliveryFee),
       freeShippingThreshold: toOptionalNumber(v.freeShippingThreshold),
+      jejuSurcharge: toOptionalNumber(v.jejuSurcharge),
       remoteAreaSurcharge: toOptionalNumber(v.remoteAreaSurcharge),
       shippingLeadDays: Number(v.shippingLeadDays),
-      returnFee: Number(v.returnFee),
-      exchangeFee: Number(v.exchangeFee),
     }
 
     try {
@@ -434,6 +427,32 @@ export default function OnboardingGatePage() {
 
         <Controller
           control={control}
+          name="jejuSurcharge"
+          render={({ field }) => (
+            <FormField
+              label={
+                <>
+                  제주 추가비
+                  <Optional />
+                </>
+              }
+              htmlFor="jejuSurcharge"
+            >
+              <NumberField
+                id="jejuSurcharge"
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                placeholder="0"
+                disabled={isSubmitting}
+                suffix="원"
+              />
+            </FormField>
+          )}
+        />
+
+        <Controller
+          control={control}
           name="remoteAreaSurcharge"
           render={({ field }) => (
             <FormField
@@ -444,7 +463,6 @@ export default function OnboardingGatePage() {
                 </>
               }
               htmlFor="remoteAreaSurcharge"
-              help="미입력 시 0원으로 적용됩니다."
             >
               <NumberField
                 id="remoteAreaSurcharge"
@@ -507,68 +525,23 @@ export default function OnboardingGatePage() {
           )}
         />
 
-        <div className="grid grid-cols-2 gap-3">
-          <Controller
-            control={control}
-            name="returnFee"
-            rules={{ required: "반품비를 입력해 주세요." }}
-            render={({ field }) => (
-              <FormField
-                label={
-                  <>
-                    반품비(회수비)
-                    <Required />
-                  </>
-                }
-                htmlFor="returnFee"
-                error={errors.returnFee?.message}
-              >
-                <NumberField
-                  id="returnFee"
-                  value={field.value}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  hasError={!!errors.returnFee}
-                  disabled={isSubmitting}
-                  suffix="원"
-                />
-              </FormField>
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="exchangeFee"
-            rules={{ required: "교환비를 입력해 주세요." }}
-            render={({ field }) => (
-              <FormField
-                label={
-                  <>
-                    교환비
-                    <Required />
-                  </>
-                }
-                htmlFor="exchangeFee"
-                error={errors.exchangeFee?.message}
-              >
-                <NumberField
-                  id="exchangeFee"
-                  value={field.value}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  hasError={!!errors.exchangeFee}
-                  disabled={isSubmitting}
-                  suffix="원"
-                />
-              </FormField>
-            )}
-          />
-        </div>
+        {/* 반품 · 교환 비용 구조(기-18 변경) — 입력란 대신 자동 계산 규칙을 안내한다(시안 03 rev.3) */}
+        <NoticeBox className="mb-3">
+          반품·교환 배송비는 <b>따로 정하지 않고</b> 위 배송비로 자동
+          계산됩니다.
+          <br />· <b>단순 변심 반품</b> — 소비자가 선불로 직접 발송합니다.{" "}
+          <b>무료배송 주문</b>이면 최초 배송비를 환불액에서 차감합니다(일부 반품
+          후 남은 금액이 무료배송 기준 아래로 내려갈 때만).
+          <br />· <b>단순 변심 교환</b> — 소비자가 선불로 직접 발송하고{" "}
+          <b>재발송 배송비</b>(편도 · 제주·도서산간 추가비 별도)를 결제합니다.
+          <br />· <b>불량 · 오배송</b> — 착불로 받습니다. 소비자 부담은 없고{" "}
+          <b>착불 운임은 브랜드 부담</b>입니다.
+        </NoticeBox>
 
         <NoticeBox className="mb-5">
           배송·반품 정책은 여기서 최초 설정한 뒤에도 <b>기본정보관리</b>에서
-          계속 수정할 수 있어요. 수정하면 진행 중인 공동구매는 기존 값이 그대로
-          유지되고, 새 값은 다음 결제부터 적용됩니다.
+          계속 수정할 수 있어요. 저장 후 결제된 주문부터 적용됩니다. 이미 접수된
+          주문은 기존 값이 유지됩니다.
         </NoticeBox>
 
         <button

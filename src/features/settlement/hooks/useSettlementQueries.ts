@@ -29,6 +29,16 @@ export function useGetSettlementSummary(enabled = true) {
   })
 }
 
+/** 세금계산서 공급자 — 설정값이라 한 번 받으면 바뀌지 않는다. 실패하면 화면이 시안 값으로 그린다 */
+export function useGetCompanyInfo() {
+  return useQuery({
+    queryKey: [SETTLEMENT_QUERY_KEYS.COMPANY_INFO],
+    queryFn: settlementService.getCompanyInfo,
+    staleTime: Infinity,
+    retry: false,
+  })
+}
+
 export function useGetSettlementDetail(settlementId: number) {
   return useQuery({
     queryKey: [SETTLEMENT_QUERY_KEYS.DETAIL, settlementId],

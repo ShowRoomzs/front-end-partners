@@ -5,6 +5,7 @@ import type { Columns } from "@/common/components/Table/types"
 import { usePaginationInfo } from "@/common/hooks/usePaginationInfo"
 import { useParams } from "@/common/hooks/useParams"
 import { queryClient } from "@/common/lib/queryClient"
+import RegisterBlockedState from "@/features/productManagement/components/RegisterBlockedState/RegisterBlockedState"
 import ProductStatusFilter from "@/features/productManagement/components/ProductStatusFilter/ProductStatusFilter"
 import { PRODUCT_LIST_COLUMNS } from "@/features/productManagement/constants/columns"
 import {
@@ -22,6 +23,7 @@ import {
   type ProductListSortType,
 } from "@/features/productManagement/services/productService"
 import { isDeleteBlocked } from "@/features/productManagement/utils/productPermission"
+import { SUSPENSION_COPY, useAccountSuspension } from "@/features/suspension"
 import { cn } from "@/lib/utils"
 import { useCallback, useMemo } from "react"
 import toast from "react-hot-toast"
@@ -64,8 +66,19 @@ const INITIAL_PARAMS: ProductListParams = {
 const ACTION_BUTTON_CLASS =
   "inline-flex h-7 items-center justify-center rounded-[6px] border border-sz-n-300 bg-white px-3.5 text-[11px] font-medium text-sz-n-700 hover:enabled:border-sz-n-400 hover:enabled:bg-sz-n-100"
 
-export default function ProductListPage() {
+interface ProductListPageProps {
+  /**
+   * 시안 15 S2b — 정지 중 `/product/register`로 직접 들어오면 등록 폼 대신 이 목록 골격을 그리고
+   * 표 본문만 차단 빈 상태로 바꾼다(필터 · 카운트는 그대로 · 「총 0건」).
+   */
+  registerBlocked?: boolean
+}
+
+export default function ProductListPage(props: ProductListPageProps) {
+  const { registerBlocked = false } = props
   const navigate = useNavigate()
+  // 정지 중 [+ 상품 등록]은 숨기지 않고 비활성 + 툴팁(시안 15 S2) — 기존 상품 수정 · 삭제는 평소대로
+  const { isSuspended } = useAccountSuspension()
   const { params, localParams, update, updateParam, updateLocalParam, reset } =
     useParams<ProductListParams>(INITIAL_PARAMS)
 
@@ -76,7 +89,7 @@ export default function ProductListPage() {
     productList?.groupBuyStatusCounts ?? EMPTY_GROUP_BUY_COUNTS
 
   const pageInfo = usePaginationInfo({
-    data: productList?.pageInfo,
+    data: registerBlocked ? undefined : productList?.pageInfo,
     onPageChange: page => {
       updateParam("page", page)
     },
@@ -184,8 +197,10 @@ export default function ProductListPage() {
         </div>
         <button
           type="button"
+          disabled={isSuspended}
+          title={isSuspended ? SUSPENSION_COPY.blockedTooltip : undefined}
           onClick={() => navigate("/product/register")}
-          className="inline-flex h-8 items-center rounded-[6px] bg-sz-accent-500 px-3.5 text-[12px] font-medium text-white hover:bg-sz-accent-600"
+          className="inline-flex h-8 items-center rounded-[6px] bg-sz-accent-500 px-3.5 text-[12px] font-medium text-white hover:enabled:bg-sz-accent-600 disabled:cursor-not-allowed disabled:bg-sz-n-200 disabled:text-sz-n-400"
         >
           + 상품 등록
         </button>
@@ -251,11 +266,11 @@ export default function ProductListPage() {
         <Table<ProductItem, "productId">
           rowKey="productId"
           columns={columns}
-          data={productList?.content ?? []}
+          data={registerBlocked ? [] : (productList?.content ?? [])}
           pageInfo={pageInfo}
-          isLoading={isLoading}
+          isLoading={!registerBlocked && isLoading}
           onRowClick={handleClickRow}
-          emptyState={emptyState}
+          emptyState={registerBlocked ? <RegisterBlockedState /> : emptyState}
           fitWidth
           // 좌측 합계가 툴바로 올라가 있어 푸터에는 페이저뿐이다 — 가운데로 둔다
           footerAlign="center"

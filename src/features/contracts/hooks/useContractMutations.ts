@@ -2,13 +2,15 @@ import { CONTRACT_QUERY_KEYS } from "@/features/contracts/constants/queryKeys"
 import { contractService } from "@/features/contracts/services/contractService"
 import type {
   ContractCreateRequest,
+  ContractDetailResponse,
   ContractReviewRequestRequest,
+  ContractTerminationRequestBody,
   ContractUpdateRequest,
 } from "@/features/contracts/types"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 /**
- * 계약 쓰기 9종.
+ * 계약 쓰기 11종.
  *
  * **낙관적 업데이트를 쓰지 않는다.** 상태·권한·이력을 전부 서버가 다시 계산해 상세로
  * 돌려주므로, 프론트가 미리 그린 화면은 한 박자 뒤 서버 값으로 덮인다. 성공 후에는
@@ -116,5 +118,49 @@ export function useDuplicateContract() {
   return useMutation({
     mutationFn: (contractId: number) => contractService.duplicate(contractId),
     onSuccess: invalidate,
+  })
+}
+
+/**
+ * 해지 요청 · 철회(기-05) — 응답이 상세 전체라 상세 캐시는 그 값으로 바로 바꾼다.
+ * 개발 서버 목업은 재조회하면 시나리오 원본이 오므로 무효화하지 않는다(목업은 따로 붙잡아 둔다).
+ */
+function useApplyContractDetail() {
+  const queryClient = useQueryClient()
+
+  return (detail: ContractDetailResponse) => {
+    queryClient.setQueryData(
+      [CONTRACT_QUERY_KEYS.DETAIL, detail.contractId],
+      detail
+    )
+    queryClient.invalidateQueries({ queryKey: [CONTRACT_QUERY_KEYS.LIST] })
+    queryClient.invalidateQueries({ queryKey: [CONTRACT_QUERY_KEYS.SUMMARY] })
+  }
+}
+
+export function useRequestTermination() {
+  const apply = useApplyContractDetail()
+
+  return useMutation({
+    mutationFn: (variables: {
+      detail: ContractDetailResponse
+      body: ContractTerminationRequestBody
+    }) =>
+      contractService.requestTermination(
+        variables.detail.contractId,
+        variables.body,
+        variables.detail
+      ),
+    onSuccess: apply,
+  })
+}
+
+export function useWithdrawTermination() {
+  const apply = useApplyContractDetail()
+
+  return useMutation({
+    mutationFn: (detail: ContractDetailResponse) =>
+      contractService.withdrawTermination(detail.contractId, detail),
+    onSuccess: apply,
   })
 }

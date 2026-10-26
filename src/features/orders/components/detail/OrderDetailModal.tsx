@@ -1,3 +1,4 @@
+import { confirm } from "@/common/components/ConfirmModal/confirm"
 import Notice from "@/common/components/Notice/Notice"
 import { parseServerDateTime } from "@/common/utils/formatDate"
 import dayjs from "dayjs"
@@ -26,6 +27,7 @@ import {
   useApproveCancelRequest,
   useDirectCancel,
   usePrepareStart,
+  useRefundStallChoice,
   useRegisterShipments,
   useRejectCancelRequest,
   useUpdateShipment,
@@ -1018,13 +1020,13 @@ function StatusHint(props: {
             정리되고 <b>남은 {remaining}개 항목은 그대로 발송</b>해야 하기
             때문입니다.
             <br />· <b>승인</b> → 그 항목만 취소되고 주문은 <b>{backTab}</b>
-            으로 복귀(환불은 운영자 실행 · 되돌릴 수 없음)
+            으로 복귀(환불은 PG가 자동 처리)
           </>
         ) : (
           <>
             <b>전 항목이 요청된 주문입니다.</b>
             <br />· <b>승인</b> → 주문이 <b>취소로 종결</b>되어 취소 탭으로
-            이동(환불은 운영자 실행 · 되돌릴 수 없음)
+            이동(환불은 PG가 자동 처리)
           </>
         )}
         <br />· <b>거부</b> → 전 항목이 살아난 채 <b>{backTab}</b>으로
@@ -1380,6 +1382,78 @@ function InlineInvoice(props: {
   )
 }
 
+/**
+ * 시안 C7b 「소비자 선택」 행(1021 기-15 【잠정】) — 선택은 소비자가 앱에서 하고, 브랜드는 결과대로 처리한다.
+ * 재발송은 [송장 수정]으로 새 송장을 넣고, 환불은 [소비자 환불 처리](분실 판정과 같은 효과 · PG 자동 환불).
+ * 개방 일수 N은 서버 설정값이다 — 서버가 남은 일수를 주지 않으면 「N일」로 둔다.
+ */
+function StallChoiceRow(props: { detail: OrderDetailResponse }) {
+  const { detail } = props
+  const choice = detail.stallChoice ?? null
+  const refund = useRefundStallChoice()
+
+  const handleRefund = async () => {
+    if (refund.isPending) return
+    const ok = await confirm({
+      title: "소비자 환불을 처리할까요?",
+      content:
+        "소비자가 환불을 선택한 주문입니다. 처리하면 이 하위주문이 취소되고 상품과 배송비가 PG로 자동 환불됩니다. 되돌릴 수 없습니다.",
+      confirmText: "소비자 환불 처리",
+    })
+    if (!ok) return
+    refund.mutate(detail.deliveryGroupId, {
+      onSuccess: () => toast.success("소비자 환불을 처리했습니다."),
+    })
+  }
+
+  let badge: ReactNode = <StatusBadge variant="neutral">선택 전</StatusBadge>
+  let sub: ReactNode =
+    choice?.daysUntilOpen != null
+      ? `${choice.daysUntilOpen}일 뒤 열림`
+      : "추적 정지 N일 뒤 열림"
+  if (choice?.state === "OPEN") {
+    badge = <StatusBadge variant="info">선택 대기</StatusBadge>
+    sub = "소비자가 재발송 / 환불을 고를 수 있습니다"
+  }
+  if (choice?.state === "CHOSEN") {
+    badge = (
+      <StatusBadge variant="warning">
+        {choice.choiceLabel ?? (choice.choice === "REFUND" ? "환불" : "재발송")}
+      </StatusBadge>
+    )
+    sub = (
+      <>
+        {choice.chosenAt && `${formatDateTime(choice.chosenAt)} 선택 · `}
+        {choice.choice === "RESHIP"
+          ? "재발송한 뒤 [송장 수정]으로 새 번호를 넣으세요"
+          : "환불을 처리해 주세요"}
+      </>
+    )
+  }
+
+  return (
+    <div className="mt-2 border-t border-sz-n-100 pt-2 text-[12px]">
+      <div className="flex items-start justify-between gap-3">
+        <span className="text-sz-n-500">소비자 선택</span>
+        <div className="text-right">
+          {badge}
+          <div className="mt-[2px] text-[11px] text-sz-n-500">{sub}</div>
+        </div>
+      </div>
+      {choice?.canRefund && (
+        <Btn
+          variant="primary"
+          className="mt-2 w-full"
+          isLoading={refund.isPending}
+          onClick={() => void handleRefund()}
+        >
+          소비자 환불 처리
+        </Btn>
+      )}
+    </div>
+  )
+}
+
 /** 배송 정보 — 송장 이후. 배송완료일시는 출처를 항상 병기한다(자동 확인 / 운영자 처리) */
 function ShippingBox(props: { detail: OrderDetailResponse }) {
   const { detail } = props
@@ -1415,6 +1489,12 @@ function ShippingBox(props: { detail: OrderDetailResponse }) {
             <span className="text-sz-n-500">처리 상태</span>
             <StatusBadge variant="danger">추적 정지</StatusBadge>
           </div>
+          <StallChoiceRow detail={detail} />
+          <Notice tone="neutral" className="mt-2">
+            <B>[잠정]</B> 추적 정지 N일 뒤{" "}
+            <B>소비자가 재발송 / 환불을 선택할 수 있습니다.</B> 선택 결과는 이
+            주문의 처리 이력에 남습니다.
+          </Notice>
         </MBox>
       )}
       <MBox

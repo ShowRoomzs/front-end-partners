@@ -1,6 +1,5 @@
 import StatusBadge from "@/common/components/StatusBadge/StatusBadge"
 import Notice from "@/common/components/Notice/Notice"
-import { fileService } from "@/common/services/fileService"
 import Btn from "@/features/contracts/components/shared/Btn"
 import {
   ERR_CLASS,
@@ -12,13 +11,12 @@ import {
 import { FORM_SELECT_CHEVRON_STYLE } from "@/features/contracts/constants/params"
 import {
   CARRIER_OPTIONS,
-  EVIDENCE_FILE_TYPES,
-  EVIDENCE_MAX_BYTES,
-  EVIDENCE_MAX_COUNT,
+  INSPECT_DUE_LABEL,
   OPERATOR_THREAD_PATH,
   REJECT_CONSUMER_MESSAGE_MAX,
   REJECT_LEGAL_BASIS_OPTIONS,
   REJECT_REASON_OPTIONS,
+  SELLER_BORNE_INTAKE_LABEL,
   SELLER_BORNE_REASONS,
 } from "@/features/claims/constants/params"
 import {
@@ -28,11 +26,20 @@ import {
   MBox,
   WideModal,
 } from "@/features/claims/components/detail/DetailParts"
+import { EvidenceField } from "@/features/claims/components/detail/EvidenceField"
+import {
+  AmountRow,
+  CollectFreightNotice,
+  MWARN_CLASS,
+} from "@/features/claims/components/detail/FreightParts"
+import OverturnForm from "@/features/claims/components/detail/OverturnForm"
 import PassConfirmModal from "@/features/claims/components/modals/PassConfirmModal"
 import {
   useClaimMutations,
   useGetClaimDetail,
+  useGetClaimFreightPreview,
 } from "@/features/claims/hooks/useClaimQueries"
+import { useEvidenceUpload } from "@/features/claims/hooks/useEvidenceUpload"
 import type {
   ClaimDetailResponse,
   ClaimRejectLegalBasis,
@@ -44,10 +51,14 @@ import {
   formatFullDateTime,
   formatWon,
 } from "@/features/claims/utils/format"
+import {
+  canOverturnOf,
+  isSellerBorne,
+} from "@/features/claims/utils/inspection"
 import { cn } from "@/lib/utils"
 import { isAxiosError } from "axios"
-import { Loader2, X } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { Loader2 } from "lucide-react"
+import { useEffect, useState } from "react"
 import type { ReactNode } from "react"
 import toast from "react-hot-toast"
 import { useNavigate } from "react-router-dom"
@@ -67,9 +78,11 @@ const HISTORY_TONE: Record<string, string> = {
   RESHIP_FEE_SETTLED: "info",
   STORAGE_NOTICE_SENT: "warning",
   DISPOSED: "danger",
+  AUTO_RECEIVED: "success",
+  REASON_OVERTURNED: "warning",
+  FAULT_ACCEPTED_ON_PASS: "info",
+  OVERTURN_FEE_PAID: "info",
 }
-
-/** 서버 반려 요청에 아직 없는 입력 — 화면에는 두되 제출되지 않는다는 것을 밝힌다 */
 
 function FieldLabel(props: {
   children: ReactNode
@@ -158,17 +171,51 @@ function headerBadge(detail: ClaimDetailResponse) {
   return <StatusBadge variant="neutral">{summary.statusLabel}</StatusBadge>
 }
 
+/**
+ * 「사유」 행 보조줄 — 운영자 개설(B1 「운영자 개설 · 구매확정 후 하자 · 증빙 2장」) · 교환 재발송 배송비 청구(B2).
+ * 기-18: 교환은 「교환비」가 아니라 재발송 배송비이고, 불량 · 오배송은 착불 회수(운임 브랜드 부담)다.
+ */
+function reasonSub(
+  detail: ClaimDetailResponse,
+  reshipFeeCharged: boolean | null
+) {
+  const { summary } = detail
+  const parts: Array<string> = []
+  if (summary.openedByOperator) {
+    parts.push("운영자 개설")
+    if (summary.openReason) parts.push(summary.openReason)
+  }
+  if (summary.type === "EXCHANGE" && reshipFeeCharged !== null) {
+    const intake = SELLER_BORNE_INTAKE_LABEL[summary.reasonCode]
+    parts.push(
+      reshipFeeCharged
+        ? "고객 귀책 교환 · 재발송 배송비 신청 시 결제"
+        : intake
+          ? `재발송 배송비 미청구 · ${intake} 접수라 착불 회수(운임 브랜드 부담)`
+          : "재발송 배송비 미청구"
+    )
+  } else if (summary.consumerAttachmentCount > 0) {
+    parts.push(`증빙 ${summary.consumerAttachmentCount}장`)
+  }
+  return parts.length > 0 ? parts.join(" · ") : undefined
+}
+
 function DetailBody(props: { detail: ClaimDetailResponse }) {
   const { detail } = props
   const { summary, actions } = detail
   const navigate = useNavigate()
   const mutations = useClaimMutations()
   const [passOpen, setPassOpen] = useState(false)
-  const [rejectOpen, setRejectOpen] = useState(false)
+  /** 우 레일에 펼친 판정 폼 — 하나만 펼친다(B1r 반려 · B2b 사유 번복) */
+  const [openForm, setOpenForm] = useState<"REJECT" | "OVERTURN" | null>(null)
 
   const isExchange = summary.type === "EXCHANGE"
   const isInspecting = actions.canPass || actions.canReject
   const detailRequired = SELLER_BORNE_REASONS.includes(summary.reasonCode)
+  const sellerBorne = isSellerBorne(detail)
+  const canOverturn = canOverturnOf(detail)
+  const reshipFeeCharged = detail.reshipFeeCharged ?? detail.exchangeFeeCharged
+  const timer = detail.purchaseConfirm
 
   const handleReceive = async () => {
     try {
@@ -177,15 +224,17 @@ function DetailBody(props: { detail: ClaimDetailResponse }) {
         toast.error(result.skipped[0].message)
         return
       }
-      toast.success("입고 확인했습니다. 2영업일 안에 검수를 완료해 주세요.")
+      toast.success(
+        `입고 확인했습니다. ${INSPECT_DUE_LABEL} 안에 검수를 완료해 주세요.`
+      )
     } catch {
       // 토스트는 apiInstance가 띄운다
     }
   }
 
-  const handlePass = async () => {
+  const handlePass = async (faultToSeller: boolean) => {
     try {
-      await mutations.pass.mutateAsync(summary.claimId)
+      await mutations.pass.mutateAsync({ current: detail, faultToSeller })
       setPassOpen(false)
       toast.success(
         isExchange
@@ -234,18 +283,7 @@ function DetailBody(props: { detail: ClaimDetailResponse }) {
           <FRow label="수량">
             <span className="tabular-nums">{summary.quantity}개</span>
           </FRow>
-          <FRow
-            label="사유"
-            sub={
-              isExchange && detail.exchangeFeeCharged !== null
-                ? detail.exchangeFeeCharged
-                  ? "고객 귀책 교환 · 재발송비 신청 시 결제"
-                  : "교환비 미청구"
-                : summary.consumerAttachmentCount > 0
-                  ? `증빙 ${summary.consumerAttachmentCount}장`
-                  : undefined
-            }
-          >
+          <FRow label="사유" sub={reasonSub(detail, reshipFeeCharged)}>
             {summary.reasonLabel}
           </FRow>
           {(detail.reasonDetail || detailRequired) && (
@@ -291,8 +329,10 @@ function DetailBody(props: { detail: ClaimDetailResponse }) {
                   <b className="font-semibold">
                     {formatFullDateTime(summary.inspectDueAt)}
                   </b>
-                  까지 · 2영업일
+                  까지 · {INSPECT_DUE_LABEL}
                 </>
+              ) : detail.inspection?.autoReceived ? (
+                "자동 입고"
               ) : undefined
             }
           >
@@ -309,9 +349,11 @@ function DetailBody(props: { detail: ClaimDetailResponse }) {
                 <>
                   이 항목 상품 금액 {formatWon(detail.refund.itemAmount)}
                   {detail.refund.requestDeduction > 0 &&
-                    ` · 배송비 차감 −${formatWon(detail.refund.requestDeduction)}`}{" "}
-                  · {detail.refund.basisLabel} — 검수 통과 시{" "}
-                  <b className="font-semibold">PG가 자동으로 환불</b>합니다.
+                    ` · 최초 배송비 차감 −${formatWon(detail.refund.requestDeduction)}`}{" "}
+                  · {detail.refund.basisLabel}
+                  {sellerBorne && " · 착불 회수(운임 브랜드 부담)"} — 검수 통과
+                  시 <b className="font-semibold">PG가 이 금액을 자동 환불</b>
+                  합니다.
                 </>
               }
             >
@@ -333,7 +375,11 @@ function DetailBody(props: { detail: ClaimDetailResponse }) {
 
         {detail.sellerEvidences.length > 0 && (
           <MBox
-            title="브랜드 반려 증빙"
+            title={
+              detail.inspection?.result === "REASON_OVERTURNED"
+                ? "사유 번복 증빙"
+                : "브랜드 반려 증빙"
+            }
             note={`${detail.sellerEvidences.length}장 · 소비자에게 그대로 전달됨`}
           >
             {detail.rejectDetail && (
@@ -371,7 +417,11 @@ function DetailBody(props: { detail: ClaimDetailResponse }) {
               label="구매확정 타이머"
               sub="반품·교환 요청 시점부터 정지 · 철회되면 남은 일수부터 재개"
             >
-              <span className="text-sz-warning-text">정지</span>
+              <span className="text-sz-warning-text">
+                {timer?.paused && timer.remainingDays !== null
+                  ? `정지 · 남은 ${timer.remainingDays}일`
+                  : "정지"}
+              </span>
             </FRow>
             <div className="mt-4 flex flex-col gap-1.5">
               {actions.canPass && (
@@ -383,52 +433,76 @@ function DetailBody(props: { detail: ClaimDetailResponse }) {
                   {isExchange ? "검수 통과 · 재발송 처리" : "검수 통과"}
                 </Btn>
               )}
-              {actions.canReject && !rejectOpen && (
+              {canOverturn && openForm === null && (
                 <Btn
                   variant="secondary"
                   className="w-full"
-                  onClick={() => setRejectOpen(true)}
+                  onClick={() => setOpenForm("OVERTURN")}
+                >
+                  사유 번복
+                </Btn>
+              )}
+              {actions.canReject && openForm === null && (
+                <Btn
+                  variant="secondary"
+                  className="w-full"
+                  onClick={() => setOpenForm("REJECT")}
                 >
                   검수 반려
                 </Btn>
               )}
             </div>
-            {isExchange ? (
+            {openForm === null && isExchange && (
               <>
                 <Hint>
                   <b>검수 통과 · 재발송</b> — 교환 옵션 상품을 출고하고{" "}
                   <b>새 송장을 등록</b>하면 완료됩니다.
                 </Hint>
+                {canOverturn && (
+                  <Hint className="mt-2">
+                    <b>사유 번복</b> — 불량 신청이었지만 검수 결과{" "}
+                    <b>단순 변심</b>인 경우입니다. 교환은 진행하고{" "}
+                    <b>재발송 배송비는 소비자가 결제</b>합니다. 결제 확인 후
+                    재발송으로 넘어갑니다.
+                  </Hint>
+                )}
                 <Hint className="mt-2">
                   <b>검수 반려</b> — 반려가 확정되면 <b>교환이 취소</b>되고,
                   소비자가 배송비를 결제한 뒤 <b>회수한 원래 상품을 그대로</b>{" "}
                   다시 보내게 됩니다.
                 </Hint>
               </>
-            ) : (
+            )}
+            {openForm === null && !isExchange && (
               <Hint>
                 <b>검수 통과로 처리하면 PG가 자동으로 환불</b>합니다. 환불
                 금액은 정산에 반영됩니다.{" "}
                 <b>브랜드는 금액을 입력하거나 환불을 실행하지 않습니다.</b>
               </Hint>
             )}
-            <Hint className="mt-2">
-              부당한 신청이라고 판단되면{" "}
-              <span
-                role="link"
-                tabIndex={0}
-                className={FLINK_CLASS}
-                onClick={() => navigate(OPERATOR_THREAD_PATH)}
-              >
-                운영자 문의
-              </span>{" "}
-              — 회수를 중단할 수는 없습니다.
-            </Hint>
-            {rejectOpen && actions.canReject && (
-              <RejectForm
-                claimId={summary.claimId}
-                claimedQuantity={summary.quantity}
-                onCancel={() => setRejectOpen(false)}
+            {openForm === null && (
+              <Hint className="mt-2">
+                {isExchange
+                  ? "판단이 어려우면 "
+                  : "부당한 신청이라고 판단되면 "}
+                <span
+                  role="link"
+                  tabIndex={0}
+                  className={FLINK_CLASS}
+                  onClick={() => navigate(OPERATOR_THREAD_PATH)}
+                >
+                  운영자 문의
+                </span>
+                {!isExchange && " — 회수를 중단할 수는 없습니다."}
+              </Hint>
+            )}
+            {openForm === "REJECT" && actions.canReject && (
+              <RejectForm detail={detail} onCancel={() => setOpenForm(null)} />
+            )}
+            {openForm === "OVERTURN" && canOverturn && (
+              <OverturnForm
+                detail={detail}
+                onCancel={() => setOpenForm(null)}
               />
             )}
           </MBox>
@@ -493,25 +567,22 @@ function Thumbs(props: { urls: Array<string> }) {
   )
 }
 
-interface Evidence {
-  key: string
-  name: string
-  url: string | null
-}
-
 /**
  * 시안 B1r — 검수 반려 6항목(서버 SellerClaimRejectRequest · 소비자 C10-5와 1:1).
  * 사유·상세·법적 근거·소비자 메시지·증빙은 필수, 반려 범위·귀책 변경은 선택이다(제출 = 즉시 확정).
  * 미입력은 에러 문구 없이 버튼만 비활성이다(전역 규칙).
+ * 기-93: 착불(브랜드 귀책)로 신청한 건을 소비자 귀책으로 반려하면 브랜드가 낸 착불 운임을 소비자에게 청구한다.
  */
 function RejectForm(props: {
-  claimId: number
-  claimedQuantity: number
+  detail: ClaimDetailResponse
   onCancel: () => void
 }) {
-  const { claimId, claimedQuantity, onCancel } = props
+  const { detail, onCancel } = props
+  const claimId = detail.summary.claimId
+  const claimedQuantity = detail.summary.quantity
+  const isExchange = detail.summary.type === "EXCHANGE"
   const mutations = useClaimMutations()
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const upload = useEvidenceUpload()
   const [reasonCode, setReasonCode] = useState<ClaimRejectReason | "">("")
   const [detailText, setDetailText] = useState("")
   const [legalBasis, setLegalBasis] = useState<ClaimRejectLegalBasis | "">("")
@@ -519,13 +590,12 @@ function RejectForm(props: {
   const [rejectedQuantity, setRejectedQuantity] = useState("")
   const [faultChangedToSeller, setFaultChangedToSeller] = useState(false)
   const [consumerMessage, setConsumerMessage] = useState("")
-  const [evidences, setEvidences] = useState<Array<Evidence>>([])
-  const [uploadError, setUploadError] = useState<string | null>(null)
-
-  const uploading = evidences.some(item => item.url === null)
-  const uploaded = evidences.filter(
-    (item): item is Evidence & { url: string } => item.url !== null
+  const chargesCollectFreight = isSellerBorne(detail) && !faultChangedToSeller
+  const { data: preview } = useGetClaimFreightPreview(
+    detail,
+    isSellerBorne(detail)
   )
+
   const partialQuantity = Number(rejectedQuantity)
   // 일부 반려는 1 이상 · 신청 수량 미만 — 신청 수량과 같으면 전체 반려와 같다
   const quantityValid =
@@ -539,58 +609,9 @@ function RejectForm(props: {
     !!legalBasis &&
     consumerMessage.trim() !== "" &&
     quantityValid &&
-    uploaded.length > 0 &&
-    !uploading &&
+    upload.uploadedUrls.length > 0 &&
+    !upload.uploading &&
     !mutations.reject.isPending
-
-  const handleFiles = async (files: FileList | null) => {
-    if (!files) return
-    setUploadError(null)
-    const room = EVIDENCE_MAX_COUNT - evidences.length
-    const picked = Array.from(files).slice(0, room)
-    if (files.length > room) {
-      setUploadError(
-        `증빙 사진은 최대 ${EVIDENCE_MAX_COUNT}장까지 올릴 수 있습니다.`
-      )
-    }
-    for (const file of picked) {
-      if (!EVIDENCE_FILE_TYPES.includes(file.type)) {
-        setUploadError("PNG · JPG 파일만 올릴 수 있습니다.")
-        continue
-      }
-      if (file.size > EVIDENCE_MAX_BYTES) {
-        setUploadError("10MB 이하 파일만 올릴 수 있습니다.")
-        continue
-      }
-      const key = `${file.name}-${file.size}-${Date.now()}`
-      setEvidences(prev => [...prev, { key, name: file.name, url: null }])
-      try {
-        // CLAIM 타입은 정사각형 제한이 없다. 응답이 오지 않아도 계속 돌지 않게 시간 제한을 둔다
-        const data = (await fileService.upload(file, "CLAIM", {
-          timeoutMs: 60_000,
-          suppressErrorToast: true,
-        })) as { imageUrl?: string }
-        if (!data?.imageUrl) throw new Error("EMPTY_IMAGE_URL")
-        const imageUrl = data.imageUrl
-        setEvidences(prev =>
-          prev.map(item =>
-            item.key === key ? { ...item, url: imageUrl } : item
-          )
-        )
-      } catch (error) {
-        setEvidences(prev => prev.filter(item => item.key !== key))
-        const serverMessage = isAxiosError(error)
-          ? (error.response?.data as { message?: string } | undefined)?.message
-          : undefined
-        setUploadError(
-          serverMessage ??
-            (isAxiosError(error) && error.code === "ECONNABORTED"
-              ? `${file.name} 업로드 시간이 초과됐습니다. 다시 시도해 주세요.`
-              : `${file.name}을(를) 올리지 못했습니다. 다시 시도해 주세요.`)
-        )
-      }
-    }
-  }
 
   const handleSubmit = async () => {
     if (!reasonCode || !legalBasis) return
@@ -604,7 +625,7 @@ function RejectForm(props: {
           rejectedQuantity: partial ? partialQuantity : undefined,
           faultChangedToSeller,
           consumerMessage: consumerMessage.trim(),
-          evidenceImageUrls: uploaded.map(item => item.url),
+          evidenceImageUrls: upload.uploadedUrls,
         },
       })
       toast.success(
@@ -656,7 +677,7 @@ function RejectForm(props: {
         placeholder="브랜드·운영자 기록용 상세 설명입니다"
       />
 
-      <FieldLabel>반려 범위</FieldLabel>
+      <FieldLabel required>반려 범위</FieldLabel>
       <div className="flex flex-wrap items-center gap-3.5 text-[12px] text-sz-n-700">
         <label className="flex cursor-pointer items-center gap-[5px]">
           <input
@@ -736,12 +757,12 @@ function RejectForm(props: {
         style={FORM_SELECT_CHEVRON_STYLE}
         className={cn(SELECT_CLASS, "h-[34px] w-full")}
       >
-        <option value="KEEP">변경 없음 · 소비자 귀책</option>
+        <option value="KEEP">신청 때 귀책 유지 · 소비자 귀책</option>
         <option value="SELLER">브랜드 귀책으로 인정</option>
       </select>
       {faultChangedToSeller && (
         <Hint>
-          반품 배송비 차감이 환불에 돌아가고, 반려 재발송비는 브랜드가
+          차감한 최초 배송비가 환불에 돌아가고, 반려 재발송비는 브랜드가
           부담합니다.
         </Hint>
       )}
@@ -756,82 +777,36 @@ function RejectForm(props: {
       />
 
       <FieldLabel required>증빙 사진</FieldLabel>
-      <div className="rounded-[8px] border-[1.5px] border-dashed border-sz-n-300 bg-sz-n-50 p-4 text-center">
-        <div className="text-[12px] font-semibold text-sz-n-900">
-          개봉·사용 흔적이 보이는 사진
-        </div>
-        <div className="mt-[3px] text-[11px] text-sz-n-500">
-          PNG · JPG · 10MB 이하 · 최대 {EVIDENCE_MAX_COUNT}장
-        </div>
-        <Btn
-          variant="secondary"
-          className="mt-2"
-          disabled={evidences.length >= EVIDENCE_MAX_COUNT}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          파일 선택
-        </Btn>
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept={EVIDENCE_FILE_TYPES.join(",")}
-          className="hidden"
-          onChange={event => {
-            void handleFiles(event.target.files)
-            event.target.value = ""
-          }}
-        />
-      </div>
-      {uploadError && <p className={ERR_CLASS}>{uploadError}</p>}
-      {evidences.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {evidences.map(item => (
-            <div
-              key={item.key}
-              className="relative size-14 overflow-hidden rounded-[6px] border border-sz-n-200 bg-sz-n-100"
-            >
-              {item.url ? (
-                <img
-                  src={item.url}
-                  alt={item.name}
-                  className="size-full object-cover"
-                />
-              ) : (
-                <div className="flex size-full items-center justify-center">
-                  <Loader2 className="size-4 animate-spin text-sz-n-400" />
-                </div>
-              )}
-              {item.url && (
-                <button
-                  type="button"
-                  aria-label={`${item.name} 삭제`}
-                  onClick={() =>
-                    setEvidences(prev =>
-                      prev.filter(evidence => evidence.key !== item.key)
-                    )
-                  }
-                  className="absolute right-0.5 top-0.5 flex size-4 cursor-pointer items-center justify-center rounded-full bg-black/55 text-white"
+      <EvidenceField title="개봉·사용 흔적이 보이는 사진" upload={upload} />
+
+      {chargesCollectFreight && (
+        <>
+          <CollectFreightNotice />
+          {preview && (
+            <div className="mt-1">
+              <AmountRow
+                label="착불 운임(회수)"
+                sub="브랜드가 낸 금액(상품 기본 배송비 정액) · 소비자 청구"
+              >
+                {formatWon(preview.freight)}
+              </AmountRow>
+              {!isExchange && (
+                <AmountRow
+                  label="환불액에서 차감"
+                  sub="일부 반려 시 환불분에서 · 전체 반려면 재발송 시 청구"
                 >
-                  <X className="size-2.5" />
-                </button>
+                  <b className="font-semibold">−{formatWon(preview.freight)}</b>
+                </AmountRow>
               )}
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
 
-      <div className="mt-3 rounded-[6px] border border-sz-n-200 bg-sz-n-50 px-[13px] py-[11px] text-[11px] leading-[1.7] text-sz-n-700">
-        <b className="font-semibold text-sz-n-900">
-          제출과 동시에 반려가 확정되며
-        </b>{" "}
-        소비자에게{" "}
-        <b className="font-semibold text-sz-n-900">사유와 증빙이 그대로 전달</b>
-        됩니다. 이후 소비자가{" "}
-        <b className="font-semibold text-sz-n-900">
-          재배송비를 결제하면 상품을 다시 보내야
-        </b>{" "}
-        합니다.
+      <div className={cn(MWARN_CLASS, "mt-3")}>
+        <b>제출과 동시에 반려가 확정되며</b> 소비자에게{" "}
+        <b>사유와 증빙이 그대로 전달</b>됩니다. 이후 소비자가{" "}
+        <b>재발송 배송비를 결제하면 상품을 다시 보내야</b> 합니다.
       </div>
       <Btn
         variant="dangerSolid"
@@ -1003,6 +978,9 @@ function ReshipBox(props: { detail: ClaimDetailResponse }) {
 function StorageBox(props: { detail: ClaimDetailResponse }) {
   const { detail } = props
   const storage = detail.summary.storage
+  if (detail.inspection?.result === "REASON_OVERTURNED") {
+    return <OverturnPaymentBox detail={detail} />
+  }
   return (
     <MBox title="반려 보류" tight>
       <FRow label="반려 사유">{detail.summary.rejectReasonLabel ?? "—"}</FRow>
@@ -1031,12 +1009,60 @@ function StorageBox(props: { detail: ClaimDetailResponse }) {
         </span>
       </FRow>
       <Hint>
-        소비자가 <b>재배송비를 결제하면 재발송 탭으로 이동</b>합니다. 결제가
-        없으면 플랫폼이 <b>2회 이상 고지</b>하고{" "}
+        소비자가 <b>재발송 배송비를 결제하면 재발송 탭으로 이동</b>합니다.
+        결제가 없으면 플랫폼이 <b>2회 이상 고지</b>하고{" "}
         <b>최종 고지일로부터 3개월간</b> 상품을 보관합니다. 보관 기한까지 반환
         요청을 기다립니다.
       </Hint>
     </MBox>
+  )
+}
+
+/**
+ * 교환 사유 번복 뒤 결제 대기(B2b → A6 재사용) — 서버는 반려 보류 상태에 사유 번복 청구를 건다.
+ * 브랜드 조치는 없다. 결제가 확인되면 재발송 탭으로 넘어간다.
+ */
+function OverturnPaymentBox(props: { detail: ClaimDetailResponse }) {
+  const { detail } = props
+  const inspection = detail.inspection
+  const fee = inspection?.overturnFee ?? detail.summary.reshipFee?.amount
+  const dueAt = detail.summary.reshipFee?.dueAt ?? null
+  return (
+    <MBox title="사유 번복 · 결제 대기" tight>
+      <FRow label="판정" sub={inspection?.explanation ?? undefined}>
+        {inspection?.resultLabel ?? "사유 번복"}
+      </FRow>
+      {fee !== undefined && fee !== null && (
+        <FRow label="소비자 결제 합계" sub="재발송 배송비 + 착불 운임">
+          <span className="font-semibold tabular-nums">{formatWon(fee)}</span>
+        </FRow>
+      )}
+      {dueAt && (
+        <FRow label="결제 기한">
+          <span className="tabular-nums">{formatFullDateTime(dueAt)}</span>
+        </FRow>
+      )}
+      <Hint>
+        소비자에게 <b>재발송 배송비 + 착불 운임 결제</b>가 요청됐습니다. 결제가
+        확인되면 <b>재발송</b> 탭으로 넘어갑니다.
+      </Hint>
+    </MBox>
+  )
+}
+
+/** 운임 정산 행(기-93) — 브랜드 정산 「± 운임 정산」과 같은 행. 1021 서버부터 내려온다 */
+function FreightRows(props: { detail: ClaimDetailResponse }) {
+  const rows = props.detail.inspection?.freight ?? []
+  if (rows.length === 0) return null
+  return (
+    <FRow label="운임 정산" sub="브랜드 정산 「± 운임 정산」에 반영">
+      {rows.map((row, index) => (
+        <div key={`${row.trigger}-${index}`} className="tabular-nums">
+          {row.triggerLabel} · {row.signedAmount > 0 ? "+" : "−"}
+          {formatWon(Math.abs(row.signedAmount))}
+        </div>
+      ))}
+    </FRow>
   )
 }
 
@@ -1049,6 +1075,12 @@ function ResultBox(props: { detail: ClaimDetailResponse }) {
   return (
     <MBox title="처리 결과" tight>
       <FRow label="결과">{headerBadge(detail)}</FRow>
+      {detail.inspection?.result === "REASON_OVERTURNED" && (
+        <FRow label="판정" sub={detail.inspection.explanation ?? undefined}>
+          {detail.inspection.resultLabel ?? "사유 번복"}
+        </FRow>
+      )}
+      <FreightRows detail={detail} />
 
       {(code === "REFUNDED" || code === "REFUND_PENDING") && (
         <>
@@ -1143,7 +1175,7 @@ function ResultBox(props: { detail: ClaimDetailResponse }) {
             </FRow>
           ) : (
             <>
-              <FRow label="반송 송장" sub="소비자 재배송비 결제 후 발송">
+              <FRow label="반송 송장" sub="소비자 재발송 배송비 결제 후 발송">
                 <span className="tabular-nums">
                   {summary.reshipCarrierLabel ?? "—"}{" "}
                   {summary.reshipTrackingNumber ?? ""}

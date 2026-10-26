@@ -92,7 +92,7 @@ export interface LoginData {
  * 필드명은 백엔드 SellerCompleteRegistrationRequest와 1:1 일치.
  *
  * 숫자 필드는 서버가 Integer로 받으므로 number로 변환해 보낸다.
- * 선택 항목(freeShippingThreshold·remoteAreaSurcharge)은 미입력 시 null.
+ * 선택 항목(freeShippingThreshold·jejuSurcharge·remoteAreaSurcharge)은 미입력 시 null.
  */
 export interface OnboardingData {
   recipientName: string
@@ -101,10 +101,11 @@ export interface OnboardingData {
   detailAddress: string
   defaultDeliveryFee: number
   freeShippingThreshold: number | null
+  /** 제주 추가비(선택) — 도서산간과 따로 받는다(제주는 항공·해상 운임이 별도) */
+  jejuSurcharge: number | null
+  /** 도서산간 추가비 — 제주 제외(선택) */
   remoteAreaSurcharge: number | null
   shippingLeadDays: number
-  returnFee: number
-  exchangeFee: number
 }
 
 // 온보딩 성공 응답 — 정식 access/refresh 토큰이 발급된다(로그인 완료 처리에 사용).

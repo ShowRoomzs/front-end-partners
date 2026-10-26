@@ -2,6 +2,7 @@ import ListViewWrapper from "@/common/components/ListViewWrapper/ListViewWrapper
 import Table from "@/common/components/Table/Table"
 import { usePaginationInfo } from "@/common/hooks/usePaginationInfo"
 import { useParams } from "@/common/hooks/useParams"
+import { widenStatusForHold } from "@/features/contracts/constants/columns"
 import { SELECT_CHEVRON_STYLE } from "@/features/contracts/constants/params"
 import {
   GroupBuyEmptyState,
@@ -78,6 +79,13 @@ export default function GroupBuyListPage() {
 
   const hasCondition = params.tab !== "ALL" || !!params.keyword
   const isEmpty = !isLoading && (list?.content.length ?? 0) === 0
+
+  // 오픈 전 공구의 정지 보류 배지가 있을 때만 상태 열을 넓힌다(배지가 셀 밖으로 잘리지 않게)
+  const hasHold = !!list?.content.some(row => row.sanctionHold)
+  const columns = useMemo(
+    () => widenStatusForHold(GROUP_BUY_COLUMNS, "statusLabel", hasHold),
+    [hasHold]
+  )
 
   const emptyState = useMemo(
     () => (
@@ -177,7 +185,7 @@ export default function GroupBuyListPage() {
 
           <Table<GroupBuyListItem, "groupBuyId">
             rowKey="groupBuyId"
-            columns={GROUP_BUY_COLUMNS}
+            columns={columns}
             data={list?.content ?? []}
             pageInfo={pageInfo}
             isLoading={isLoading}

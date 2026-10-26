@@ -99,7 +99,7 @@ export interface DirectCancelTarget {
 
 /**
  * E5 주문 직권 취소 — 품절·하자로 브랜드가 스스로 취소한다. 버튼은 중립이지만 결과는 무겁다:
- * 사유가 소비자에게 그대로 전달되고 취소율에 반영된다. 환불은 운영자가 실행한다.
+ * 사유가 소비자에게 그대로 전달되고 취소율에 반영된다. 환불은 PG가 자동 처리한다(10-05 결정).
  * 서버는 설명을 필수로 받는다(약관 제18조② · 사유와 함께 소비자에게 전달).
  */
 export function DirectCancelModal(props: {
@@ -376,8 +376,9 @@ export function RejectCancelModal(props: {
         </B>{" "}
         주문은 <B className="text-sz-n-900">{returnTabLabel} 탭으로 돌아가</B>{" "}
         배송 처리를 이어가야 합니다. 소비자는 수령 후{" "}
-        <B className="text-sz-n-900">반품 요청</B>으로만 되돌릴 수 있고, 그때는{" "}
-        <B className="text-sz-n-900">반품비가 발생</B>합니다.
+        <B className="text-sz-n-900">반품 요청</B>으로만 되돌릴 수 있고, 그때
+        단순 변심 반품이면{" "}
+        <B className="text-sz-n-900">반송 배송비는 소비자가 부담</B>합니다.
       </MWarn>
     </GbModal>
   )

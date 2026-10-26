@@ -28,7 +28,7 @@ export const INPUT_ERROR_CLASS = "border-sz-danger-text"
 export const SELECT_CLASS = `${INPUT_CLASS} cursor-pointer appearance-none pr-[30px]`
 /** 시안 `.ta` */
 export const TEXTAREA_CLASS =
-  "min-h-[76px] w-full resize-y rounded-[6px] border border-sz-n-300 bg-white px-3 pt-[9px] pb-2 text-[13px] leading-[1.65] text-sz-n-900 outline-none placeholder:text-sz-n-400 focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50"
+  "min-h-[76px] w-full resize-y rounded-[6px] border border-sz-n-300 bg-white px-3 pt-[9px] pb-2 text-[13px] leading-[1.65] text-sz-n-900 outline-none placeholder:text-sz-n-400 focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50 disabled:cursor-not-allowed disabled:bg-sz-n-100 disabled:text-sz-n-500"
 
 /** 시안 `.hint` · `.err` · `.fsub` */
 export const HINT_CLASS = "mt-[5px] text-[11px] leading-[1.55] text-sz-n-500"

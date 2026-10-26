@@ -1,3 +1,5 @@
+import { isAxiosError } from "axios"
+
 /*
   백엔드 API가 아직 없는 화면(브랜드 탈퇴 신청)의 데이터 원천.
   정산 관리 · 배송·반품 정책은 실제 API로 옮겼다(2026-10-17).
@@ -30,3 +32,31 @@ export class ApiNotReadyError extends Error {
     this.name = "ApiNotReadyError"
   }
 }
+
+/**
+ * 백엔드 main에는 있으나 개발 서버에 아직 배포되지 않은 API(2026-10-24 기준 1017 · 1021 설계분).
+ *
+ * 실호출을 먼저 하고, 서버가 그 경로를 모르면(404 · 405) 배포본은 `ApiNotReadyError`(화면은 「준비 중」),
+ * 개발 서버는 목업으로 채운다. 배포되면 코드를 고치지 않아도 실데이터로 바뀐다.
+ * 개발 서버는 로컬 로그인이 막혀(CORS) 실호출이 대개 실패하므로 어떤 실패든 목업으로 넘긴다.
+ *
+ * 실호출에는 `{ suppressErrorToast: true }`를 넘겨, 아직 없는 경로의 404 토스트가 뜨지 않게 한다.
+ */
+export async function callOrMock<T>(
+  feature: string,
+  real: () => Promise<T>,
+  mock: () => Promise<T>
+): Promise<T> {
+  try {
+    return await real()
+  } catch (error) {
+    if (DEV_MOCK_ENABLED) return mock()
+    if (isAxiosError(error) && [404, 405].includes(error.response?.status ?? 0))
+      throw new ApiNotReadyError(feature)
+    throw error
+  }
+}
+
+/** `callOrMock`의 실패가 「아직 배포 안 됨」인지 — 화면이 「준비 중」을 고를 때 쓴다 */
+export const isApiNotReady = (error: unknown) =>
+  error instanceof ApiNotReadyError

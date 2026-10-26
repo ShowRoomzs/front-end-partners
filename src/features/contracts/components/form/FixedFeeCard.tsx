@@ -9,7 +9,11 @@ import {
   INPUT_CLASS,
   INPUT_ERROR_CLASS,
 } from "@/features/contracts/components/shared/styles"
-import { FIXED_FEE_TRIGGER_OPTIONS } from "@/features/contracts/constants/labels"
+import {
+  FIXED_FEE_TRIGGER_OPTIONS,
+  FIXED_FEE_TRIGGER_TOOLTIP,
+  paymentDaysText,
+} from "@/features/contracts/constants/labels"
 import type { ContractFormApi } from "@/features/contracts/hooks/useContractForm"
 import {
   formatIntegerInput,
@@ -19,7 +23,15 @@ import { cn } from "@/lib/utils"
 
 interface FixedFeeCardProps {
   form: ContractFormApi
+  /** 「그 뒤 N영업일」 — 서버 설정값(main 상세 `fixedFee.paymentBusinessDays`). 없으면 「N영업일」 */
+  paymentBusinessDays?: number | null
 }
+
+/** 시안 B1 `.seg-i` title — 선택지마다 정의 툴팁(기-28) */
+const TRIGGER_OPTIONS = FIXED_FEE_TRIGGER_OPTIONS.map(option => ({
+  ...option,
+  title: FIXED_FEE_TRIGGER_TOOLTIP[option.value],
+}))
 
 /**
  * 시안 B1~B3 「고정 지급비」 — 금액 + 지급 시점만 계약서에 기재된다(§25-6-4).
@@ -27,7 +39,7 @@ interface FixedFeeCardProps {
  * 하지 않는다는 사실을 계약 전에 알려야 한다.
  */
 export default function FixedFeeCard(props: FixedFeeCardProps) {
-  const { form } = props
+  const { form, paymentBusinessDays } = props
   const { values, errors, set } = form
   const showConsent =
     values.fixedFeeAmount !== null && values.fixedFeeAmount > 0
@@ -71,7 +83,7 @@ export default function FixedFeeCard(props: FixedFeeCardProps) {
         <FormRow label="지급 시점" required>
           <SegmentedControl
             compact
-            options={FIXED_FEE_TRIGGER_OPTIONS}
+            options={TRIGGER_OPTIONS}
             value={values.fixedFeeTrigger}
             onChange={fixedFeeTrigger => set({ fixedFeeTrigger })}
           />
@@ -79,6 +91,11 @@ export default function FixedFeeCard(props: FixedFeeCardProps) {
             브랜드가 <b className="text-sz-n-700">인플루언서에게 직접 지급</b>
             하는 시점입니다. 계약서에 기재되며 플랫폼은 대금을 보관하거나
             중개하지 않습니다.
+            <br />
+            <b className="text-sz-n-700">게시물 등록 후</b> = 오픈 승인 후
+            쇼룸에 노출된 때 · <b className="text-sz-n-700">공구 종료 후</b> =
+            중단 포함 · <b className="text-sz-n-700">정산 완료 후</b> = 정산
+            지급 완료 — 그 뒤 {paymentDaysText(paymentBusinessDays)} 안에 지급
           </div>
         </FormRow>
 
@@ -105,7 +122,7 @@ export default function FixedFeeCard(props: FixedFeeCardProps) {
               <b className="font-semibold text-sz-n-900">
                 연결·소통 이슈 스레드
               </b>
-              에서 운영자 중재를 요청할 수 있습니다(계약서가 근거가 됩니다)
+              에서 운영자 중재를 요청할 수 있습니다
             </div>
             <ConsentCheck
               required

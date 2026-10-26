@@ -1,5 +1,7 @@
 import { formatDateTimeShort } from "@/common/utils/formatDate"
 import Btn from "@/features/contracts/components/shared/Btn"
+import { RESEND_SUSPENDED_TEXT } from "@/features/contracts/constants/suspension"
+import { SUSPENSION_COPY } from "@/features/suspension"
 import { cn } from "@/lib/utils"
 
 interface SignatureBoxesProps {
@@ -14,6 +16,8 @@ interface SignatureBoxesProps {
   isExpired?: boolean
   /** 내 칸의 [서명 안내 다시 받기] — 서버 permissions.canRequestResend */
   showResend: boolean
+  /** 계정 이용 정지(시안 15 S4b) — 버튼은 자리를 지킨 채 비활성 · 설명 줄을 정지 안내로 바꾼다 */
+  resendBlocked?: boolean
   isResending: boolean
   onResend: () => void
 }
@@ -33,6 +37,7 @@ export default function SignatureBoxes(props: SignatureBoxesProps) {
     counterpartyViewed = false,
     isExpired = false,
     showResend,
+    resendBlocked = false,
     isResending,
     onResend,
   } = props
@@ -66,17 +71,27 @@ export default function SignatureBoxes(props: SignatureBoxesProps) {
                     variant="secondary"
                     className="mt-[9px] w-full"
                     isLoading={isResending}
+                    disabled={resendBlocked}
+                    title={
+                      resendBlocked ? SUSPENSION_COPY.blockedTooltip : undefined
+                    }
                     onClick={onResend}
                   >
                     서명 안내 다시 받기
                   </Btn>
                   <div className="mt-1.5 text-[11px] leading-[1.6] text-sz-n-500">
-                    누르면{" "}
-                    <b className="font-semibold text-sz-n-700">
-                      운영팀 소통 스레드
-                    </b>
-                    에 재발송 요청이 자동 등록되고, 운영자가 확인한 뒤
-                    모두싸인에서 다시 보냅니다.
+                    {resendBlocked ? (
+                      RESEND_SUSPENDED_TEXT
+                    ) : (
+                      <>
+                        누르면{" "}
+                        <b className="font-semibold text-sz-n-700">
+                          운영팀 소통 스레드
+                        </b>
+                        에 재발송 요청이 자동 등록되고, 운영자가 확인한 뒤
+                        모두싸인에서 다시 보냅니다.
+                      </>
+                    )}
                   </div>
                 </>
               )}

@@ -316,6 +316,29 @@ export interface OrderDetailResponse {
   cancelRequest: OrderCancelRequestBlock | null
   actions: OrderActions
   history: Array<OrderHistoryItem>
+  /**
+   * 추적 정지 · 소비자 선택(10c C7b · 1021 기-15 【잠정】) — 추적 정지가 아니고 선택도 없으면 null.
+   * 개발 서버가 새 버전으로 배포되기 전에는 응답에 없다(undefined) — 그때는 「선택 전」 안내만 그린다.
+   */
+  stallChoice?: OrderStallChoice | null
+}
+
+/** WAITING 선택 개방 전 · OPEN 소비자 선택 대기 · CHOSEN 소비자가 골랐다 */
+export type OrderStallChoiceState = "WAITING" | "OPEN" | "CHOSEN"
+
+export interface OrderStallChoice {
+  state: OrderStallChoiceState
+  /** 선택 개방 시각(이벤트 시각 — UTC 벽시계) */
+  opensAt: string | null
+  /** 개방까지 남은 일수 — 「N일 뒤 열림」 */
+  daysUntilOpen: number | null
+  daysStalled: number | null
+  /** RESHIP = 새 송장 등록([송장 수정])으로 처리 · REFUND = [소비자 환불 처리] */
+  choice: "RESHIP" | "REFUND" | null
+  choiceLabel: string | null
+  chosenAt: string | null
+  /** 소비자가 환불을 골랐고 아직 배송중 */
+  canRefund: boolean
 }
 
 // ── 액션 ─────────────────────────────────────────────

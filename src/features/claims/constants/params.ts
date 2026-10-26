@@ -18,6 +18,7 @@ export const CLAIM_QUERY_KEYS = {
   SUMMARY: "sellerClaimSummary",
   DETAIL: "sellerClaimDetail",
   RESHIP_TEMPLATE: "sellerClaimReshipTemplate",
+  FREIGHT_PREVIEW: "sellerClaimFreightPreview",
 } as const
 
 /** 시안 상태 탭 7종 — 순서가 화면 순서다 */
@@ -163,6 +164,24 @@ export const EVIDENCE_MAX_BYTES = 10 * 1024 * 1024
 export const EVIDENCE_FILE_TYPES = ["image/png", "image/jpeg"]
 
 export const CLAIM_SUMMARY_POLL_INTERVAL = 30_000
+
+/**
+ * 【잠정】 기-17 검수 기한 = 입고 확인 후 2영업일 — 변호사 확인 뒤 바뀔 수 있어 문구를 한 곳에 둔다.
+ * 실제 기한 시각은 서버 `inspectDueAt`이 정본이고, 이 값은 안내 문구에만 쓴다.
+ */
+export const INSPECT_DUE_LABEL = "2영업일"
+
+/**
+ * 【잠정】 기-17 자동 입고 = 택배 도착 후 N영업일 [정책값 미정]. 서버 설정
+ * `order.claim.auto-receive-business-days`는 응답에 내려오지 않는다 — 숫자를 짐작해 적지 않는다.
+ */
+export const AUTO_RECEIVE_LABEL = "N영업일"
+
+/** 착불 신청 사유의 접수 이름 — B2 「불량 접수라 착불 회수」 */
+export const SELLER_BORNE_INTAKE_LABEL: Partial<Record<ClaimReason, string>> = {
+  DAMAGED_OR_DEFECTIVE: "불량",
+  WRONG_OR_LATE_DELIVERY: "오배송",
+}
 
 /** 「운영자 문의」 — 연결·소통의 운영팀 채널 */
 export const OPERATOR_THREAD_PATH = "/connections?operator=1"

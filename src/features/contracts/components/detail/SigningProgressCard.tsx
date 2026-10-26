@@ -5,7 +5,9 @@ import { formatDateTimeShort } from "@/common/utils/formatDate"
 import SignatureBoxes from "@/features/contracts/components/detail/SignatureBoxes"
 import Stepper from "@/features/contracts/components/detail/Stepper"
 import Btn from "@/features/contracts/components/shared/Btn"
+import { CANCEL_CONSENT_PHRASE } from "@/features/contracts/constants/provisional"
 import { FSUB_CLASS } from "@/features/contracts/components/shared/styles"
+import { SUSPENSION_COPY } from "@/features/suspension"
 import type { ContractDetailResponse } from "@/features/contracts/types"
 import {
   buildStepper,
@@ -24,6 +26,8 @@ interface SigningProgressCardProps {
   onCancelRequest: () => void
   onEditAfterReject: () => void
   onDelete: () => void
+  /** 계정 이용 정지 — [수정하고 다시 요청] · [서명 안내 다시 받기]를 비활성으로 둔다(시안 15 S4a · S4b) */
+  suspended?: boolean
 }
 
 const NOTE_BY_VIEW: Partial<Record<ContractViewState, string>> = {
@@ -39,6 +43,7 @@ const NOTE_BY_VIEW: Partial<Record<ContractViewState, string>> = {
   declined: "상대 거절로 종결",
   expired: "서명 기한 초과로 종결",
   canceled: "어드민 직권 취소로 종결",
+  terminated: "계약 성립 후 해지로 종결",
 }
 
 /**
@@ -56,6 +61,7 @@ export default function SigningProgressCard(props: SigningProgressCardProps) {
     onCancelRequest,
     onEditAfterReject,
     onDelete,
+    suspended = false,
   } = props
   const { signature, review, permissions, counterparty } = detail
   const creatorName = counterparty.showroomName ?? "인플루언서"
@@ -116,10 +122,22 @@ export default function SigningProgressCard(props: SigningProgressCardProps) {
           </b>{" "}
           인플루언서에게도 취소 사실과 사유가 전달되었습니다. 조건을 고쳐 다시
           진행하려면 <b className="font-semibold">새 계약을 작성</b>하세요.
+          취소는 <b className="font-semibold">{CANCEL_CONSENT_PHRASE}</b>{" "}
+          처리됩니다.
+        </Notice>
+      )}
+      {view === "terminated" && (
+        <Notice tone="neutral" className="mb-4">
+          <b className="font-semibold">
+            해지 요청이 운영자 확인을 거쳐 처리되어 종결된 계약입니다.
+          </b>{" "}
+          공구는 오픈되지 않았고 인플루언서에게도 해지 사실과 사유가
+          전달되었습니다. 조건을 고쳐 다시 진행하려면{" "}
+          <b className="font-semibold">새 계약을 작성</b>하세요.
         </Notice>
       )}
 
-      <Stepper steps={buildStepper(view, detail)} />
+      <Stepper steps={buildStepper(view, detail, brandName)} />
 
       {view === "reviewPending" && (
         <>
@@ -177,6 +195,8 @@ export default function SigningProgressCard(props: SigningProgressCardProps) {
               <Btn
                 variant="primary"
                 className="w-full"
+                disabled={suspended}
+                title={suspended ? SUSPENSION_COPY.blockedTooltip : undefined}
                 onClick={onEditAfterReject}
               >
                 수정하고 다시 요청
@@ -207,6 +227,7 @@ export default function SigningProgressCard(props: SigningProgressCardProps) {
           counterpartyViewed={signature.counterpartyViewed}
           isExpired={view === "expired"}
           showResend={permissions.canRequestResend}
+          resendBlocked={suspended}
           isResending={isResending}
           onResend={onResend}
         />
@@ -216,21 +237,21 @@ export default function SigningProgressCard(props: SigningProgressCardProps) {
         view === "signingMine" ||
         view === "signingTheirs") && (
         <Notice tone="info" className="mt-3">
-          <b className="font-semibold">양측이 모두 서명해야</b> 체결로
-          넘어갑니다. 서명이 끝나면 어드민이 확인해{" "}
-          <b className="font-semibold">체결 완료 처리</b>하고, 그때 서명
-          PDF·감사추적인증서가 발급되며 공구가 생성됩니다.
+          <b className="font-semibold">양측이 모두 서명하면 계약이 성립</b>
+          합니다. 어드민이 서명 완료를 확인해{" "}
+          <b className="font-semibold">공구를 생성</b>하고, 그때 서명
+          PDF·감사추적인증서를 업로드합니다.
         </Notice>
       )}
 
       {view === "conclusionPending" && (
         <Notice tone="info" className="mt-3">
           <b className="font-semibold">
-            양측 서명이 확인되어 어드민 체결 처리를 기다립니다.
+            양측 서명이 확인되어 어드민 공구 생성 처리를 기다립니다.
           </b>{" "}
           서명 완료는{" "}
           <b className="font-semibold">어드민이 모두싸인에서 확인</b>한
-          것이고(자동 통지가 아닙니다), 체결 처리 시{" "}
+          것이고(자동 통지가 아닙니다), 공구 생성 처리 시{" "}
           <b className="font-semibold">
             어드민이 서명 PDF·감사추적인증서를 내려받아 업로드
           </b>
