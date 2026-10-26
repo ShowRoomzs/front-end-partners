@@ -47,12 +47,22 @@ const SELF_TITLED_PREFIXES = [
   "/product/list",
   "/contract",
   "/group-buy",
-  // 자리표시 화면(ComingSoonPage)은 제목을 직접 그린다 — 셸 H1과 겹치지 않게 뺀다
   "/",
   "/performance",
   "/sales/orders",
   "/sales/claims",
   "/settlement/history",
+  // 기본정보 관리는 제목 + 설명 줄을 직접 그린다
+  "/store/basic",
+  // 자리표시 화면(ComingSoonPage)은 제목을 직접 그린다 — 셸 H1과 겹치지 않게 뺀다
+  "/product/request",
+  "/showroom",
+  "/analytics",
+  "/post",
+  "/lottery",
+  "/settlement/vat",
+  "/settlement/commission",
+  "/support",
 ]
 
 /**

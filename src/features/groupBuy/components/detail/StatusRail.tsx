@@ -588,8 +588,9 @@ export function StatusRailCard(props: {
       rows.push({ label: "게시물", value: postBadge })
       hint = (
         <Hint>
-          구매확정이 끝나면 정산이 시작됩니다. 배송·콘텐츠 이행에 문제가 있으면{" "}
-          <B>이슈 스레드</B>에서 논의해 주세요. 공구를 다시 열 수는 없습니다.
+          구매확정이 끝나면 정산이 시작됩니다. 배송·콘텐츠 이행에 문제가 있으면
+          정산 확인 기간에 <B>정산 조정 요청</B>으로 협의해 주세요. 공구를 다시
+          열 수는 없습니다.
         </Hint>
       )
       break
