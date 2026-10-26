@@ -73,9 +73,10 @@ export function AfterEndTasksCard(props: {
             </span>
           ) : (
             <>
+              {/* 시안 B5의 「운영자가 중재합니다」는 rev.5 이전 표현 — 금액은 양측 합의로만 바뀌고 운영팀은 열람만 한다 */}
               <span>콘텐츠를 안 올렸거나 리워드 금액이 다를 때</span>
               <span className="text-[11px] text-sz-n-500">
-                운영자가 중재합니다
+                정산 확인 기간에 정산 조정 요청으로 양측이 협의합니다
               </span>
             </>
           )}
