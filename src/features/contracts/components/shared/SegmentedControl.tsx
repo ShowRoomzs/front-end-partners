@@ -1,7 +1,8 @@
 import { cn } from "@/lib/utils"
 
 interface SegmentedControlProps<T extends string> {
-  options: Array<{ value: T; label: string }>
+  /** title — 시안 `.seg-i`의 브라우저 툴팁(지급 시점 정의 · 기-28) */
+  options: Array<{ value: T; label: string; title?: string }>
   value: T | null
   onChange: (value: T) => void
   disabled?: boolean
@@ -28,6 +29,7 @@ export default function SegmentedControl<T extends string>(
             type="button"
             role="radio"
             aria-checked={isOn}
+            title={option.title}
             disabled={disabled}
             onClick={() => onChange(option.value)}
             className={cn(

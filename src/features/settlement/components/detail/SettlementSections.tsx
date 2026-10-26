@@ -26,8 +26,12 @@ import {
   STATEMENT_PAGE_SIZE,
   TAX_DOCUMENT_STATUS_LABEL,
   TAX_DOCUMENT_STATUS_VARIANT,
+  TAX_INVOICE_SUPPLIER_FALLBACK,
 } from "@/features/settlement/constants/params"
-import { useGetSettlementItems } from "@/features/settlement/hooks/useSettlementQueries"
+import {
+  useGetCompanyInfo,
+  useGetSettlementItems,
+} from "@/features/settlement/hooks/useSettlementQueries"
 import type {
   PayoutStatus,
   SettlementDetail,
@@ -287,9 +291,9 @@ export function BreakdownCard({ detail }: Props) {
   return (
     <Sec
       title="정산 금액 분해"
-      note={
+      note={`${
         reviewing ? "확정 금액 · 조정 요청이 없으면 이 금액으로 지급" : "확정"
-      }
+      } · 리워드 = 확정 거래액 × 리워드율`}
     >
       <table className="w-full border-collapse text-[12px]">
         <tbody className={MTAB_TBODY}>
@@ -304,7 +308,7 @@ export function BreakdownCard({ detail }: Props) {
           />
           <SubRow
             label="반품 차감"
-            note={`${b.return.count}건${reviewing ? " · 종결" : ""}`}
+            note={`${b.return.count}건${reviewing ? " · 종결" : ""} · 상품 금액 기준 · 차감한 최초 배송비는 아래 별도 줄 · 브랜드 귀책 전환으로 환불에 더한 운임도 이 줄`}
             amount={formatMinusWon(b.return.amount)}
           />
           <SubRow
@@ -349,16 +353,34 @@ export function BreakdownCard({ detail }: Props) {
             note={`${formatPercent(ratioToPercent(b.rewardVat.rate))} · 별도 · SHOWROOMZ 세금계산서 발행분`}
             amount={formatMinusWon(b.rewardVat.amount)}
           />
+          {/* 기-19 — 0원이어도 줄을 남긴다(시안 D1 「+0원」) */}
+          <SubRow
+            label="배송비"
+            note="소비자 결제분 · 브랜드 수취액에 가산 · 리워드 기준 판매금액에 포함하지 않음"
+            amount={formatPlusWon(b.consumerDeliveryFee)}
+          />
           <SubRow
             label="재발송비"
-            note={`교환·반려 재발송 · 브랜드 수취액에만 가산 · 리워드 기준 판매금액에 포함하지 않음${b.reshipFee.count === 0 ? " · 이 공구 해당 없음" : ` · ${b.reshipFee.count}건`}`}
+            note={`교환·반려 재발송 배송비 · 소비자 결제분(귀책 번복 시 브랜드가 낸 착불 운임 청구분 포함) · 브랜드 수취액에만 가산 · 리워드 기준 판매금액에 포함하지 않음${b.reshipFee.count === 0 ? " · 이 공구 해당 없음" : ` · ${b.reshipFee.count}건`}`}
             amount={formatPlusWon(b.reshipFee.amount)}
           />
-          {b.consumerDeliveryFee !== 0 && (
+          {/* 기-18 · 기-93 — 1021 서버에서 생긴 줄이라 배포 전 응답에는 없다 */}
+          {b.returnDeductionFee && b.returnDeductionFee.count > 0 && (
             <SubRow
-              label="소비자 결제 배송비"
-              note="브랜드 수취액에 가산"
-              amount={formatPlusWon(b.consumerDeliveryFee)}
+              label="반품 시 차감한 최초 배송비"
+              note={`무료배송 · 소비자 귀책 ${b.returnDeductionFee.count}건 · 환불에서 차감한 금액 · 브랜드 정산에 남음`}
+              amount={formatPlusWon(b.returnDeductionFee.amount)}
+            />
+          )}
+          {b.freightAdjustment && b.freightAdjustment.count > 0 && (
+            <SubRow
+              label="운임 정산"
+              note={`귀책 변경 ${b.freightAdjustment.count}건 · 소비자 부담분은 더하고 환급분은 뺀다`}
+              amount={
+                b.freightAdjustment.amount < 0
+                  ? formatMinusWon(-b.freightAdjustment.amount)
+                  : formatPlusWon(b.freightAdjustment.amount)
+              }
             />
           )}
           <TotalRow label="내 수취액" amount={b.brandPayoutBeforeClawback} />
@@ -508,7 +530,17 @@ export function DistributionCard({ detail }: Props) {
                     MUTED_PAYOUT.includes(payout.status) && "text-sz-n-500"
                   )}
                 >
-                  {payoutStatusText(payout)}
+                  {payout.hold ? (
+                    // 시안 15 S5 — 보류는 상태 라벨을 바꾸지 않고 보조 배지로(정산 상태는 「지급 예정」 그대로)
+                    <>
+                      <span className="inline-flex h-5 items-center whitespace-nowrap rounded-[6px] bg-sz-n-100 px-[7px] text-[11px] font-medium text-sz-n-600">
+                        {payout.hold.sanction ? "지급 정지" : payout.hold.label}
+                      </span>
+                      <MNote>{payout.hold.scheduleLabel}</MNote>
+                    </>
+                  ) : (
+                    payoutStatusText(payout)
+                  )}
                 </td>
               </tr>
             )
@@ -588,12 +620,20 @@ export function TaxInvoiceCard(
 ) {
   const { detail, downloadingId, onDownload } = props
   const documents = detail.taxDocuments
+  // 기-35 — 서버 설정값(company.*)이 배포되기 전에는 시안 값으로 그린다
+  const { data: company } = useGetCompanyInfo()
+  const supplier = company ?? TAX_INVOICE_SUPPLIER_FALLBACK
 
   return (
     <Sec
       title="SHOWROOMZ 발행 세금계산서"
       note="정산 1건당 1장 · 공급가액 = 리워드 + 플랫폼 수수료"
     >
+      <div className="mb-2 text-[11px] text-sz-n-600">
+        공급자 <b className="text-sz-n-900">{supplier.name}</b> · 대표{" "}
+        {supplier.representative} · {supplier.registrationNumber} ·{" "}
+        {supplier.address}
+      </div>
       {documents === null ? (
         <SecEmpty>
           {detail.status === "ADJUSTING"
@@ -681,9 +721,9 @@ export function TaxInvoiceCard(
 }
 
 /**
- * 반품·교환 배송비(§43-4) — 주문 결제금과 별도 결제라 분해 표·정산 반영액에 넣지 않는다.
- * 서버는 부담 주체별 합계(소비자 · 브랜드)만 내린다. 사유 칸은 부담 주체를 가르는 규칙(아래 안내문과 같은
- * 기준)을 적는다.
+ * 반품·교환 배송비(기-18 변경 · 시안 13 rev.9) — 상품 배송비로 자동 계산한다. 소비자 행은 무료배송 주문의
+ * 단순 변심 반품에서 환불에서 뺀 최초 배송비(브랜드 정산에 남음 · 분해 표의 「반품 시 차감한 최초 배송비」 줄),
+ * 브랜드 행은 불량 · 오배송의 착불 운임(정산 대상 아님). 서버는 부담 주체별 합계만 내린다.
  */
 export function ShippingFeeCard({ detail }: Props) {
   const { consumer, brand } = detail.claimShipping
@@ -691,18 +731,19 @@ export function ShippingFeeCard({ detail }: Props) {
     {
       key: "CONSUMER",
       label: "소비자",
-      note: "신청 시 인앱 결제",
-      reason: "단순변심 등",
+      note: "최초 배송비 · 환불에서 차감",
+      reason: "단순변심",
       fee: consumer,
-      result: "브랜드 수취",
-      resultNote: "회수 택배비를 브랜드가 지출했으므로",
+      result: "브랜드 정산에 남음",
+      resultNote:
+        "무료배송 주문의 최초 배송비 · 분해 표 「반품 시 차감한 최초 배송비」 줄",
       muted: false,
     },
     {
       key: "BRAND",
       label: "브랜드",
       note: "회수·재발송 비용 부담",
-      reason: "불량·오배송 등",
+      reason: "불량 · 오배송",
       fee: brand,
       result: "정산 대상 아님",
       resultNote: "성과 관리의 원가(배송비)에서 처리",
@@ -713,7 +754,7 @@ export function ShippingFeeCard({ detail }: Props) {
   return (
     <Sec
       title="반품 · 교환 배송비"
-      note="별도 결제 · 정산 반영액에 포함되지 않음"
+      note="단순 변심 반품 = 무료배송 주문만 최초 배송비를 환불에서 차감(브랜드 정산에 남음) · 단순 변심 교환 = 소비자가 재발송 배송비 결제 → 계산식 「재발송비」 줄 · 불량·오배송 = 착불 · 운임 브랜드 부담"
     >
       <table className="w-full border-collapse text-[12px]">
         <thead>
@@ -747,12 +788,10 @@ export function ShippingFeeCard({ detail }: Props) {
         </tbody>
       </table>
       <Note>
-        반품·교환 배송비는 <B>주문 결제금과 별도로 결제</B>되므로 위 정산 금액
-        분해와 주문 명세의 <B>정산 반영액에는 포함되지 않습니다.</B> 부담 주체는{" "}
-        <B>사유에 따라 갈립니다</B> — 단순변심은 소비자, 불량·오배송은
-        브랜드입니다(기본정보 관리의 배송·반품 정책 기준).{" "}
-        <WaitTag>[미정]</WaitTag> 반품비·교환비 금액 산정(왕복 전액 vs 회수
-        편도) 확정 대기.
+        반품·교환 배송비는 <B>상품 배송비로 자동 계산</B>됩니다(기-18). 단순
+        변심 반품에서 <B>환불에서 차감한 최초 배송비</B>와 교환·반려의{" "}
+        <B>재발송비</B>는 브랜드 수취액에 더해지고, 불량·오배송의{" "}
+        <B>착불 운임은 브랜드 부담</B>(정산 대상 아님)입니다.
       </Note>
     </Sec>
   )

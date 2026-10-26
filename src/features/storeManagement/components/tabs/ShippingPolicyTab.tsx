@@ -1,3 +1,4 @@
+import Notice from "@/common/components/Notice/Notice"
 import { Button } from "@/components/ui/button"
 import {
   StoreButtonRow,
@@ -21,6 +22,7 @@ import toast from "react-hot-toast"
 interface FormState {
   defaultDeliveryFee: string
   freeShippingThreshold: string
+  jejuSurcharge: string
   remoteAreaSurcharge: string
   shippingLeadDays: string
 }
@@ -31,12 +33,14 @@ type FormKey = keyof FormState
 const SHIP_DUE_MIN = 1
 const SHIP_DUE_MAX = 7
 
-const toText = (value: number | null) => (value === null ? "" : String(value))
+const toText = (value: number | null | undefined) =>
+  value === null || value === undefined ? "" : String(value)
 
 function toForm(policy: DeliveryPolicyResponse): FormState {
   return {
     defaultDeliveryFee: toText(policy.defaultDeliveryFee),
     freeShippingThreshold: toText(policy.freeShippingThreshold),
+    jejuSurcharge: toText(policy.jejuSurcharge),
     remoteAreaSurcharge: toText(policy.remoteAreaSurcharge),
     shippingLeadDays: String(policy.shippingLeadDays),
   }
@@ -53,8 +57,9 @@ function withComma(value: string) {
  * 사업자 정보·정산 계좌와 달리 **브랜드가 바로 고친다**(운영자 검토 없음) — 영업 조건이지 법정
  * 신원정보가 아니다. 저장한 값은 **이후 접수되는 주문에만** 적용된다(주문 시점 값 고정).
  *
- * 서버 정책을 따른 시안과의 차이: 반품비·교환비는 따로 없고(반품 배송비 차감 · 교환 재발송비 = 기본 배송비),
- * 제주 추가비는 서버에 값이 없어 칸을 두지 않는다. 무료배송 기준금액은 비우면 「무료배송 없음」(null)이다.
+ * 반품비·교환비 입력은 없다 — 상품 배송비로 자동 계산한다(기-18 변경 · 시안 rev.11 「반품·교환 배송비」 안내).
+ * 제주 추가비는 서버 응답에 그 값이 있을 때만 칸을 둔다(배포 전 서버는 저장해 주지 않는다).
+ * 무료배송 기준금액은 비우면 「무료배송 없음」(null)이다.
  */
 export default function ShippingPolicyTab() {
   const queryClient = useQueryClient()
@@ -123,6 +128,7 @@ export default function ShippingPolicyTab() {
 
   const optionalNumber = (value: string) =>
     value === "" ? null : Number(value)
+  const hasJeju = data.jejuSurcharge !== undefined
 
   const handleSave = async () => {
     setTouched(true)
@@ -133,9 +139,12 @@ export default function ShippingPolicyTab() {
         shippingLeadDays: leadDays,
         defaultDeliveryFee: Number(form.defaultDeliveryFee),
         freeShippingThreshold: optionalNumber(form.freeShippingThreshold),
+        ...(hasJeju && { jejuSurcharge: optionalNumber(form.jejuSurcharge) }),
         remoteAreaSurcharge: optionalNumber(form.remoteAreaSurcharge),
       })
-      toast.success("저장되었습니다. 이후 접수되는 주문부터 적용됩니다.")
+      toast.success(
+        "저장되었습니다. 저장 후 결제된 주문부터 적용됩니다. 이미 접수된 주문은 기존 값이 유지됩니다."
+      )
       // 서버가 도서산간 미입력을 0으로 저장하고 발송 문구를 다시 만든다 — 저장값을 다시 읽는다
       await queryClient.invalidateQueries({
         queryKey: [BASIC_INFO_QUERY_KEYS.SHIPPING_POLICY],
@@ -182,21 +191,29 @@ export default function ShippingPolicyTab() {
         >
           {money("freeShippingThreshold")}
         </StoreField>
-        <StoreHint>
-          반품 배송비 차감과 교환 재발송비는{" "}
-          <b className="font-semibold text-sz-n-700">기본 배송비</b> 기준으로
-          계산됩니다(별도 반품비·교환비 없음).
-        </StoreHint>
       </StoreSection>
 
       <StoreSection title="권역 추가비">
+        {hasJeju && (
+          <StoreField label={<Optional>제주 추가비</Optional>}>
+            {money("jejuSurcharge")}
+          </StoreField>
+        )}
         <StoreField label={<Optional>도서산간 추가비</Optional>}>
           {money("remoteAreaSurcharge")}
         </StoreField>
         <StoreHint>
           권역 판정은{" "}
           <b className="font-semibold text-sz-n-700">우편번호 기준</b>
-          이며 플랫폼이 자동으로 분류합니다. 비워 두면 0원으로 저장됩니다.
+          이며 플랫폼이 자동으로 분류합니다.
+          {hasJeju && (
+            <>
+              {" "}
+              두 권역이 겹치는 주소는{" "}
+              <b className="font-semibold text-sz-n-700">제주 추가비</b>가 우선
+              적용됩니다.
+            </>
+          )}
         </StoreHint>
       </StoreSection>
 
@@ -244,6 +261,27 @@ export default function ShippingPolicyTab() {
           </div>
         </StoreField>
       </StoreSection>
+
+      {/* 시안 rev.11 — 반품·교환 배송비는 입력 없이 자동 계산(기-18 변경) · 적용 시점(기-20) */}
+      <StoreSection title="반품·교환 배송비">
+        <Notice tone="neutral" className="[&_b]:font-semibold">
+          반품·교환 배송비는 <b>따로 정하지 않고</b> 위 배송비로 자동
+          계산됩니다.
+          <br />· <b>단순 변심 반품</b> — 소비자가 선불로 직접 발송합니다.{" "}
+          <b>무료배송 주문</b>이면 최초 배송비를 환불액에서 차감합니다(일부 반품
+          후 남은 금액이 무료배송 기준 아래로 내려갈 때만).
+          <br />· <b>단순 변심 교환</b> — 소비자가 선불로 직접 발송하고{" "}
+          <b>재발송 배송비</b>(편도 · 제주·도서산간 추가비 별도)를 결제합니다.
+          <br />· <b>불량 · 오배송</b> — 착불로 받습니다. 소비자 부담은 없고{" "}
+          <b>착불 운임은 브랜드 부담</b>입니다.
+        </Notice>
+      </StoreSection>
+      <div className="px-5 pb-4">
+        <Notice tone="info" className="[&_b]:font-semibold">
+          <b>저장 후 결제된 주문부터 적용</b>됩니다. 이미 접수된 주문은{" "}
+          <b>기존 값이 유지</b>됩니다.
+        </Notice>
+      </div>
 
       <StoreButtonRow>
         <Button

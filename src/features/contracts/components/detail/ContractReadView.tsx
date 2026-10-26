@@ -2,22 +2,33 @@ import DetailCard from "@/common/components/DetailCard/DetailCard"
 import HistoryList from "@/common/components/HistoryList/HistoryList"
 import RecordNav from "@/common/components/RecordNav/RecordNav"
 import { confirm } from "@/common/components/ConfirmModal/confirm"
+import { isApiNotReady } from "@/common/utils/devMock"
 import ClosureReasonCard from "@/features/contracts/components/detail/ClosureReasonCard"
 import ContentObligationCard from "@/features/contracts/components/detail/ContentObligationCard"
 import ContractItemsCard from "@/features/contracts/components/detail/ContractItemsCard"
 import ContractTermsCard from "@/features/contracts/components/detail/ContractTermsCard"
 import DocumentsCard from "@/features/contracts/components/detail/DocumentsCard"
+import DraftApprovalsCard from "@/features/contracts/components/detail/DraftApprovalsCard"
 import SigningProgressCard from "@/features/contracts/components/detail/SigningProgressCard"
 import StatusSideCard from "@/features/contracts/components/detail/StatusSideCard"
+import SanctionNotice from "@/features/contracts/components/shared/SanctionNotice"
 import CancelReviewModal from "@/features/contracts/components/modals/CancelReviewModal"
 import DeleteDraftModal from "@/features/contracts/components/modals/DeleteDraftModal"
+import TerminationRequestModal from "@/features/contracts/components/modals/TerminationRequestModal"
 import { CONTRACT_LIST_PATH } from "@/features/contracts/constants/params"
+import { TERMINATION_REASON_CODE } from "@/features/contracts/constants/provisional"
+import {
+  SIGNING_COUNTERPARTY_HELD_NOTICE,
+  SIGNING_SUSPENDED_NOTICE,
+} from "@/features/contracts/constants/suspension"
 import {
   useCancelReviewRequest,
   useDeleteContract,
   useDuplicateContract,
   useRecordFixedFeePayment,
   useRequestResend,
+  useRequestTermination,
+  useWithdrawTermination,
 } from "@/features/contracts/hooks/useContractMutations"
 import type {
   ContractDetailResponse,
@@ -29,7 +40,9 @@ import {
   headerMeta,
   type ContractViewState,
 } from "@/features/contracts/utils/contractView"
+import { getApiErrorMessage } from "@/features/contracts/utils/apiError"
 import { toHistoryItems } from "@/features/contracts/utils/history"
+import { useAccountSuspension } from "@/features/suspension"
 import { useCallback, useState } from "react"
 import toast from "react-hot-toast"
 import { useContractNeighbors } from "@/features/contracts/hooks/useContractNeighbors"
@@ -43,13 +56,24 @@ interface ContractReadViewProps {
 }
 
 /**
- * 계약서 모드(B3c·B3d·B4·B4a·B4c·B4b·B5·B5a·B5b·B6·B7·B8) — 한 응답으로 13종을 그린다.
+ * 계약서 모드(B3c·B3d·B4·B4a·B4c·B4b·B5·B5a·B5b·B6·B7·B8·B9) — 한 응답으로 14종을 그린다.
  * 좌측: 서명 진행 → (사유·문서) → 계약 조건 → 상품 항목 → 콘텐츠 의무 / 우측: 상태 · 이력.
  */
 export default function ContractReadView(props: ContractReadViewProps) {
   const { detail, view, brandName, onEditAfterReject } = props
   const navigate = useNavigate()
   const location = useLocation()
+  const { isSuspended } = useAccountSuspension()
+
+  /*
+    서명 진행중 체결 보류 안내(시안 15 S4b · R1). 배지와 같은 서버 판정(sanctionHold)을 따르되,
+    배포 전 서버는 필드가 없어 내 정지는 계정 상태로도 본다. 상대 정지는 서버 값으로만 안다.
+  */
+  const isSigning = detail.status === "SIGNING"
+  const holdKind = detail.sanctionHold?.kind
+  const signingHeldByMe = isSigning && (holdKind === "MINE" || isSuspended)
+  const signingHeldByCounterparty =
+    isSigning && !signingHeldByMe && holdKind === "COUNTERPARTY"
 
   const { mutateAsync: requestResend, isPending: isResending } =
     useRequestResend()
@@ -61,9 +85,16 @@ export default function ContractReadView(props: ContractReadViewProps) {
     useDuplicateContract()
   const { mutateAsync: deleteContract, isPending: isDeleting } =
     useDeleteContract()
+  const {
+    mutateAsync: requestTermination,
+    isPending: isRequestingTermination,
+  } = useRequestTermination()
+  const { mutateAsync: withdrawTermination, isPending: isWithdrawing } =
+    useWithdrawTermination()
 
   const [isCancelOpen, setIsCancelOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [isTerminationOpen, setIsTerminationOpen] = useState(false)
 
   const isConcluded = CONCLUDED_VIEWS.includes(view)
   const isClosed = CLOSED_VIEWS.includes(view)
@@ -111,7 +142,7 @@ export default function ContractReadView(props: ContractReadViewProps) {
   )
 
   const handleResend = useCallback(async () => {
-    if (isResending) {
+    if (isResending || isSuspended) {
       return
     }
     try {
@@ -128,7 +159,7 @@ export default function ContractReadView(props: ContractReadViewProps) {
     } catch {
       // 인터셉터가 서버 문구를 토스트로 띄운다
     }
-  }, [detail.contractId, isResending, requestResend])
+  }, [detail.contractId, isResending, isSuspended, requestResend])
 
   const handleCancelReview = useCallback(async () => {
     if (isCanceling) {
@@ -165,7 +196,8 @@ export default function ContractReadView(props: ContractReadViewProps) {
   }, [detail.contractId, isRecordingPayment, recordPayment])
 
   const handleDuplicate = useCallback(async () => {
-    if (isDuplicating) {
+    // 재작성도 새 계약의 시작이다 — 정지 중엔 서버가 CONTRACT_CREATE로 막는다
+    if (isDuplicating || isSuspended) {
       return
     }
     try {
@@ -179,7 +211,64 @@ export default function ContractReadView(props: ContractReadViewProps) {
     } catch {
       // 인터셉터가 서버 문구를 토스트로 띄운다
     }
-  }, [detail.contractId, detail.title, duplicate, isDuplicating, navigate])
+  }, [
+    detail.contractId,
+    detail.title,
+    duplicate,
+    isDuplicating,
+    isSuspended,
+    navigate,
+  ])
+
+  /** 해지 요청 · 철회는 아직 없는 경로일 수 있어 실호출이 토스트를 끄고 온다 — 문구는 여기서 고른다 */
+  const toastTerminationError = useCallback((error: unknown) => {
+    toast.error(
+      isApiNotReady(error)
+        ? "아직 준비 중인 기능입니다."
+        : (getApiErrorMessage(error) ?? "요청을 처리하지 못했습니다.")
+    )
+  }, [])
+
+  const handleRequestTermination = useCallback(
+    async (memo: string) => {
+      if (isRequestingTermination) {
+        return
+      }
+      try {
+        await requestTermination({
+          detail,
+          body: { reasonCode: TERMINATION_REASON_CODE, memo },
+        })
+        setIsTerminationOpen(false)
+        toast.success(
+          "해지를 요청했습니다. 운영자가 상대 의사를 확인한 뒤 처리합니다."
+        )
+      } catch (error) {
+        toastTerminationError(error)
+      }
+    },
+    [detail, isRequestingTermination, requestTermination, toastTerminationError]
+  )
+
+  const handleWithdrawTermination = useCallback(async () => {
+    if (isWithdrawing) {
+      return
+    }
+    const ok = await confirm({
+      title: "해지 요청을 철회할까요?",
+      content: "철회하면 계약은 체결완료 그대로 유지됩니다.",
+      confirmText: "요청 철회",
+    })
+    if (!ok) {
+      return
+    }
+    try {
+      await withdrawTermination(detail)
+      toast.success("해지 요청을 철회했습니다.")
+    } catch (error) {
+      toastTerminationError(error)
+    }
+  }, [detail, isWithdrawing, toastTerminationError, withdrawTermination])
 
   const handleDelete = useCallback(async () => {
     if (isDeleting) {
@@ -213,6 +302,20 @@ export default function ContractReadView(props: ContractReadViewProps) {
         />
       </div>
 
+      {signingHeldByMe && (
+        <SanctionNotice tone="warn" title={SIGNING_SUSPENDED_NOTICE.title}>
+          {SIGNING_SUSPENDED_NOTICE.body}
+        </SanctionNotice>
+      )}
+      {signingHeldByCounterparty && (
+        <SanctionNotice
+          tone="neutral"
+          title={SIGNING_COUNTERPARTY_HELD_NOTICE.title}
+        >
+          {SIGNING_COUNTERPARTY_HELD_NOTICE.body}
+        </SanctionNotice>
+      )}
+
       <div className="grid grid-cols-[1fr_320px] items-start gap-4">
         <div className="flex flex-col gap-4">
           <SigningProgressCard
@@ -225,9 +328,14 @@ export default function ContractReadView(props: ContractReadViewProps) {
             onCancelRequest={() => setIsCancelOpen(true)}
             onEditAfterReject={onEditAfterReject}
             onDelete={() => setIsDeleteOpen(true)}
+            suspended={isSuspended}
           />
 
-          <ClosureReasonCard detail={detail} view={view} />
+          <ClosureReasonCard
+            detail={detail}
+            view={view}
+            brandName={brandName}
+          />
 
           {isConcluded && (
             <DocumentsCard
@@ -248,9 +356,14 @@ export default function ContractReadView(props: ContractReadViewProps) {
             showSettlementNote={!isClosed}
           />
 
-          {/* 시안 B8 — 어드민 직권 취소 화면엔 콘텐츠 의무 카드가 없다 */}
-          {view !== "canceled" && (
+          {/* 시안 B8 · B9 — 직권 취소 · 해지 화면엔 콘텐츠 의무 카드가 없다 */}
+          {view !== "canceled" && view !== "terminated" && (
             <ContentObligationCard content={detail.content} />
+          )}
+
+          {/* 기-30 — main 필드라 개발 서버 응답엔 없다(undefined면 카드째 숨김) */}
+          {isConcluded && detail.draftApprovals && (
+            <DraftApprovalsCard approvals={detail.draftApprovals} />
           )}
         </div>
 
@@ -260,12 +373,16 @@ export default function ContractReadView(props: ContractReadViewProps) {
             view={view}
             isRecordingPayment={isRecordingPayment}
             isDuplicating={isDuplicating}
+            isWithdrawingTermination={isWithdrawing}
             onOpenDocument={openDocument}
             onContactAdmin={contactAdmin}
             onRecordPayment={handleRecordPayment}
             onOpenGroupBuy={() => navigate("/group-buy")}
             onDuplicate={handleDuplicate}
             onOpenThread={openThread}
+            onRequestTermination={() => setIsTerminationOpen(true)}
+            onWithdrawTermination={handleWithdrawTermination}
+            suspended={isSuspended}
           />
           <DetailCard title="이력" flushBody>
             <HistoryList
@@ -285,6 +402,15 @@ export default function ContractReadView(props: ContractReadViewProps) {
           isPending={isCanceling}
           onClose={() => setIsCancelOpen(false)}
           onConfirm={handleCancelReview}
+        />
+      )}
+
+      {isTerminationOpen && (
+        <TerminationRequestModal
+          detail={detail}
+          isPending={isRequestingTermination}
+          onClose={() => setIsTerminationOpen(false)}
+          onConfirm={handleRequestTermination}
         />
       )}
 

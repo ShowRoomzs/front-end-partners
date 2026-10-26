@@ -14,6 +14,7 @@ import ItemsCard from "@/features/contracts/components/form/ItemsCard"
 import NoteCard from "@/features/contracts/components/form/NoteCard"
 import PeriodCard from "@/features/contracts/components/form/PeriodCard"
 import SettlementSummaryCard from "@/features/contracts/components/form/SettlementSummaryCard"
+import SanctionNotice from "@/features/contracts/components/shared/SanctionNotice"
 import ClausesModal from "@/features/contracts/components/modals/ClausesModal"
 import DeleteDraftModal from "@/features/contracts/components/modals/DeleteDraftModal"
 import ReviewRequestModal from "@/features/contracts/components/modals/ReviewRequestModal"
@@ -21,6 +22,7 @@ import UnsavedLeaveModal from "@/features/contracts/components/modals/UnsavedLea
 import { FSUB_CLASS } from "@/features/contracts/components/shared/styles"
 import { CONTRACT_LIST_PATH } from "@/features/contracts/constants/params"
 import { VIOLATION_FIELD_CARD } from "@/features/contracts/constants/labels"
+import { DRAFT_SUSPENDED_NOTICE } from "@/features/contracts/constants/suspension"
 import { useContractForm } from "@/features/contracts/hooks/useContractForm"
 import {
   useDeleteContract,
@@ -42,6 +44,7 @@ import {
   isContractValidationError,
 } from "@/features/contracts/utils/apiError"
 import { toUpdateRequest } from "@/features/contracts/utils/contractForm"
+import { useAccountSuspension } from "@/features/suspension"
 import { useCallback, useEffect, useRef, useState } from "react"
 import toast from "react-hot-toast"
 import { useLocation, useNavigate } from "react-router-dom"
@@ -73,6 +76,11 @@ export default function ContractForm(props: ContractFormProps) {
   const locationState = (location.state ?? {}) as LocationState
 
   const form = useContractForm(detail, sources.products)
+  /*
+    시안 15 S4a — 정지 전에 써 둔 초안은 열람 · 삭제만. 작성 · 수정 · 임시저장 · 검토 요청은 서버도 409로 막는다
+    (CONTRACT_UPDATE · CONTRACT_REVIEW_REQUEST). 해제되면 같은 초안에서 이어 쓰니 값은 그대로 보여준다.
+  */
+  const { isSuspended } = useAccountSuspension()
   const {
     values,
     version,
@@ -193,21 +201,21 @@ export default function ContractForm(props: ContractFormProps) {
   ])
 
   const handleSave = useCallback(async () => {
-    if (isSaving) {
+    if (isSaving || isSuspended) {
       return
     }
     const saved = await save()
     if (saved) {
       toast.success("임시저장했습니다.")
     }
-  }, [isSaving, save])
+  }, [isSaving, isSuspended, save])
 
   /**
    * [검토 요청] — ① 변경분 저장 ② 서버 검증 ③ 경고 열거 모달(C3) ④ 확정.
    * 하드 위반이 남아 있으면 모달을 열지 않고 위반 칸으로 보낸다.
    */
   const handleRequestReview = useCallback(async () => {
-    if (isValidating || isRequesting) {
+    if (isValidating || isRequesting || isSuspended) {
       return
     }
     setIsValidating(true)
@@ -236,6 +244,7 @@ export default function ContractForm(props: ContractFormProps) {
     detail.contractId,
     isDirty,
     isRequesting,
+    isSuspended,
     isValidating,
     save,
     scrollToFirstViolation,
@@ -344,6 +353,12 @@ export default function ContractForm(props: ContractFormProps) {
         <RecordNav onList={goToList} />
       </div>
 
+      {isSuspended && (
+        <SanctionNotice tone="neutral" title={DRAFT_SUSPENDED_NOTICE.title}>
+          {DRAFT_SUSPENDED_NOTICE.body}
+        </SanctionNotice>
+      )}
+
       {detail.sourceContractId !== null && (
         <DuplicateSourceBanner
           sourceContractId={detail.sourceContractId}
@@ -374,17 +389,29 @@ export default function ContractForm(props: ContractFormProps) {
       )}
 
       <div className="flex flex-col gap-4">
-        <CounterpartyCard
-          form={form}
-          detail={detail}
-          counterparties={sources.counterparties}
-          savedAt={savedAt}
-        />
-        <PeriodCard form={form} />
-        <ItemsCard form={form} products={sources.products} />
-        <FixedFeeCard form={form} />
-        <ContentCard form={form} />
-        <NoteCard form={form} />
+        {/*
+          정지 중 읽기 전용 — 카드마다 disabled를 내리지 않고 fieldset 하나로 입력 · 선택 · 추가 버튼을 함께 잠근다.
+          조항 전문 보기는 읽는 일이라 fieldset 밖에 둔다.
+        */}
+        <fieldset
+          disabled={isSuspended}
+          className="m-0 flex min-w-0 flex-col gap-4 border-0 p-0"
+        >
+          <CounterpartyCard
+            form={form}
+            detail={detail}
+            counterparties={sources.counterparties}
+            savedAt={savedAt}
+          />
+          <PeriodCard form={form} />
+          <ItemsCard form={form} products={sources.products} />
+          <FixedFeeCard
+            form={form}
+            paymentBusinessDays={detail.fixedFee.paymentBusinessDays}
+          />
+          <ContentCard form={form} />
+          <NoteCard form={form} />
+        </fieldset>
         <SettlementSummaryCard
           settlement={detail.settlement}
           fixedFeeAmount={values.fixedFeeAmount}
@@ -404,6 +431,7 @@ export default function ContractForm(props: ContractFormProps) {
         onDelete={() => setIsDeleteOpen(true)}
         onSave={handleSave}
         onRequestReview={handleRequestReview}
+        suspended={isSuspended}
       />
 
       {reviewWarnings && (

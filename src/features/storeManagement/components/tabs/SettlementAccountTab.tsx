@@ -23,12 +23,20 @@ import {
   getBannerTitle,
   getBannerTone,
 } from "@/features/storeManagement/utils/changeRequestBanner"
+import SanctionNotice from "@/features/contracts/components/shared/SanctionNotice"
+import { useAccountSuspension } from "@/features/suspension"
 import { cn } from "@/lib/utils"
 import { useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 
+/** 시안 15 S6 — 이 사유로 정지됐을 때만 상단 안내를 둔다(계좌를 고쳐야 정지가 풀린다) */
+const SETTLEMENT_MISMATCH_REASON = "SETTLEMENT_INFO_MISMATCH"
+
 export default function SettlementAccountTab() {
   const { data, isLoading } = useGetSettlementInfo()
+  // 정지 중에도 [변경 요청]은 그대로다(시안 15 S6) — 정산 정보 불일치로 정지됐는데 못 고치면 풀 방법이 없다
+  const { sanction } = useAccountSuspension()
+  const showMismatchNotice = sanction?.reason === SETTLEMENT_MISMATCH_REASON
   const queryClient = useQueryClient()
 
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false)
@@ -90,6 +98,14 @@ export default function SettlementAccountTab() {
 
   return (
     <>
+      {showMismatchNotice && (
+        <SanctionNotice
+          tone="danger"
+          title="정산 정보 불일치로 계정 이용이 정지되었습니다."
+        >
+          수정 후 운영팀 채널로 알려 주시면 확인 후 정지를 해제합니다.
+        </SanctionNotice>
+      )}
       <StoreFormCard>
         {banner && (
           <RequestBanner

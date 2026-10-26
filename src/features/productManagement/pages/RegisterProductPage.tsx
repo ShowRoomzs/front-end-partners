@@ -32,7 +32,9 @@ import {
   PRODUCT_GROUP_BUY_STATUS,
 } from "@/features/productManagement/constants/params"
 import { PRODUCT_QUERY_KEYS } from "@/features/productManagement/constants/queryKeys"
+import { REDISPLAY_BLOCKED_NOTICE } from "@/features/productManagement/constants/suspension"
 import { useGetProductDetail } from "@/features/productManagement/hooks/useGetProductDetail"
+import ProductListPage from "@/features/productManagement/pages/ProductListPage"
 import {
   DEFAULT_PRODUCT_NOTICE,
   parseProductNotice,
@@ -46,10 +48,13 @@ import type {
 } from "@/features/productManagement/types"
 import {
   getProductBanner,
+  getProductEditCase,
   getSaveHint,
   isDeleteBlocked,
   isProductLocked,
 } from "@/features/productManagement/utils/productPermission"
+import SanctionNotice from "@/features/contracts/components/shared/SanctionNotice"
+import { useAccountSuspension } from "@/features/suspension"
 import { cn } from "@/lib/utils"
 import type { AxiosError } from "axios"
 import { useCallback, useEffect, useRef, useState } from "react"
@@ -82,13 +87,30 @@ function createEmptyOptionGroup(): OptionGroup {
   }
 }
 
+/**
+ * `/product/register` · `/product/edit/:id` — 같은 폼이다.
+ * 정지 중 등록 직접 진입(시안 15 S2b)은 폼 대신 상품 목록 골격 + 차단 빈 상태를 그린다 — 서버도 409로 막는다(PRODUCT_CREATE).
+ * 기존 상품 수정은 정지와 무관하게 평소대로다.
+ */
 export default function RegisterProductPage() {
+  const { productId } = useParams<{ productId?: string }>()
+  const { isSuspended, isLoading } = useAccountSuspension()
+  if (!productId) {
+    // 정지 여부를 모르는 채로 폼을 먼저 그리면 입력하다 빈 상태로 바뀐다 — 확인될 때까지 비워 둔다
+    if (isLoading) return null
+    if (isSuspended) return <ProductListPage registerBlocked />
+  }
+  return <ProductFormPage />
+}
+
+function ProductFormPage() {
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
   const { productId } = useParams<{ productId?: string }>()
   const { data: productDetail } = useGetProductDetail(Number(productId))
   const { categoryMap } = useGetCategory()
   const { data: marketInfo } = useGetMarketInfo()
+  const { isSuspended } = useAccountSuspension()
   const isEdit = !!productId
 
   /**
@@ -114,6 +136,17 @@ export default function RegisterProductPage() {
     productDetail?.groupBuyStatus,
     productDetail?.latestHideInfo?.hideReasonType
   )
+  /*
+    시안 15 B10 — 브랜드 요청 미진열(경우 5 · 6)은 「진열 요청」으로 다시 내놓는 상품이라 정지 중엔 그 길이 막힌다
+    (서버 PRODUCT_REDISPLAY). 수정 · 재고 저장은 평소대로라 배너는 그대로 두고 위에 안내만 더한다.
+  */
+  const editCase = getProductEditCase(
+    productDetail?.displayStatus,
+    productDetail?.groupBuyStatus,
+    productDetail?.latestHideInfo?.hideReasonType
+  )
+  const showRedisplayBlocked =
+    isEdit && isSuspended && (editCase === 5 || editCase === 6)
   const saveHint = getSaveHint(
     productDetail?.displayStatus,
     productDetail?.groupBuyStatus,
@@ -409,6 +442,11 @@ export default function RegisterProductPage() {
       */}
       <div className="grid grid-cols-[minmax(0,1fr)_300px] items-start gap-4">
         <div className="min-w-0">
+          {showRedisplayBlocked && (
+            <SanctionNotice tone="warn" title={REDISPLAY_BLOCKED_NOTICE.title}>
+              {REDISPLAY_BLOCKED_NOTICE.body}
+            </SanctionNotice>
+          )}
           {/* 배너는 좌측 컬럼 안에 둔다 — 우측 레일까지 덮으면 카드와 좌우가 어긋난다 */}
           {banner && (
             <div

@@ -6,6 +6,7 @@ import { claimService } from "@/features/claims/services/claimService"
 import type {
   ClaimDetailResponse,
   ClaimListParams,
+  ClaimOverturnBody,
   ClaimRejectBody,
   ReshipExportBody,
   ReshipItem,
@@ -41,6 +42,19 @@ export function useGetClaimDetail(claimId: number | null) {
     queryFn: () => claimService.getDetail(claimId as number),
     enabled: claimId !== null,
     retry: false,
+  })
+}
+
+/** 판정 전 운임 미리보기 — 배포본은 null(서버에 원천 없음 · claimService 참고) */
+export function useGetClaimFreightPreview(
+  detail: ClaimDetailResponse,
+  enabled: boolean
+) {
+  return useQuery({
+    queryKey: [CLAIM_QUERY_KEYS.FREIGHT_PREVIEW, detail.summary.claimId],
+    queryFn: () => claimService.getFreightPreview(detail),
+    enabled,
+    staleTime: Infinity,
   })
 }
 
@@ -91,7 +105,18 @@ export function useClaimMutations() {
   })
 
   const pass = useMutation({
-    mutationFn: (claimId: number) => claimService.pass(claimId),
+    mutationFn: (vars: {
+      current: ClaimDetailResponse
+      faultToSeller: boolean
+    }) => claimService.pass(vars.current, vars.faultToSeller),
+    onSuccess: applyDetail,
+  })
+
+  const overturn = useMutation({
+    mutationFn: (vars: {
+      current: ClaimDetailResponse
+      body: ClaimOverturnBody
+    }) => claimService.overturn(vars.current, vars.body),
     onSuccess: applyDetail,
   })
 
@@ -143,6 +168,7 @@ export function useClaimMutations() {
   return {
     receive,
     pass,
+    overturn,
     reject,
     registerReshipments,
     updateReshipment,

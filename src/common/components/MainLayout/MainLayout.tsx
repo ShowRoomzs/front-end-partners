@@ -16,6 +16,8 @@ import { useGetContractSummary } from "@/features/contracts/hooks/useContractQue
 import { useGetGroupBuySummary } from "@/features/groupBuy/hooks/useGroupBuyQueries"
 import { useGetOrderSummary } from "@/features/orders/hooks/useOrderQueries"
 import { useGetSettlementSummary } from "@/features/settlement/hooks/useSettlementQueries"
+import { useGetSellerBadges } from "@/features/home/hooks/useHomeQueries"
+import { SuspensionBanner } from "@/features/suspension"
 
 /**
  * 메뉴에는 없지만 브레드크럼 하위 이름이 필요한 화면들.
@@ -152,7 +154,7 @@ export default function MainLayout() {
   const { data: threadSummary } = useGetThreadSummary(menuType === "SELLER")
   // 계약 GNB 배지 — 브랜드가 지금 조치해야 하는 건수(검토 반려 + 상대만 서명 완료)
   const { data: contractSummary } = useGetContractSummary(menuType === "SELLER")
-  // 공구 GNB 배지 — 물량 확인 대기 + 소명 가능 + 이행 확인 대기
+  // 공구 GNB 배지 — 서버 summary.actionRequiredCount(물량 확보 · 소명 등 내 차례). 이행 확인은 rev.5에서 폐기
   const { data: groupBuySummary } = useGetGroupBuySummary(menuType === "SELLER")
   /*
     판매 GNB 배지 — 브랜드가 손대야 넘어가는 건수: 준비 시작 + 송장 등록 + 취소 요청 + 반품·교환 입고 확인
@@ -170,6 +172,11 @@ export default function MainLayout() {
   const { data: settlementSummary } = useGetSettlementSummary(
     menuType === "SELLER"
   )
+  /*
+    GNB 배지 집계(1017 · `GET /v1/seller/badges`) — 서버가 배포되기 전(404)에는 위 화면별 요약으로 계산한다.
+    서버 정의는 조금 넓다: 판매에 배송 이상 · 회수 대기 포함, 정산은 조정 협의 「내 응답 필요」.
+  */
+  const { data: badges } = useGetSellerBadges(menuType === "SELLER")
 
   return (
     <div className="flex h-screen bg-sz-n-50">
@@ -177,11 +184,15 @@ export default function MainLayout() {
         menus={menus}
         isOpen={isSidebarOpen}
         badgeCounts={{
-          connections: threadSummary?.unreadCount ?? 0,
-          contract: contractSummary?.actionRequiredCount ?? 0,
-          groupbuy: groupBuySummary?.actionRequiredCount ?? 0,
-          sales: salesActionCount,
-          settlement: settlementSummary?.attentionCount ?? 0,
+          connections: badges?.connections ?? threadSummary?.unreadCount ?? 0,
+          contract:
+            badges?.contracts ?? contractSummary?.actionRequiredCount ?? 0,
+          groupbuy:
+            badges?.groupBuys ?? groupBuySummary?.actionRequiredCount ?? 0,
+          sales: badges?.sales ?? salesActionCount,
+          settlement:
+            badges?.settlements ?? settlementSummary?.attentionCount ?? 0,
+          inquiry: badges?.inquiries ?? 0,
         }}
       />
 
@@ -202,6 +213,8 @@ export default function MainLayout() {
             isFullBleed ? "overflow-hidden" : "overflow-auto p-6"
           }`}
         >
+          {/* 계정 이용 정지 배너(ui-partner-15 S1) — 정지가 아니거나 서버 미배포면 그리지 않는다 */}
+          {menuType === "SELLER" && !isFullBleed && <SuspensionBanner />}
           {/* 디자인시스템 H1 — 20px/600(bold 아님) */}
           {pageTitle && (
             <h1 className="mb-4 shrink-0 text-[20px] font-semibold text-sz-n-900">

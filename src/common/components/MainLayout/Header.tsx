@@ -1,6 +1,9 @@
 import { useMarketStore } from "@/common/stores/useMarketStore"
+import { getMenuTypeByRole, type Role } from "@/common/types/role"
 import { Button } from "@/components/ui/button"
+import NotificationBell from "@/features/home/components/NotificationBell/NotificationBell"
 import { LogOut } from "lucide-react"
+import { SuspensionChip } from "@/features/suspension"
 import { HEADER_HEIGHT } from "./config"
 
 interface HeaderProps {
@@ -22,7 +25,7 @@ interface HeaderProps {
  */
 export default function Header(props: HeaderProps) {
   const { title, subtitle, isSidebarOpen, onToggleSidebar, onLogout } = props
-  const { market } = useMarketStore()
+  const { market, role } = useMarketStore()
 
   return (
     <header
@@ -64,9 +67,17 @@ export default function Header(props: HeaderProps) {
       </div>
 
       <div className="flex shrink-0 items-center gap-3">
+        {/* 시안 16 `.bell` — 탑바 우측 순서는 종 → 브랜드명 → 로그아웃. 알림함은 브랜드 전용 API다 */}
+        <NotificationBell
+          enabled={getMenuTypeByRole(role as Role) === "SELLER"}
+        />
         {/* 시안 `.brand-chip` — 어느 브랜드로 로그인했는지 항상 보이게 */}
         {market?.marketName && (
-          <span className="text-[12px] text-sz-n-600">{market.marketName}</span>
+          <span className="text-[12px] text-sz-n-600">
+            {market.marketName}
+            {/* 정지 중이면 브랜드명 옆 칩(ui-partner-15) — 정지가 아니면 아무것도 그리지 않는다 */}
+            <SuspensionChip />
+          </span>
         )}
         <Button
           type="button"

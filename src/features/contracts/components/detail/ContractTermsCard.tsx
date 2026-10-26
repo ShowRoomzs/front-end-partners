@@ -10,6 +10,10 @@ import {
   CONCLUDED_VIEWS,
   type ContractViewState,
 } from "@/features/contracts/utils/contractView"
+import {
+  FIXED_FEE_TRIGGER_TOOLTIP,
+  paymentDaysText,
+} from "@/features/contracts/constants/labels"
 import { formatKRW, periodText } from "@/features/contracts/utils/format"
 
 interface ContractTermsCardProps {
@@ -31,6 +35,7 @@ const NOTE_BY_VIEW: Partial<Record<ContractViewState, string>> = {
   declined: "거절된 계약 · 읽기 전용",
   expired: "만료된 계약 · 읽기 전용",
   canceled: "취소된 계약 · 읽기 전용",
+  terminated: "해지된 계약 · 읽기 전용",
 }
 
 /** 「계약 조건」 — 상대 · 공구명 · 기간 · 고정 지급비(지급 시점 · 지급 주체). 읽기 전용 */
@@ -52,7 +57,7 @@ export default function ContractTermsCard(props: ContractTermsCardProps) {
           <b className="font-semibold">{fixedFee.triggerLabel}</b>입니다 —
           플랫폼은 대금을 중개하지 않으므로{" "}
           <b className="font-semibold">지급 후 [지급 완료 기록]</b>으로 표시해
-          주세요. 기록이 미지급 분쟁의 근거가 됩니다.
+          주세요.
         </Notice>
       )}
       <FieldRow label="계약 상대">
@@ -87,7 +92,11 @@ export default function ContractTermsCard(props: ContractTermsCardProps) {
           ) : fixedFee.amount ? (
             <>
               지급 시점{" "}
-              <b className="font-semibold text-sz-n-700">
+              {/* 기-28 — 작성 폼(B1) `.seg-i`와 같은 title 툴팁. 서버 정의가 오면(main) 그것을 쓴다 */}
+              <b
+                className="font-semibold text-sz-n-700"
+                title={triggerTooltip(fixedFee)}
+              >
                 {fixedFee.triggerLabel ?? "—"}
               </b>{" "}
               · 브랜드 직접 지급
@@ -99,4 +108,13 @@ export default function ContractTermsCard(props: ContractTermsCardProps) {
       </FieldRow>
     </DetailCard>
   )
+}
+
+function triggerTooltip(fixedFee: ContractDetailResponse["fixedFee"]) {
+  if (!fixedFee.trigger) {
+    return undefined
+  }
+  const definition =
+    fixedFee.triggerDescription ?? FIXED_FEE_TRIGGER_TOOLTIP[fixedFee.trigger]
+  return `${definition} — 그 뒤 ${paymentDaysText(fixedFee.paymentBusinessDays)} 안에 지급`
 }

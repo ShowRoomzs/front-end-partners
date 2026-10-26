@@ -79,6 +79,8 @@ export interface SettlementListItem {
   statusLabel: string
   statusTone: SettlementTone
   schedule: SettlementSchedule
+  /** 내 지급 행 보류 이유 — 보류가 아니면 null · 배포 전 서버는 없음 */
+  payoutHold?: PayoutHold | null
 }
 
 /** KPI 칸 — 건수가 0이면 `amount = null`(0원은 실적처럼 읽혀 화면은 「—」) */
@@ -107,6 +109,25 @@ export interface SettlementSummary {
   statusCounts: SettlementStatusCounts
   /** GNB 「정산 관리」 배지 = 요청 창이 열린 정산 확인 중 건수 */
   attentionCount: number
+  /** 조정 협의 「내 응답 필요」 수(1017 · 개발 서버 배포 전에는 없다) */
+  adjustmentMyTurnCount?: number
+}
+
+/**
+ * 내 지급 행 보류 이유(1017 · ui-partner-15 S5) — 정산 상태는 「지급 예정」 그대로이고 이 보조 정보로 보인다.
+ * 개발 서버 배포 전에는 응답에 없다(undefined).
+ */
+export interface PayoutHold {
+  /** PayoutBlockReason — BRAND_SUSPENDED 등 */
+  reason: string
+  /** 「계정 이용 정지 · 지급 정지」 */
+  label: string
+  /** 「정지 해제 다음 영업일 지급」 */
+  scheduleLabel: string
+  /** 원래 지급 예정일(KST 날짜) */
+  originalDueDate: string | null
+  /** 계정 이용 정지로 인한 보류인가 */
+  sanction: boolean
 }
 
 /** 금액 + 건수(분해 행) */
@@ -155,6 +176,13 @@ export interface SettlementBreakdown {
   reshipFee: SettlementAmountCount
   /** 소비자 결제 배송비 — 브랜드 가산(§46 B-6 미결 행) */
   consumerDeliveryFee: number
+  /**
+   * + 반품 시 차감한 최초 배송비(1021 기-18) — 무료배송 · 소비자 귀책 반품에서 환불액에서 뺀 금액 · 브랜드 정산에 남는다.
+   * 개발 서버 배포 전에는 없다(undefined) — 그때는 줄을 그리지 않는다.
+   */
+  returnDeductionFee?: SettlementAmountCount
+  /** ± 운임 정산(1021 기-93) — amount는 부호 있음(소비자 부담 +, 환급 −). 배포 전에는 없다 */
+  freightAdjustment?: SettlementAmountCount
   /** 차감 전 브랜드 수취액 */
   brandPayoutBeforeClawback: number
   /** 없으면 [] */
@@ -188,6 +216,8 @@ export interface SettlementPayout {
   statusLabel: string
   dueDate: string | null
   paidAt: string | null
+  /** [내 행] 보류 이유 — 「지급 정지 · 해제 다음 영업일 지급」(1017 · 배포 전 서버는 없음) */
+  hold?: PayoutHold | null
 }
 
 /** 지급 정보 — 지시 후엔 지급 시점 계좌 스냅샷, 지시 전엔 현재 등록 계좌(뒤 6자리 노출) */
@@ -367,6 +397,8 @@ export interface SettlementDetail {
   items: Array<SettlementItem>
   itemTotalCount: number
   actions: SettlementActions
+  /** 내 지급 행 보류 이유(S5 「지급 정지 · 계정 이용 정지 중」) — 보류가 아니면 null · 배포 전 서버는 없음 */
+  payoutHold?: PayoutHold | null
 }
 
 /** 정산 포트의 계산값 — 전 항목 절사 */

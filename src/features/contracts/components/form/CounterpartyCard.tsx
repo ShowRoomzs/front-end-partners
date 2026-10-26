@@ -16,7 +16,10 @@ import type {
   ContractDetailResponse,
 } from "@/features/contracts/types"
 import { relativeSavedText } from "@/features/contracts/utils/format"
-import { toneToVariant } from "@/features/contracts/utils/statusBadge"
+import {
+  contractStatusLabel,
+  toneToVariant,
+} from "@/features/contracts/utils/statusBadge"
 import { cn } from "@/lib/utils"
 
 interface CounterpartyCardProps {
@@ -56,7 +59,7 @@ export default function CounterpartyCard(props: CounterpartyCardProps) {
       note={
         <span className="flex items-center gap-1.5">
           <StatusBadge variant={toneToVariant(detail.statusTone)}>
-            {detail.statusLabel}
+            {contractStatusLabel(detail.status, detail.statusLabel)}
           </StatusBadge>
           {savedText && <span>· 임시저장 · {savedText}</span>}
         </span>

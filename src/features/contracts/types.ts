@@ -1,11 +1,15 @@
 import type { BaseParams } from "@/common/types/page"
+import type { SanctionHoldView } from "@/features/suspension"
 
 /*
   계약 관리(§25·§26) 타입 — 백엔드 `api/seller/contract/dto/*.java`·`domain/contract/type/*.java`와 1:1.
   서버가 내려주는 값을 그대로 쓰고, 화면 문구·색은 서버 `statusLabel`·`statusTone`을 따른다.
 */
 
-/** 상태 9종 — 3서피스 공통(§25-2). 「서명 진행중」을 쪼개지 않는다 */
+/**
+ * 상태 10종 — 3서피스 공통(§25-2). 「서명 진행중」을 쪼개지 않는다.
+ * `TERMINATED`(해지)는 1021 기-05로 main에 생겼고 개발 서버는 아직 내려 주지 않는다.
+ */
 export type ContractStatus =
   | "DRAFT"
   | "REVIEW_PENDING"
@@ -16,6 +20,7 @@ export type ContractStatus =
   | "DECLINED"
   | "EXPIRED"
   | "CANCELED"
+  | "TERMINATED"
 
 /** 배지 색 — 서버가 상태별로 하나만 내린다(원칙 ③ 같은 상태는 같은 색) */
 export type ContractStatusTone =
@@ -64,6 +69,7 @@ export type ContractEventType =
   | "CREATOR_SIGNED"
   | "SIGNATURE_UPDATED"
   | "BOTH_SIGNED_CONFIRMED"
+  | "ESTABLISHED"
   | "RESEND_REQUESTED"
   | "RESEND_HANDLED"
   | "CONTRACT_PDF_GENERATED"
@@ -75,6 +81,10 @@ export type ContractEventType =
   | "CANCELED"
   | "FIXED_FEE_PAID"
   | "GROUP_BUY_CREATED"
+  | "TERMINATION_REQUESTED"
+  | "TERMINATION_REQUEST_WITHDRAWN"
+  | "TERMINATED"
+  | "DRAFT_APPROVAL_RECORDED"
   | "DELETED"
 
 /**
@@ -115,6 +125,11 @@ export interface ContractListItem {
   statusLabel: string
   statusTone: ContractStatusTone
   entryMode: ContractEntryMode
+  /**
+   * 정지 보류 보조 배지(1017 설계서 8-4 · 8-5) — 내 정지 경고 · 상대 사정 / 편집 불가 중립.
+   * main 필드라 배포 전 개발 서버는 내리지 않는다(undefined → 배지 없음).
+   */
+  sanctionHold?: SanctionHoldView | null
 }
 
 export interface ContractListParams extends BaseParams {
@@ -237,6 +252,10 @@ export interface ContractFixedFee {
   amount: number | null
   trigger: FixedFeeTrigger | null
   triggerLabel: string | null
+  /** 지급 시점 정의(툴팁 · 기-28) — main에만 있어 개발 서버 응답엔 없다 */
+  triggerDescription?: string | null
+  /** 지급 시점 뒤 N영업일 안에 지급 — null이면 [정책값 미정](화면은 「N영업일」) */
+  paymentBusinessDays?: number | null
   noticeAgreedAt: string | null
   /** 지급 완료 기록 시각 — 브랜드가 [지급 완료 기록]을 누른 사실이지 입금 사실이 아니다 */
   paidAt: string | null
@@ -287,7 +306,7 @@ export interface ContractSettlement {
   withholdingLabel: string | null
 }
 
-/** 종결 — 거절·만료·취소 공통. 진행 중이면 전부 null */
+/** 종결 — 거절·만료·취소·해지 공통. 진행 중이면 전부 null */
 export interface ContractClosure {
   closedAt: string | null
   actorType: ContractActorType | null
@@ -299,7 +318,46 @@ export interface ContractClosure {
 
 export interface ContractGroupBuy {
   groupBuyId: number | null
-  canCreate: boolean
+  groupBuyNumber?: string | null
+}
+
+/** 사유 4종 — 공구 중단 요청과 같은 서버 `SuspensionReasonCode` */
+export type ContractTerminationReasonCode =
+  | "QUALITY_ISSUE"
+  | "PRICE_TERMS_ERROR"
+  | "NEGOTIATION_BROKEN"
+  | "ETC"
+
+export type ContractTerminationRequestStatus =
+  | "PENDING"
+  | "HANDLED"
+  | "WITHDRAWN"
+  | "LAPSED"
+
+/** 가장 최근 해지 요청(기-05) — 처리 대기면 [요청 철회], 해지(B9)면 「사유 구분 · 메모」 */
+export interface ContractTerminationRequest {
+  requestId: number
+  status: ContractTerminationRequestStatus
+  statusLabel: string
+  reasonCode: ContractTerminationReasonCode
+  reasonLabel: string
+  memo: string | null
+  requestedAt: string
+  closedAt: string | null
+}
+
+/** 초안 승인 기록 1건(기-30) — 브랜드 사전 검수 · 기록 전용 */
+export interface ContractDraftApproval {
+  approvalId: number
+  /** 대상 — 「릴스 1차 초안」 */
+  title: string
+  approvedAt: string
+  /** 승인자 — 브랜드명 */
+  approvedByName: string
+  /** 출처 — 「연결·소통 스레드에서 확인한 초안」 */
+  sourceLabel: string
+  threadMessageId: number | null
+  note: string | null
 }
 
 export interface ContractDocument {
@@ -317,8 +375,11 @@ export interface ContractPermissions {
   canCancelRequest: boolean
   canRequestResend: boolean
   canRecordPayment: boolean
-  canCreateGroupBuy: boolean
   canDuplicate: boolean
+  /** [해지 요청](B5) — main에만 있다. 없으면(개발 서버) 버튼을 그리지 않는다 */
+  canRequestTermination?: boolean
+  canWithdrawTermination?: boolean
+  canRecordDraftApproval?: boolean
 }
 
 export interface ContractHistoryEntry {
@@ -330,7 +391,10 @@ export interface ContractHistoryEntry {
   occurredAt: string
 }
 
-/** 상세 — 화면 13종(B2a·B3c·B3d·B4·B4a·B4b·B4c·B5·B5a·B5b·B6·B7·B8)이 이 응답 하나를 쓴다 */
+/**
+ * 상세 — 화면 14종(B2a·B3c·B3d·B4·B4a·B4b·B4c·B5·B5a·B5b·B6·B7·B8·B9)이 이 응답 하나를 쓴다.
+ * 끝의 선택 필드는 main(1017 · 1021)에서 늘어난 것이라 배포 전 개발 서버 응답엔 없다 — 없으면 그 블록을 숨긴다.
+ */
 export interface ContractDetailResponse {
   contractId: number
   contractNumber: string | null
@@ -359,6 +423,20 @@ export interface ContractDetailResponse {
   documents: Array<ContractDocument>
   permissions: ContractPermissions
   history: Array<ContractHistoryEntry>
+  /** 계약 성립 = 양측 서명 완료 시각(기-05). concludedAt은 운영자의 공구 생성 처리 시각 */
+  establishedAt?: string | null
+  terminationRequest?: ContractTerminationRequest | null
+  draftApprovals?: Array<ContractDraftApproval>
+  /** 정지 보류 보조 배지 — 목록과 같다(main 필드 · 없으면 배지 없음) */
+  sanctionHold?: SanctionHoldView | null
+  /** 서명 기한이 멈춰 있는가 — 서명 진행중 ∧ 당사자 정지 보류(해제 후 남은 기한부터) */
+  signatureDeadlinePaused?: boolean
+}
+
+export interface ContractTerminationRequestBody {
+  reasonCode: ContractTerminationReasonCode
+  /** ETC면 필수 · 1000자 — 인플루언서 · 운영자에게 그대로 전달된다 */
+  memo: string | null
 }
 
 export interface ContractCreateRequest {

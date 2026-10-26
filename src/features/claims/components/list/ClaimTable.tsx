@@ -123,6 +123,18 @@ const quantityCol: ColumnDef = {
   center: true,
   cell: row => <span className="tabular-nums">{row.quantity}</span>,
 }
+/** 사유 아래 보조줄 — 운영자가 대신 연 건은 「운영자 개설 · 구매확정 후 하자 · 증빙 2장」(시안 A4) */
+function reasonNote(row: ClaimListItem) {
+  const parts: Array<string> = []
+  if (row.openedByOperator) {
+    parts.push("운영자 개설")
+    if (row.openReason) parts.push(row.openReason)
+  }
+  if (row.consumerAttachmentCount > 0) {
+    parts.push(`증빙 ${row.consumerAttachmentCount}장`)
+  }
+  return parts.join(" · ")
+}
 const reasonCol = (width = 170): ColumnDef => ({
   key: "reason",
   label: "사유",
@@ -132,8 +144,8 @@ const reasonCol = (width = 170): ColumnDef => ({
       member,
       <>
         {row.reasonLabel}
-        {row.consumerAttachmentCount > 0 && !member && (
-          <span className={NOTE}>증빙 {row.consumerAttachmentCount}장</span>
+        {!member && reasonNote(row) && (
+          <span className={NOTE}>{reasonNote(row)}</span>
         )}
       </>
     ),
@@ -211,7 +223,7 @@ function reshipFeeCell(row: ClaimListItem) {
       <span className={NOTE}>
         {fee.statusLabel}
         {row.reshipReason === "REJECT_RETURN"
-          ? " · 소비자 재배송비"
+          ? " · 소비자 재발송 배송비"
           : " · 교환 신청 시 선결제"}
       </span>
     </>

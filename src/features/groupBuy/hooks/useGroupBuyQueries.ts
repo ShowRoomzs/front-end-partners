@@ -46,3 +46,19 @@ export function useGetGroupBuyDetail(
     retry: false,
   })
 }
+
+/**
+ * 원 계약의 해지 요청(처리 대기 표시용) — 공구 상세에 해지 요청 블록이 없어 계약 상세에서 읽는다.
+ * 오픈 전(준비중 · 준비완료)에만 의미가 있어 그때만 부른다. 실패하면 표시만 생략한다.
+ */
+export function useGetContractTermination(
+  contractId: number | undefined,
+  enabled: boolean
+) {
+  return useQuery({
+    queryKey: [GROUP_BUY_QUERY_KEYS.TERMINATION, contractId],
+    queryFn: () => groupBuyService.getContractTermination(contractId!),
+    enabled: enabled && contractId !== undefined,
+    retry: false,
+  })
+}

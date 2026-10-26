@@ -1,9 +1,12 @@
 import { formatDateTimeShort } from "@/common/utils/formatDate"
 import type { ContractDetailResponse } from "@/features/contracts/types"
-import { formatMonthDayTime } from "@/features/contracts/utils/datetime"
+import {
+  formatMonthDay,
+  formatMonthDayTime,
+} from "@/features/contracts/utils/datetime"
 
 /**
- * 상세 화면 13종의 분기(설계서 4-5). 상태 하나에 서명 조합·지급 여부를 곱해 화면을 고른다.
+ * 상세 화면 14종의 분기(설계서 4-5). 상태 하나에 서명 조합·지급 여부를 곱해 화면을 고른다.
  * **버튼은 여기서 정하지 않는다** — `permissions`가 정한다. 이 값은 배너 톤·스텝퍼·메타 행·
  * 안내 문구처럼 레이아웃과 문구만 고른다.
  */
@@ -21,6 +24,7 @@ export type ContractViewState =
   | "declined" // B6
   | "expired" // B7
   | "canceled" // B8
+  | "terminated" // B9 — 성립 뒤 · 공구 오픈 전 해지(기-05)
 
 export function deriveContractView(
   detail: ContractDetailResponse
@@ -36,7 +40,7 @@ export function deriveContractView(
       return "reviewRejected"
     case "SIGNING":
       if (signature.brandSignedAt && signature.creatorSignedAt) {
-        // 양측 서명이 다 찼는데 아직 상태가 넘어가지 않은 찰나 — 체결 처리 대기로 그린다
+        // 양측 서명이 다 찼는데 아직 상태가 넘어가지 않은 찰나 — 공구 생성 대기로 그린다
         return "conclusionPending"
       }
       if (signature.brandSignedAt) {
@@ -59,6 +63,8 @@ export function deriveContractView(
       return "expired"
     case "CANCELED":
       return "canceled"
+    case "TERMINATED":
+      return "terminated"
   }
 }
 
@@ -66,6 +72,7 @@ export const CLOSED_VIEWS: ReadonlyArray<ContractViewState> = [
   "declined",
   "expired",
   "canceled",
+  "terminated",
 ]
 
 export const CONCLUDED_VIEWS: ReadonlyArray<ContractViewState> = [
@@ -96,7 +103,8 @@ export interface StepChip {
  */
 export function buildStepper(
   view: ContractViewState,
-  detail: ContractDetailResponse
+  detail: ContractDetailResponse,
+  brandName: string
 ): Array<StepChip> {
   const { review, signature, closure } = detail
 
@@ -113,7 +121,7 @@ export function buildStepper(
     tone: "done",
   }
   const conclude: StepChip = {
-    label: "어드민 체결 완료 처리",
+    label: "어드민 공구 생성 처리",
     who: "PDF + 감사추적인증서",
     tone: "todo",
   }
@@ -128,7 +136,7 @@ export function buildStepper(
         },
         { label: "서명 요청 발송", who: "통과 시 양측 발송", tone: "todo" },
         { label: "양측 서명", who: "—", tone: "todo" },
-        { label: "어드민 체결 완료 처리", who: "—", tone: "todo" },
+        { label: "어드민 공구 생성 처리", who: "—", tone: "todo" },
       ]
     case "reviewRejected":
       return [
@@ -139,7 +147,7 @@ export function buildStepper(
         },
         { label: "서명 요청 발송", who: "—", tone: "todo" },
         { label: "양측 서명", who: "—", tone: "todo" },
-        { label: "어드민 체결 완료 처리", who: "—", tone: "todo" },
+        { label: "어드민 공구 생성 처리", who: "—", tone: "todo" },
       ]
     case "signingNone":
     case "signingMine":
@@ -217,12 +225,38 @@ export function buildStepper(
         approved,
         sent,
         {
+          // rev.9 — 취소 주체를 어드민으로 밝힌다(기-06)
           label: "어드민 직권 취소",
-          who: `${formatMonthDayTime(closure.closedAt)}`,
+          who: `어드민 · ${formatMonthDay(closure.closedAt)}`,
           tone: "halt",
         },
         { label: "체결완료", who: "진행되지 않음", tone: "todo" },
       ]
+    case "terminated": {
+      // 시안 B9 — 성립 → (해지 요청) → 운영자 처리 3단. 요청 없는 직권 해지면 가운데 칸이 없다
+      const request = detail.terminationRequest
+      return [
+        {
+          label: "양측 서명 · 계약 성립",
+          who: formatMonthDay(detail.establishedAt ?? null),
+          tone: "done",
+        },
+        ...(request
+          ? [
+              {
+                label: "해지 요청",
+                who: `${brandName} · ${formatMonthDay(request.requestedAt)}`,
+                tone: "done" as const,
+              },
+            ]
+          : []),
+        {
+          label: "운영자 해지 처리",
+          who: `어드민 · ${formatMonthDay(closure.closedAt)}`,
+          tone: "halt",
+        },
+      ]
+    }
     case "draft":
       return []
   }
@@ -249,6 +283,8 @@ export function headerMeta(
         return `${formatDateTimeShort(detail.closure.closedAt)} 만료`
       case "canceled":
         return `${formatDateTimeShort(detail.closure.closedAt)} 취소`
+      case "terminated":
+        return `${formatDateTimeShort(detail.closure.closedAt)} 해지`
       case "concludedNoFee":
       case "concludedFeeDue":
         return `${formatDateTimeShort(concludedAt(detail))} 체결`

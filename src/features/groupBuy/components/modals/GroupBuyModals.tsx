@@ -25,22 +25,15 @@ import {
   APPEAL_FILE_TYPES,
   EARLY_CLOSE_REASON_OPTIONS,
   EMERGENCY_REASON_LABEL,
-  ISSUE_TYPE_OPTIONS,
   SUSPENSION_CLAUSE_TEXT,
   SUSPENSION_REASON_OPTIONS,
+  TERMINATION_TEXT,
 } from "@/features/groupBuy/constants/params"
 import type {
   EarlyCloseReasonCode,
-  FulfillmentResult,
-  GroupBuyIssueType,
   SuspensionReasonCode,
 } from "@/features/groupBuy/types"
-import {
-  type Detail,
-  contentDutyText,
-  dDay,
-  dt,
-} from "@/features/groupBuy/utils/view"
+import { type Detail, dDay, dt } from "@/features/groupBuy/utils/view"
 import { cn } from "@/lib/utils"
 import { X } from "lucide-react"
 import { useRef, useState } from "react"
@@ -48,8 +41,9 @@ import toast from "react-hot-toast"
 
 /*
   시안 C1~C9 — 모달 버튼 규칙(rev.2): 제목은 「~할까요?」, 좌측은 언제나 [닫기](ghost),
-  우측 확인 버튼 라벨은 그 모달을 연 버튼과 같다. 색은 결과의 성격이 정한다 — 파괴적 종결(중단)만
-  위험, 정상 절차(연장·조기 마감·이슈·소명)는 주 액션. 필수 입력 전에는 에러 문구 없이 비활성만.
+  우측 확인 버튼 라벨은 그 모달을 연 버튼과 같다. 색은 결과의 성격이 정한다 — 파괴적 종결(중단 · 해지)만
+  위험, 정상 절차(연장·조기 마감·소명)는 주 액션. 필수 입력 전에는 에러 문구 없이 비활성만.
+  rev.5에서 이슈 개설(C5) · 이행 확인(C6 · C7) 모달은 폐기됐다 — 정산 조정 요청은 정산 관리(13) 몫이다.
 */
 
 interface BaseProps {
@@ -198,7 +192,7 @@ export function ExtensionRequestModal(
   )
 }
 
-// ── C2 · C4 공구 중단 요청 ───────────────────────────
+// ── C2 공구 중단 요청(진행중) ────────────────────────
 
 export function SuspensionRequestModal(
   props: BaseProps & {
@@ -211,7 +205,6 @@ export function SuspensionRequestModal(
   const { detail, isPending, onClose, onConfirm } = props
   const [reasonCode, setReasonCode] = useState<SuspensionReasonCode | "">("")
   const [memo, setMemo] = useState("")
-  const beforeStart = detail.groupBuy.status === "READY"
   const isValid =
     reasonCode !== "" && (reasonCode !== "ETC" || memo.trim() !== "")
   const fee = detail.fixedFee.amount
@@ -243,86 +236,38 @@ export function SuspensionRequestModal(
       <MSum>
         <MSumRow label="공구명">{detail.groupBuy.title}</MSumRow>
         <MSumRow label="인플루언서">{detail.counterparty.name}</MSumRow>
-        {beforeStart ? (
-          <MSumRow label="상태">
-            준비완료 · <B className="text-sz-n-900">시작 전</B>(
-            {dt(detail.timeline.startAt)} 시작 예정)
-          </MSumRow>
-        ) : (
-          <MSumRow label="현재 실적">{currentSales(detail)}</MSumRow>
-        )}
+        <MSumRow label="현재 실적">{currentSales(detail)}</MSumRow>
       </MSum>
 
       <MLabel required first>
         중단 사유
       </MLabel>
-      <MSelect
-        value={reasonCode}
-        onChange={event =>
-          setReasonCode(event.target.value as SuspensionReasonCode | "")
-        }
-      >
-        <option value="">선택하세요</option>
-        {SUSPENSION_REASON_OPTIONS.map(option => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </MSelect>
+      <ReasonSelect value={reasonCode} onChange={setReasonCode} />
 
-      <MLabel optional={!beforeStart}>운영자에게 전달할 메모</MLabel>
+      <MLabel optional>운영자에게 전달할 메모</MLabel>
       <MTextarea
         placeholder="중단이 필요한 상황을 구체적으로 적어주세요"
         maxLength={1000}
         value={memo}
         onChange={event => setMemo(event.target.value)}
       />
-      {!beforeStart && (
-        <MHint>사유로 “기타(직접 입력)”를 선택하면 메모가 필수가 됩니다.</MHint>
-      )}
+      <MHint>사유로 “기타(직접 입력)”를 선택하면 메모가 필수가 됩니다.</MHint>
 
       <Notice tone="consent" className="mt-4 flex flex-col gap-2">
         <div>
           <B className="text-sz-n-900">중단이 승인되면 되돌릴 수 없습니다</B>
         </div>
         <div className="leading-[1.8]">
-          {beforeStart ? (
-            <>
-              ·{" "}
-              <B className="text-sz-n-900">
-                아직 판매가 시작되지 않아 주문 환불은 발생하지 않습니다
-              </B>
-              <br />
-            </>
-          ) : null}
           {/* 지급비가 없으면(0원) 회수 문장 자체가 의미 없다 */}
           {fee !== null && fee > 0 && (
             <>
-              {/* 시안 C4는 문장 전체, C2는 금액부터 굵게 */}
-              {beforeStart ? (
-                <>
-                  ·{" "}
-                  <B className="text-sz-n-900">
-                    이미 지급된 고정 지급비 {formatKRW(fee)}은 플랫폼이 회수해
-                    주지 않습니다
-                  </B>{" "}
-                </>
-              ) : (
-                <>
-                  · 이미 지급된 고정 지급비{" "}
-                  <B className="text-sz-n-900">
-                    {formatKRW(fee)}은 플랫폼이 회수해 주지 않습니다
-                  </B>{" "}
-                </>
-              )}
-              — 돈이 플랫폼을 지나가지 않아 되돌릴 대상이 없습니다
-              {!beforeStart && (
-                <>
-                  {" "}
-                  · 반환이 필요하면{" "}
-                  <B className="text-sz-n-900">인플루언서와 직접</B> 협의하세요
-                </>
-              )}
+              · 이미 지급된 고정 지급비{" "}
+              <B className="text-sz-n-900">
+                {formatKRW(fee)}은 플랫폼이 회수해 주지 않습니다
+              </B>{" "}
+              — 돈이 플랫폼을 지나가지 않아 되돌릴 대상이 없습니다 · 반환이
+              필요하면 <B className="text-sz-n-900">인플루언서와 직접</B>{" "}
+              협의하세요
               <br />
             </>
           )}
@@ -335,32 +280,141 @@ export function SuspensionRequestModal(
             중단 이후 잔여 기간의 리워드 청구권은 소멸
           </B>
           합니다(약관 제16조④2).
-          <br />
-          {!beforeStart && (
-            <>
-              ·{" "}
-              <B className="text-sz-n-900">
-                이미 접수된 주문
-                {orders !== undefined ? ` ${formatNumber(orders)}건` : ""}의
-                배송 의무는 남습니다
-              </B>{" "}
-              — 판매 관리에서 계속 처리해야 합니다
-              <br />
-            </>
-          )}
-          {beforeStart ? (
-            <>· 게시물도 함께 내려가 쇼룸에서 보이지 않게 됩니다</>
-          ) : (
-            <>
-              · <B className="text-sz-n-900">게시물도 함께 내려가</B> 쇼룸에서
-              보이지 않게 되고 신규 주문을 받지 않습니다
-            </>
-          )}
+          <br />·{" "}
+          <B className="text-sz-n-900">
+            이미 접수된 주문
+            {orders !== undefined ? ` ${formatNumber(orders)}건` : ""}의 배송
+            의무는 남습니다
+          </B>{" "}
+          — 판매 관리에서 계속 처리해야 합니다
+          <br />· <B className="text-sz-n-900">게시물도 함께 내려가</B> 쇼룸에서
+          보이지 않게 되고 신규 주문을 받지 않습니다
           <br />· 다시 진행하려면{" "}
           <B className="text-sz-n-900">새 계약을 체결</B>해야 합니다
         </div>
       </Notice>
     </GbModal>
+  )
+}
+
+// ── C4 해지 요청(준비중 · 준비완료 · 시작 전) ─────────
+
+/**
+ * 시안 C4(【잠정】 기-05) — 시작 전 종결은 중단이 아니라 해지다. 판매가 없어 환불 · 배송 의무 항목이 없고
+ * 고정 지급비 미회수만 남는다. 원 계약에 해지 요청을 걸고 운영자가 상대 동의를 확인해 처리한다.
+ */
+export function TerminationRequestModal(
+  props: BaseProps & {
+    onConfirm: (body: {
+      reasonCode: SuspensionReasonCode
+      memo?: string
+    }) => void
+  }
+) {
+  const { detail, isPending, onClose, onConfirm } = props
+  const [reasonCode, setReasonCode] = useState<SuspensionReasonCode | "">("")
+  const [memo, setMemo] = useState("")
+  // 서버 검증과 같다 — 기타면 메모 필수(ContractTerminationRequestRequest)
+  const isValid =
+    reasonCode !== "" && (reasonCode !== "ETC" || memo.trim() !== "")
+  const fee = detail.fixedFee.amount
+  const statusText = detail.groupBuy.status === "READY" ? "준비완료" : "준비중"
+
+  return (
+    <GbModal
+      title={TERMINATION_TEXT.modalTitle}
+      onClose={onClose}
+      footer={
+        <>
+          <Btn variant="ghost" onClick={onClose}>
+            닫기
+          </Btn>
+          <Btn
+            variant="danger"
+            disabled={!isValid}
+            isLoading={isPending}
+            onClick={() =>
+              reasonCode &&
+              onConfirm({ reasonCode, memo: memo.trim() || undefined })
+            }
+          >
+            {TERMINATION_TEXT.action}
+          </Btn>
+        </>
+      }
+    >
+      <MSum>
+        <MSumRow label="공구명">{detail.groupBuy.title}</MSumRow>
+        <MSumRow label="인플루언서">{detail.counterparty.name}</MSumRow>
+        <MSumRow label="상태">
+          {statusText} · <B className="text-sz-n-900">시작 전</B>(
+          {dt(detail.timeline.startAt)} 시작 예정)
+        </MSumRow>
+      </MSum>
+
+      <MLabel required first>
+        {TERMINATION_TEXT.reasonLabel}
+      </MLabel>
+      <ReasonSelect value={reasonCode} onChange={setReasonCode} />
+
+      <MLabel>운영자에게 전달할 메모</MLabel>
+      <MTextarea
+        placeholder="해지가 필요한 상황을 구체적으로 적어주세요"
+        maxLength={1000}
+        value={memo}
+        onChange={event => setMemo(event.target.value)}
+      />
+      <MHint>사유로 “기타(직접 입력)”를 선택하면 메모가 필수가 됩니다.</MHint>
+
+      <Notice tone="consent" className="mt-4 flex flex-col gap-2">
+        <div>
+          <B className="text-sz-n-900">{TERMINATION_TEXT.irreversible}</B>
+        </div>
+        <div className="leading-[1.8]">
+          ·{" "}
+          <B className="text-sz-n-900">
+            아직 판매가 시작되지 않아 주문 환불은 발생하지 않습니다
+          </B>
+          <br />
+          {fee !== null && fee > 0 && (
+            <>
+              ·{" "}
+              <B className="text-sz-n-900">
+                이미 지급된 고정 지급비 {formatKRW(fee)}은 플랫폼이 회수해 주지
+                않습니다
+              </B>{" "}
+              — 돈이 플랫폼을 지나가지 않아 되돌릴 대상이 없습니다
+              <br />
+            </>
+          )}
+          · 예약된 게시물은 공개되지 않습니다
+          <br />· 다시 진행하려면{" "}
+          <B className="text-sz-n-900">새 계약을 체결</B>해야 합니다
+        </div>
+      </Notice>
+    </GbModal>
+  )
+}
+
+/** C2 · C4 공용 사유 선택 — 서버 SuspensionReasonCode 4종 */
+function ReasonSelect(props: {
+  value: SuspensionReasonCode | ""
+  onChange: (value: SuspensionReasonCode | "") => void
+}) {
+  return (
+    <MSelect
+      value={props.value}
+      onChange={event =>
+        props.onChange(event.target.value as SuspensionReasonCode | "")
+      }
+    >
+      <option value="">선택하세요</option>
+      {SUSPENSION_REASON_OPTIONS.map(option => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </MSelect>
   )
 }
 
@@ -460,206 +514,6 @@ export function EarlyCloseRequestModal(
           운영자 검토를 거쳐 승인 또는 반려됩니다
         </div>
       </Notice>
-    </GbModal>
-  )
-}
-
-// ── C5 이슈 스레드 열기 ──────────────────────────────
-
-export function IssueOpenModal(
-  props: BaseProps & {
-    onConfirm: (body: { issueType: GroupBuyIssueType; content: string }) => void
-  }
-) {
-  const { detail, isPending, onClose, onConfirm } = props
-  const [issueType, setIssueType] = useState<GroupBuyIssueType | "">("")
-  const [content, setContent] = useState("")
-  const isValid = issueType !== "" && content.trim() !== ""
-
-  return (
-    <GbModal
-      title="이슈 스레드를 열까요?"
-      onClose={onClose}
-      footer={
-        <>
-          <Btn variant="ghost" onClick={onClose}>
-            닫기
-          </Btn>
-          <Btn
-            variant="primary"
-            disabled={!isValid}
-            isLoading={isPending}
-            onClick={() =>
-              issueType && onConfirm({ issueType, content: content.trim() })
-            }
-          >
-            이슈 스레드 열기
-          </Btn>
-        </>
-      }
-    >
-      <MSum>
-        <MSumRow label="공구명">{detail.groupBuy.title}</MSumRow>
-        <MSumRow label="인플루언서">{detail.counterparty.name}</MSumRow>
-      </MSum>
-
-      <MLabel required first>
-        이슈 유형
-      </MLabel>
-      <MSelect
-        value={issueType}
-        onChange={event =>
-          setIssueType(event.target.value as GroupBuyIssueType | "")
-        }
-      >
-        <option value="">선택하세요</option>
-        {ISSUE_TYPE_OPTIONS.map(option => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </MSelect>
-
-      <MLabel required>내용</MLabel>
-      <MTextarea
-        placeholder="어떤 문제인지 구체적으로 적어주세요"
-        maxLength={2000}
-        value={content}
-        onChange={event => setContent(event.target.value)}
-      />
-
-      <MWarn>
-        <B className="text-sz-n-900">연결·소통 스레드에 이슈가 등록됩니다.</B>{" "}
-        인플루언서·운영자가 함께 참여하며 위에 적은 내용이 첫 글로 등록됩니다.{" "}
-        <B className="text-sz-n-900">
-          주문 배송·환불 문제는 이 경로가 아닙니다
-        </B>{" "}
-        — 판매 관리에서 직접 처리하세요.
-      </MWarn>
-    </GbModal>
-  )
-}
-
-// ── C6 · C7 계약 이행 확인 ───────────────────────────
-
-export function FulfillmentCheckModal(
-  props: BaseProps & {
-    onConfirm: (body: { result: FulfillmentResult; reason?: string }) => void
-  }
-) {
-  const { detail, isPending, onClose, onConfirm } = props
-  const [result, setResult] = useState<FulfillmentResult | null>(null)
-  const [reason, setReason] = useState("")
-  const isUnfulfilled = result === "UNFULFILLED"
-  const isValid =
-    result === "FULFILLED" || (isUnfulfilled && reason.trim() !== "")
-
-  return (
-    <GbModal
-      title="인플루언서가 계약을 이행했나요?"
-      onClose={onClose}
-      footer={
-        <>
-          <Btn variant="ghost" onClick={onClose}>
-            닫기
-          </Btn>
-          <Btn
-            variant={isUnfulfilled ? "danger" : "primary"}
-            disabled={!isValid}
-            isLoading={isPending}
-            onClick={() =>
-              result &&
-              onConfirm(
-                isUnfulfilled ? { result, reason: reason.trim() } : { result }
-              )
-            }
-          >
-            {isUnfulfilled ? "미이행 제출 · 스레드 열기" : "확인 완료"}
-          </Btn>
-        </>
-      }
-    >
-      <MSum>
-        <MSumRow label="인플루언서">{detail.counterparty.name}</MSumRow>
-        <MSumRow label="인플루언서 의무">{contentDutyText(detail)}</MSumRow>
-      </MSum>
-
-      <div className="rounded-[6px] border border-sz-n-200 px-[13px] py-[11px]">
-        <div className="text-[12px] font-medium text-sz-n-900">
-          인플루언서가 계약을 이행했나요?
-        </div>
-        <div className="mt-[2px] text-[11px] leading-[1.6] text-sz-n-500">
-          쇼룸 공구 게시물 · 인스타그램 콘텐츠 등 계약서에 적힌 인플루언서 의무
-          전체를 기준으로 판단해 주세요.
-        </div>
-        <div className="mt-[9px] flex gap-[7px]">
-          {(["FULFILLED", "UNFULFILLED"] as const).map(value => {
-            const isOn = result === value
-            return (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setResult(value)}
-                className={cn(
-                  "flex h-8 flex-1 items-center justify-center rounded-[6px] border text-[11px] font-medium",
-                  !isOn && "border-sz-n-300 bg-white text-sz-n-600",
-                  isOn &&
-                    value === "FULFILLED" &&
-                    "border-sz-accent-500 bg-sz-accent-50 text-sz-accent-600",
-                  isOn &&
-                    value === "UNFULFILLED" &&
-                    "border-sz-danger-text bg-sz-danger-bg text-sz-danger-text"
-                )}
-              >
-                {value === "FULFILLED" ? "이행" : "미이행"}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {isUnfulfilled ? (
-        <>
-          <MLabel required>어떤 점이 이행되지 않았나요?</MLabel>
-          <MTextarea
-            maxLength={2000}
-            value={reason}
-            onChange={event => setReason(event.target.value)}
-          />
-          <MWarn danger>
-            <div>
-              <B className="text-sz-n-900">
-                «미이행»으로 제출하면 연결·소통에 스레드가 열립니다.
-              </B>
-              <br />· <B className="text-sz-n-900">나 · 인플루언서 · 운영자</B>
-              가 참여하는 스레드에서 합의합니다
-              <br />· 합의가 끝날 때까지{" "}
-              <B className="text-sz-n-900">정산은 보류</B>
-              되고 리워드 지급도 미뤄집니다
-              <br />·{" "}
-              <B className="text-sz-n-900">
-                양측이 모두 중재 의견에 동의하면
-              </B>{" "}
-              이슈가 종결되고 보류가 해제됩니다 —{" "}
-              <B className="text-sz-n-900">한쪽이라도 반대하면 보류가 계속</B>
-              됩니다(제20조⑤)
-              <br />· 운영자의{" "}
-              <B className="text-sz-n-900">
-                중재 의견에 금액 조정은 포함되지 않습니다
-              </B>
-              (제20조④)
-              <br />· 위에 적은 내용이{" "}
-              <B className="text-sz-n-900">스레드 첫 글로 등록</B>됩니다
-            </div>
-          </MWarn>
-        </>
-      ) : (
-        <Notice tone="consent" className="mt-4">
-          <B className="text-sz-n-900">이행</B>으로 확인하면 되돌릴 수 없으며,
-          인플루언서 쪽 확인이 끝나는 대로{" "}
-          <B className="text-sz-n-900">정산 절차가 시작</B>됩니다.
-        </Notice>
-      )}
     </GbModal>
   )
 }

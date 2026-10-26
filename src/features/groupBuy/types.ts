@@ -6,9 +6,11 @@
   FE는 조건을 복제하지 않고 값으로 화면을 고른다.
 */
 
+import type { SanctionHoldView } from "@/features/suspension"
+
 export type GroupBuyTone = "NEUTRAL" | "INFO" | "WARNING" | "SUCCESS" | "DANGER"
 
-/** 공구 상태 7종 */
+/** 공구 상태 8종 — TERMINATED(해지)는 1021 기-05로 생겼다(오픈 전 계약 해지로 종결 · 주문 없음) */
 export type GroupBuyStatus =
   | "PREPARING"
   | "READY"
@@ -17,8 +19,13 @@ export type GroupBuyStatus =
   | "ENDED"
   | "SETTLED"
   | "SUSPENDED"
+  | "TERMINATED"
 
-/** 게시물 상태 8종 — 공구 상태와 별 축 */
+/**
+ * 게시물 상태 8종 — 공구 상태와 별 축.
+ * 운영자 노출 중지는 1021 기-08로 `HIDDEN("숨김")` → `EXPOSURE_SUSPENDED("노출 중지")`가 됐다.
+ * 아직 배포되지 않은 서버는 옛 값을 내리므로 둘 다 받는다(`isExposureSuspended`).
+ */
 export type GroupBuyPostStatus =
   | "NOT_WRITTEN"
   | "WRITING"
@@ -26,6 +33,7 @@ export type GroupBuyPostStatus =
   | "REJECTED"
   | "SCHEDULED"
   | "EXPOSED"
+  | "EXPOSURE_SUSPENDED"
   | "HIDDEN"
   | "CLOSED"
 
@@ -41,7 +49,11 @@ export type GroupBuySortType = "START_AT_ASC" | "CREATED_DESC"
 
 export type GroupBuyActorType = "SELLER" | "CREATOR" | "ADMIN" | "SYSTEM"
 
-export type GroupBuyCloseType = "COMPLETED" | "EARLY_CLOSED" | "SUSPENDED"
+export type GroupBuyCloseType =
+  | "COMPLETED"
+  | "EARLY_CLOSED"
+  | "SUSPENDED"
+  | "CONTRACT_TERMINATED"
 
 export type GroupBuyRemarkCode =
   | "ADMIN_SUSPENSION_NOTICED"
@@ -65,8 +77,6 @@ export type GroupBuyIssueType =
   | "TERMS_INTERPRETATION"
   | "SETTLEMENT_AMOUNT"
   | "ETC"
-
-export type FulfillmentResult = "FULFILLED" | "UNFULFILLED"
 
 export type SuspensionReasonClause =
   | "ART17_1_LAW"
@@ -104,6 +114,7 @@ export type GroupBuyEventType =
   | "SUSPENSION_WITHDRAWN"
   | "SUSPENDED_BY_ADMIN"
   | "SUSPENDED_EMERGENCY"
+  | "TERMINATED_BY_CONTRACT"
   | "ENDED"
   | "ISSUE_OPENED"
   | "FULFILLMENT_CONFIRMED"
@@ -142,6 +153,11 @@ export interface GroupBuyListItem {
     code: GroupBuyRemarkCode
     appealDeadlineAt: string | null
   } | null
+  /**
+   * 정지 보류 보조 배지(1017 설계서 8-5) — 오픈 전 공구만 · 내 정지 경고 / 상대 사정 중립.
+   * main 필드라 배포 전 개발 서버는 내리지 않는다(undefined → 배지 없음).
+   */
+  sanctionHold?: SanctionHoldView | null
 }
 
 export interface GroupBuySummaryResponse {
@@ -165,13 +181,6 @@ export interface GroupBuyGate {
 export interface GroupBuyReason {
   code: string
   detail: string | null
-}
-
-export interface FulfillmentCheck {
-  result: FulfillmentResult
-  reason: string | null
-  checkedAt: string
-  auto: boolean
 }
 
 export interface GroupBuyHistoryEntry {
@@ -346,17 +355,12 @@ export interface GroupBuyDetailResponse {
     } | null
     decisionReason: string | null
   } | null
+  /*
+    rev.5(10-06) 이행 확인 · 이슈 직접 개설 폐기 — 서버는 `afterEnd.fulfillment`(항상 null) ·
+    `permissions.canOpenIssue` · `canCheckFulfillment`(항상 false)를 deprecated로 아직 내리지만 쓰지 않는다.
+    `openIssue`는 폐기 전에 열린 행이 있으면 그대로 내려와 조회만 한다.
+  */
   afterEnd: {
-    fulfillment: {
-      mine: FulfillmentCheck | null
-      theirs: FulfillmentCheck | null
-      dueAt: string | null
-      /** 기한까지 답하지 않으면 이행으로 처리되는가 — false면 「놔두면 이행」 문구를 쓰지 않는다 */
-      autoConfirmOnTimeout: boolean
-      onHold: boolean
-      threadId: number | null
-      resolvedAt: string | null
-    } | null
     openIssue: {
       issueId: number
       type: GroupBuyIssueType
@@ -367,8 +371,11 @@ export interface GroupBuyDetailResponse {
       /** 답변 대기 — 스레드의 마지막 글을 개설 측이 썼으면 true. 스레드나 글이 없으면 null */
       awaitingReply: boolean | null
     } | null
+    /** 종료 + 지연 감시 일수(서버 설정 · 기본 30일) — ENDED에서만 */
     settlementWatchAt: string | null
     settledAt: string | null
+    /** 정산 상세(13)로 가는 id — 정산이 생기기 전이면 null */
+    settlementId?: number | null
   } | null
   permissions: {
     canConfirmStock: boolean
@@ -376,9 +383,12 @@ export interface GroupBuyDetailResponse {
     canRequestEarlyClose: boolean
     canRequestSuspension: boolean
     canSubmitAppeal: boolean
-    canOpenIssue: boolean
-    canCheckFulfillment: boolean
     canOpenPairThread: boolean
+    /**
+     * [해지 요청](B3 · C4 · 1021 기-05) — 준비중 · 준비완료 ∧ 계약 해지 요청 없음. 실행은 계약 API.
+     * 아직 배포되지 않은 서버는 내리지 않는다(undefined → 버튼 없음).
+     */
+    canRequestTermination?: boolean
   }
   history: Array<GroupBuyHistoryEntry>
   /** 목록 이웃 — 상세 조회에 목록 조건(tab·keyword·sort)을 보낼 때만. 실행 API 응답은 둘 다 null */
@@ -386,6 +396,8 @@ export interface GroupBuyDetailResponse {
     prevGroupBuyId: number | null
     nextGroupBuyId: number | null
   } | null
+  /** 정지 보류 보조 배지 — 목록과 같다(main 필드 · 없으면 배지 없음) */
+  sanctionHold?: SanctionHoldView | null
 }
 
 export interface GroupBuyItemOption {
@@ -438,17 +450,24 @@ export interface AppealSubmitBody {
   attachmentIds: Array<number>
 }
 
-export interface IssueOpenBody {
-  issueType: GroupBuyIssueType
-  content: string
+/**
+ * 해지 요청 — back-end `ContractTerminationRequestRequest`(사유는 공구 중단 요청과 같은 4종 · ETC면 memo 필수).
+ * `POST /v1/seller/contracts/{contractId}/termination-request` · 응답은 계약 상세라 공구 상세는 다시 읽는다.
+ */
+export interface TerminationRequestBody {
+  reasonCode: SuspensionReasonCode
+  memo?: string
 }
 
-export interface IssueOpenResponse {
-  issueId: number
-  threadId: number
-}
-
-export interface FulfillmentCheckBody {
-  result: FulfillmentResult
-  reason?: string
+/** 계약 상세 `terminationRequest` — 공구 상세에는 해지 요청 블록이 없어 계약 상세에서 읽는다 */
+export interface ContractTerminationRequest {
+  requestId: number
+  /** PENDING(처리 대기) · HANDLED(해지 처리됨) · WITHDRAWN(요청 철회) · LAPSED(공구 오픈으로 닫힘) */
+  status: "PENDING" | "HANDLED" | "WITHDRAWN" | "LAPSED"
+  statusLabel: string
+  reasonCode: string
+  reasonLabel: string
+  memo: string | null
+  requestedAt: string
+  closedAt: string | null
 }

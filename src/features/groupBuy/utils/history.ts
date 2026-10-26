@@ -62,7 +62,13 @@ const EVENT_TEXT: Record<
     label: "운영자 직권 중단 · 공구 중단 · 게시물 내려감",
     tone: "warn",
   },
+  // 계약 해지로 오픈 전 종결(기-05) — 해지 요청 · 철회는 계약 이력이라 여기 오지 않는다
+  TERMINATED_BY_CONTRACT: {
+    label: "계약 해지 · 공구 종료 · 게시물 비공개",
+    tone: "muted",
+  },
   ENDED: { label: "공구 종료 · 게시물 노출 종료", tone: "accent" },
+  // rev.5(10-06)에 이슈 개설 · 이행 확인은 폐기됐다 — 그 전에 남은 이력을 읽을 때만 쓴다
   ISSUE_OPENED: { label: "이슈 스레드 개설", tone: "warn" },
   FULFILLMENT_CONFIRMED: { label: "계약 이행 확인 — 이행", tone: "success" },
   FULFILLMENT_DISPUTED: {

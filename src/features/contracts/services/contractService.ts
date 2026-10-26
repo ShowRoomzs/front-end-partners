@@ -1,5 +1,7 @@
 import { apiInstance } from "@/common/lib/apiInstance"
 import type { PageResponse } from "@/common/types/page"
+import { callOrMock, mockScenario } from "@/common/utils/devMock"
+import { sanctionMockKind } from "@/features/contracts/constants/suspension"
 import { paramsToSearchParams } from "@/common/utils/paramsToSearchParams"
 import type {
   ContractClausesResponse,
@@ -15,11 +17,33 @@ import type {
   ContractResendRequestResponse,
   ContractReviewRequestRequest,
   ContractSummaryResponse,
+  ContractTerminationRequestBody,
   ContractUpdateRequest,
   ContractValidationResponse,
 } from "@/features/contracts/types"
 
 const BASE_URL = "/seller/contracts"
+
+/*
+  해지 요청 · 철회(기-05)는 main에만 있고 개발 서버엔 아직 없다 → `callOrMock`.
+  배포본: 실호출 · 404/405면 ApiNotReadyError. 단 버튼 자체가 상세 `permissions.canRequestTermination`
+  (main 필드)으로만 그려지므로 배포 전 배포본에는 누를 곳이 없다.
+
+  개발 서버 상세 목업 — 주소에 `?mock=<값>`(로컬은 로그인이 막혀 상세 실호출이 안 된다):
+    contract-signing             B4  서명 진행중 · 서명 기한(공구 시작 3일 전 · 운영자 확인)
+    contract-conclusion-pending  B4b 공구 생성 대기(서버 옛 라벨 「체결 처리 대기」를 덮어쓰는지)
+    contract-concluded           B5  체결완료 · [해지 요청] · 초안 승인 기록 빈 상태
+    contract-termination-pending B5  해지 요청 처리 대기 · [요청 철회]
+    contract-paid                B5a 지급 완료 기록 · 초안 승인 기록 2건
+    contract-fee-due             B5b 지급 예정 · 초안 승인 기록 2건
+    contract-terminated          B9  해지(종결)
+
+  계정 이용 정지(시안 15) — 목록 · 상세 실응답에 서버(배포 전)가 아직 안 주는 sanctionHold를 채운다
+  (`contractSanction.mock.ts`). 상세 실호출이 실패하면 서명 진행중 목업으로 대신한다.
+    suspended · suspended-payout · suspended-open   S4 · S4a · S4b  내 정지(경고 배지 · 작성 차단)
+    counterparty-suspended                          R1  상대 인플루언서 정지(중립 배지)
+*/
+const DETAIL_MOCK_PREFIX = "contract-"
 
 export const contractService = {
   getList: async (params: ContractListParams) => {
@@ -27,6 +51,11 @@ export const contractService = {
       BASE_URL,
       { params: paramsToSearchParams(params) }
     )
+    const counterparty = sanctionMockKind(mockScenario())
+    if (counterparty !== null) {
+      const m = await import("./contractSanction.mock")
+      return m.withListHolds(data, counterparty)
+    }
     return data
   },
 
@@ -53,6 +82,24 @@ export const contractService = {
   },
 
   getDetail: async (contractId: number) => {
+    const scenario = mockScenario()
+    const counterparty = sanctionMockKind(scenario)
+    if (counterparty !== null) {
+      const m = await import("./contractSanction.mock")
+      const detail = await m.detailOrSigningMock(async () => {
+        const { data } = await apiInstance.get<ContractDetailResponse>(
+          `${BASE_URL}/${contractId}`,
+          { suppressErrorToast: true }
+        )
+        return data
+      }, contractId)
+      return m.withDetailHold(detail, counterparty)
+    }
+    if (scenario?.startsWith(DETAIL_MOCK_PREFIX)) {
+      const mock =
+        await import("@/features/contracts/services/contractDetail.mock")
+      return mock.mockContractDetail(contractId, scenario)
+    }
     const { data } = await apiInstance.get<ContractDetailResponse>(
       `${BASE_URL}/${contractId}`
     )
@@ -132,6 +179,47 @@ export const contractService = {
     )
     return data
   },
+
+  /** [해지 요청](C9) — 계약 상태는 그대로(체결완료)고 처리 대기 요청이 생긴다 */
+  requestTermination: (
+    contractId: number,
+    body: ContractTerminationRequestBody,
+    current?: ContractDetailResponse
+  ) =>
+    callOrMock(
+      "계약 해지 요청",
+      async () => {
+        const { data } = await apiInstance.post<ContractDetailResponse>(
+          `${BASE_URL}/${contractId}/termination-request`,
+          body,
+          { suppressErrorToast: true }
+        )
+        return data
+      },
+      async () => {
+        const mock =
+          await import("@/features/contracts/services/contractDetail.mock")
+        return mock.mockRequestTermination(contractId, body, current)
+      }
+    ),
+
+  /** 해지 요청 철회 — 처리 전(PENDING)만 */
+  withdrawTermination: (contractId: number, current?: ContractDetailResponse) =>
+    callOrMock(
+      "계약 해지 요청 철회",
+      async () => {
+        const { data } = await apiInstance.delete<ContractDetailResponse>(
+          `${BASE_URL}/${contractId}/termination-request`,
+          { suppressErrorToast: true }
+        )
+        return data
+      },
+      async () => {
+        const mock =
+          await import("@/features/contracts/services/contractDetail.mock")
+        return mock.mockWithdrawTermination(contractId, current)
+      }
+    ),
 
   /** 이 조건으로 새 계약 작성 — 새 초안이 만들어지고 원 계약은 그대로 남는다 */
   duplicate: async (contractId: number) => {

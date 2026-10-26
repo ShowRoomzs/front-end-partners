@@ -29,3 +29,9 @@ export const SECONDARY_USE_DEFAULT_MONTHS = 12
 
 /** 경고 임계값 — 화면 표시(할인율 문구 등)용. 판정 자체는 서버 `/validate`가 한다 */
 export const WARNING_PERIOD_DAYS = 14
+
+/**
+ * 서명 기한 기본값 = 공구 시작 3일 전(기-07 · 확정). 서버는 운영자 화면에만 제안값을 주고,
+ * 파트너센터는 운영자가 확인해 넣은 기한이 이 규칙과 같은 날인지로 부가 문구를 고른다.
+ */
+export const SIGNATURE_DEADLINE_DAYS_BEFORE_START = 3

@@ -29,6 +29,7 @@ export const EVENT_LABEL: Record<ContractEventType, string> = {
   CREATOR_SIGNED: "인플루언서 서명 완료",
   SIGNATURE_UPDATED: "서명 현황 갱신 · 어드민 확인",
   BOTH_SIGNED_CONFIRMED: "양측 서명 완료 확인",
+  ESTABLISHED: "계약 성립 · 양측 서명 완료",
   RESEND_REQUESTED: "서명 안내 재발송 요청 · 소통 스레드 자동 등록",
   RESEND_HANDLED: "서명 안내 재발송 · 스레드 답글",
   CONTRACT_PDF_GENERATED: "계약서 생성본 발급",
@@ -40,6 +41,10 @@ export const EVENT_LABEL: Record<ContractEventType, string> = {
   CANCELED: "계약 취소",
   FIXED_FEE_PAID: "고정 지급비 지급 완료 기록 · 브랜드 직접 지급",
   GROUP_BUY_CREATED: "공구 자동 생성",
+  TERMINATION_REQUESTED: "해지 요청",
+  TERMINATION_REQUEST_WITHDRAWN: "해지 요청 철회",
+  TERMINATED: "해지 처리",
+  DRAFT_APPROVAL_RECORDED: "초안 승인 기록",
   DELETED: "계약 삭제",
 }
 
@@ -58,9 +63,11 @@ export const HISTORY_TONE: Partial<Record<ContractEventType, HistoryDotTone>> =
     CONTRACT_PDF_GENERATED: "accent",
     DOCUMENT_UPLOADED: "accent",
     GROUP_BUY_CREATED: "accent",
+    TERMINATION_REQUESTED: "accent",
     BRAND_SIGNED: "success",
     CREATOR_SIGNED: "success",
     BOTH_SIGNED_CONFIRMED: "success",
+    ESTABLISHED: "success",
     CONCLUDED: "success",
     FIXED_FEE_PAID: "success",
     REVIEW_REJECTED: "warn",
@@ -77,6 +84,21 @@ export const FIXED_FEE_TRIGGER_OPTIONS: Array<{
   { value: "GROUP_BUY_ENDED", label: "공구 종료 후" },
   { value: "SETTLEMENT_COMPLETED", label: "정산 완료 후" },
 ]
+
+/**
+ * 지급 시점 정의(기-28) — 시안 B1 `.seg-i`의 title 툴팁. 작성 폼은 고르기 전 선택지까지 보여야 해서
+ * 서버 `fixedFee.triggerDescription`(고른 값 하나만 온다) 대신 이 표를 쓴다.
+ */
+export const FIXED_FEE_TRIGGER_TOOLTIP: Record<FixedFeeTrigger, string> = {
+  POST_REGISTERED: "오픈 승인 후 쇼룸에 노출된 때",
+  GROUP_BUY_ENDED: "중단으로 끝난 경우 포함",
+  SETTLEMENT_COMPLETED: "정산 지급 완료 시점",
+}
+
+/** 「그 뒤 N영업일 안에 지급」 — 서버 설정값이 없으면(정책값 미정) 「N영업일」 그대로 둔다 */
+export function paymentDaysText(days: number | null | undefined) {
+  return typeof days === "number" ? `${days}영업일` : "N영업일"
+}
 
 export const FIXED_FEE_TRIGGER_LABEL: Record<FixedFeeTrigger, string> = {
   POST_REGISTERED: "공구 게시물 등록 후",

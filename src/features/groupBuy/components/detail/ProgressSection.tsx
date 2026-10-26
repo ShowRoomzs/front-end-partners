@@ -15,7 +15,9 @@ import {
 } from "@/features/groupBuy/components/shared/GbParts"
 import {
   EMERGENCY_REASON_LABEL,
+  PAYOUT_FLOW_TEXT,
   PLATFORM_FEE_RATE,
+  SETTLEMENT_WATCH_DAYS_FALLBACK,
   SUSPENSION_CLAUSE_TEXT,
 } from "@/features/groupBuy/constants/params"
 import {
@@ -24,10 +26,12 @@ import {
   d,
   dDay,
   dt,
+  isExposureSuspended,
   md,
   mdDate,
   minQuantityText,
 } from "@/features/groupBuy/utils/view"
+import { parseServerDateTime } from "@/common/utils/formatDate"
 import type { ReactNode } from "react"
 
 /*
@@ -54,6 +58,7 @@ function lifecycleSteps(detail: Detail): Array<GbStep> {
     ENDED: 3,
     SETTLED: 4,
     SUSPENDED: 2,
+    TERMINATED: 1,
   }[groupBuy.status]
 
   return LIFECYCLE.map((label, index) => ({
@@ -188,15 +193,15 @@ export function ReadinessCard(props: {
         className="mt-4"
         rows={gateRows(detail, onConfirmStock, isConfirming)}
       />
-      {isReady && detail.post.status === "HIDDEN" ? (
-        // 준비완료에서도 운영자가 숨길 수 있다 — 숨긴 채로 시작되면 소비자에게 보이지 않는다
+      {isReady && isExposureSuspended(detail.post.status) ? (
+        // 준비완료에서도 운영자가 노출을 중지할 수 있다 — 중지된 채로 시작되면 소비자에게 보이지 않는다
         <Notice tone="warn" className="mt-4">
           <B>운영자가 게시물 노출을 중지했습니다.</B> 공구는{" "}
           {dt(detail.timeline.startAt)}에 그대로 시작되지만{" "}
           <B>소비자에게 게시물이 보이지 않아</B> 주문이 들어오기 어렵습니다 —
           게시물을 고칠 권한은 인플루언서에게 있으니 사유를{" "}
           <B>스레드에서 확인</B>해 주세요. 인플루언서가 고치면 운영자가 확인하고
-          숨김을 해제합니다.
+          노출 중지를 해제합니다.
         </Notice>
       ) : isReady ? (
         <Notice tone="info" className="mt-4">
@@ -628,6 +633,38 @@ export function ClosedProgressCard(props: { detail: Detail }) {
     )
   }
 
+  if (groupBuy.status === "TERMINATED") {
+    return (
+      <DetailCard
+        title="진행 상황"
+        note={`시작 전 해지 · ${d(groupBuy.endedAt)}`}
+      >
+        {/* 해지 후 공구 표기는 시안 [근거 대기](계약 관리 B9와 함께) — 중단(B7) 골격을 빌린다 */}
+        <GbStepper
+          steps={[
+            ...lifecycleSteps(detail)
+              .slice(0, 2)
+              .map(step => ({
+                ...step,
+                tone: "done" as const,
+              })),
+            {
+              label: "해지",
+              who: `${md(groupBuy.endedAt)} · 운영자`,
+              tone: "halt",
+            },
+            { label: "정산완료", who: "진행되지 않음", tone: "todo" },
+          ]}
+        />
+        <Notice tone="neutral" className="mt-4">
+          <B>계약이 해지되어 공구가 시작 전에 종료되었습니다.</B> 판매가
+          시작되지 않아 주문 환불과 정산은 없고, 예약된 게시물은 공개되지
+          않습니다. 다시 진행하려면 <B>새 계약을 체결</B>해야 합니다.
+        </Notice>
+      </DetailCard>
+    )
+  }
+
   const isSettled = groupBuy.status === "SETTLED"
   const isEarly = groupBuy.closeType === "EARLY_CLOSED"
   // 시안 B5~B6 — 준비중부터 다섯 단계 그대로(조기 마감도 종료 칸은 계약 종료 시각)
@@ -652,16 +689,18 @@ export function ClosedProgressCard(props: { detail: Detail }) {
     unclosed === undefined
       ? "남은 주문"
       : `남은 주문 ${formatNumber(unclosed)}건`
+  // 지연 감시 일수는 서버 설정값(종료 + N일 = settlementWatchAt)에서 읽는다
+  const watchAt = detail.afterEnd?.settlementWatchAt
+  const watchDays =
+    watchAt && groupBuy.endedAt
+      ? parseServerDateTime(watchAt)
+          .startOf("day")
+          .diff(parseServerDateTime(groupBuy.endedAt).startOf("day"), "day")
+      : SETTLEMENT_WATCH_DAYS_FALLBACK
 
   return (
-    <DetailCard
-      title="진행 상황"
-      note={
-        isEarly
-          ? `조기 마감 · ${d(groupBuy.endedAt)} 종결`
-          : "판매 종료 · 실적 확정 대기"
-      }
-    >
+    <DetailCard title="진행 상황" note="판매 종료 · 실적 확정 대기">
+      {/* 시안 B5d는 조기 마감 사실을 「정산 확인」 카드에 적는다 — 그 카드가 아직 없어 배너로 남긴다 */}
       {isEarly && (
         <Notice tone="neutral" className="mb-4">
           <B>조기 마감 요청이 승인되어 예정보다 일찍 종료되었습니다.</B>{" "}
@@ -670,24 +709,11 @@ export function ClosedProgressCard(props: { detail: Detail }) {
         </Notice>
       )}
       <GbStepper steps={steps} />
+      {/* 시안 B5 · B5d 공통(기-10) — 「영업일 5일 안에 이체」는 삭제됐고 지급 영업일은 [정책값 미정] */}
       <Notice tone="info" className="mt-4">
-        {isEarly ? (
-          <>
-            <B>
-              {unclosedText}의 배송·반품·교환이 모두 끝나면 정산이 시작됩니다.
-            </B>{" "}
-            조기 마감이라 판매 기간만 짧아졌을 뿐 정산 절차는 정상 종료와
-            같습니다 — 끝나면 <B>영업일 5일 안에 이체</B>됩니다.
-          </>
-        ) : (
-          <>
-            <B>
-              {unclosedText}의 배송·반품·교환이 모두 끝나면 정산이 시작됩니다.
-            </B>{" "}
-            판매 금액이 자동으로 확정되고 <B>영업일 5일 안에 이체</B>됩니다.
-            종료 후 <B>30일이 지나도 남아 있으면</B> 운영자가 확인합니다.
-          </>
-        )}
+        <B>{unclosedText}의 배송·반품·교환이 모두 끝나면 정산이 시작됩니다.</B>{" "}
+        <B>{PAYOUT_FLOW_TEXT}</B> 순서로 진행됩니다. 종료 후{" "}
+        <B>{watchDays}일이 지나도 남아 있으면</B> 운영자가 확인합니다.
       </Notice>
     </DetailCard>
   )
@@ -717,7 +743,9 @@ export function NoticeSummary(props: { detail: Detail }) {
       <br />· <B>소명 제출 기한</B> {dt(adminSuspension.appealDeadlineAt)}
       {dday && <B> ({dday})</B>}
       <br />
-      <B>집행 전까지 공구는 계속 팔립니다 — 배송을 멈추지 마세요.</B>
+      <B>집행 전까지 공구는 계속 팔립니다 — 배송을 멈추지 마세요.</B>{" "}
+      {/* 기-21 — 통지는 인플루언서에게도 가고, 소명 외 의견은 양측 모두 운영팀 채널로 받는다 */}
+      <B>인플루언서에게도 사전 통지되며, 양측 의견은 운영팀 채널로 받습니다.</B>
     </Notice>
   )
 }

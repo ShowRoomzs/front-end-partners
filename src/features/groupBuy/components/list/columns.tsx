@@ -3,6 +3,8 @@ import { formatMonthDay } from "@/features/contracts/utils/datetime"
 import { periodText } from "@/features/contracts/utils/format"
 import { GbBadge } from "@/features/groupBuy/components/shared/GbParts"
 import type { GroupBuyListItem } from "@/features/groupBuy/types"
+import { postStatusLabel } from "@/features/groupBuy/utils/view"
+import { SanctionHoldBadge } from "@/features/suspension"
 
 /**
  * 비고 — 상태만으로 알 수 없는 예외(걸린 요청 · 직권 중단)만 서버가 코드로 내린다.
@@ -14,6 +16,8 @@ function remarkText(remark: NonNullable<GroupBuyListItem["remark"]>) {
       return remark.appealDeadlineAt
         ? `직권 중단 예정 · 소명 기한 ${formatMonthDay(remark.appealDeadlineAt)}`
         : "직권 중단 예정"
+    // 기-05 뒤로 중단 요청은 진행중에만 걸린다(준비완료 건은 그 전에 보낸 옛 데이터). 해지 요청은
+    // 계약에 걸려 서버가 비고 코드를 내리지 않는다
     case "SUSPENSION_REQUEST_REVIEWING":
       return "중단 요청 검토 중"
     case "EARLY_CLOSE_REQUEST_REVIEWING":
@@ -77,7 +81,9 @@ export const GROUP_BUY_COLUMNS: Columns<GroupBuyListItem> = [
     width: 105,
     align: "center",
     render: (value, record) => (
-      <GbBadge tone={record.postStatusTone}>{value as string}</GbBadge>
+      <GbBadge tone={record.postStatusTone}>
+        {postStatusLabel(record.postStatus, value as string)}
+      </GbBadge>
     ),
   },
   {
@@ -89,7 +95,11 @@ export const GROUP_BUY_COLUMNS: Columns<GroupBuyListItem> = [
       const note = record.remark ? remarkText(record.remark) : null
       return (
         <div className="flex flex-col items-center">
-          <GbBadge tone={record.statusTone}>{value as string}</GbBadge>
+          {/* 시안 15 S3 · R2 — 오픈 전 공구의 정지 보류는 상태를 바꾸지 않고 옆에 보조 배지만 */}
+          <span className="inline-flex flex-wrap justify-center gap-1">
+            <GbBadge tone={record.statusTone}>{value as string}</GbBadge>
+            <SanctionHoldBadge hold={record.sanctionHold} />
+          </span>
           {note && (
             <span
               className={

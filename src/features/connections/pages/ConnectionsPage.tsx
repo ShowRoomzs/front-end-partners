@@ -35,8 +35,10 @@ export default function ConnectionsPage() {
       : undefined) ??
     (counterpartParam
       ? threads.find(
+          // 같은 상대의 이슈 스레드가 따로 있다 — 상대 이름으로 오면 1:1 스레드를 고른다
           thread =>
             !thread.operatorChannel &&
+            thread.kind !== "SETTLEMENT_ADJUSTMENT" &&
             thread.counterpartName === counterpartParam
         )
       : undefined) ??

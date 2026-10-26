@@ -28,7 +28,7 @@ import {
   withdrawalService,
   type WithdrawalRequestBody,
 } from "@/features/storeManagement/services/withdrawalService"
-import { DEV_MOCK_ENABLED } from "@/common/utils/devMock"
+import { isApiNotReady } from "@/common/utils/devMock"
 import { cn } from "@/lib/utils"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
@@ -52,36 +52,47 @@ export default function AccountTab() {
   const [isSaving, setIsSaving] = useState(false)
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
 
-  // 브랜드 탈퇴 신청(4-F~4-I) — API가 없어 개발 서버에서만 목업(withdrawalService)
+  // 브랜드 탈퇴 신청(4-F~4-I) — 계정 조회 응답의 `withdrawal` 블록. 배포 전 서버는 이 블록이 없어
+  // 배포본은 「준비 중」, 개발 서버는 목업(withdrawalService)
   const queryClient = useQueryClient()
   const withdrawalQuery = useQuery({
-    queryKey: [BASIC_INFO_QUERY_KEYS.WITHDRAWAL],
-    queryFn: () => withdrawalService.getStatus(data?.loginEmail ?? ""),
-    enabled: DEV_MOCK_ENABLED && !!data,
+    // 계정 응답의 블록을 키에 넣는다 — 계정을 다시 읽으면 탈퇴 카드도 따라 바뀐다
+    queryKey: [BASIC_INFO_QUERY_KEYS.WITHDRAWAL, data?.withdrawal ?? null],
+    queryFn: () => withdrawalService.getStatus(data!),
+    enabled: !!data,
+    retry: false,
   })
-  const invalidateWithdrawal = () =>
+  // 신청 · 취소 뒤에는 실패(409 — 화면을 연 뒤 상황이 바뀜)여도 계정을 다시 읽어 지금 상태로 그린다
+  const refreshWithdrawal = () => {
+    queryClient.invalidateQueries({ queryKey: [BASIC_INFO_QUERY_KEYS.ACCOUNT] })
     queryClient.invalidateQueries({
       queryKey: [BASIC_INFO_QUERY_KEYS.WITHDRAWAL],
     })
+  }
   const requestWithdrawal = useMutation({
     mutationFn: (body: WithdrawalRequestBody) =>
-      withdrawalService.request(body, data?.loginEmail ?? ""),
+      withdrawalService.request(body),
     onSuccess: () => {
       toast.success(
         "탈퇴 신청이 접수되었습니다. 운영자 확인 후 이메일로 안내드립니다."
       )
-      invalidateWithdrawal()
     },
+    onSettled: refreshWithdrawal,
   })
   const cancelWithdrawal = useMutation({
     mutationFn: withdrawalService.cancel,
     onSuccess: () => {
       toast.success("탈퇴 신청을 취소했습니다.")
-      invalidateWithdrawal()
     },
+    onSettled: refreshWithdrawal,
   })
-  /** 4-I — 검토 중에는 신원(이메일·비밀번호) 변경을 잠근다 */
-  const isWithdrawalPending = !!withdrawalQuery.data?.pendingRequest
+  /**
+   * 4-I — 검토 중에는 신원(이메일·비밀번호) 변경을 잠근다. 서버 `identityLock`이 기준이고,
+   * 배포 전 서버(필드 없음) · 목업은 탈퇴 블록의 PENDING으로 맞춘다.
+   */
+  const isWithdrawalPending =
+    data?.identityLock === "WITHDRAWAL_PENDING" ||
+    withdrawalQuery.data?.state === "PENDING"
 
   /**
    * 로그인 이메일을 바꾸면 그 세션은 더 못 쓴다 — 화면에 남겨두면 안 된다.
@@ -186,8 +197,9 @@ export default function AccountTab() {
               탈퇴 검토 중 · 변경 잠금
             </div>
           )}
-          {/* 4-E — 월 1회 제한을 이미 쓴 상태. 조치가 필요한 게 아니라 안내라서 정보색·버튼 없음 */}
-          {!data.emailChangeable && (
+          {/* 4-E — 월 1회 제한을 이미 쓴 상태. 조치가 필요한 게 아니라 안내라서 정보색·버튼 없음.
+              잠금 중에도 emailChangeable이 false라 잠금이 없을 때만 띄운다 */}
+          {!data.emailChangeable && !isWithdrawalPending && (
             <RequestBanner
               tone="info"
               title="이번 달 이메일 변경 완료"
@@ -336,8 +348,8 @@ export default function AccountTab() {
       </div>
 
       <WithdrawalCard
-        conditions={withdrawalQuery.data?.conditions}
-        pendingRequest={withdrawalQuery.data?.pendingRequest}
+        withdrawal={withdrawalQuery.data}
+        isNotReady={isApiNotReady(withdrawalQuery.error)}
         isLoading={withdrawalQuery.isLoading}
         isSubmitting={requestWithdrawal.isPending}
         isCanceling={cancelWithdrawal.isPending}
@@ -349,7 +361,7 @@ export default function AccountTab() {
             return false
           }
         }}
-        onCancel={() => cancelWithdrawal.mutate()}
+        onCancel={requestId => cancelWithdrawal.mutate(requestId)}
       />
 
       <EmailChangeModal

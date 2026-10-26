@@ -6,10 +6,9 @@ import {
 import type {
   EarlyCloseRequestBody,
   ExtensionRequestBody,
-  FulfillmentCheckBody,
   GroupBuyDetailResponse,
-  IssueOpenBody,
   SuspensionRequestBody,
+  TerminationRequestBody,
 } from "@/features/groupBuy/types"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
@@ -41,6 +40,9 @@ function useInvalidateGroupBuy() {
     queryClient.invalidateQueries({ queryKey: [GROUP_BUY_QUERY_KEYS.DETAIL] })
     queryClient.invalidateQueries({ queryKey: [GROUP_BUY_QUERY_KEYS.LIST] })
     queryClient.invalidateQueries({ queryKey: [GROUP_BUY_QUERY_KEYS.SUMMARY] })
+    queryClient.invalidateQueries({
+      queryKey: [GROUP_BUY_QUERY_KEYS.TERMINATION],
+    })
   }
 }
 
@@ -128,26 +130,19 @@ export function useSubmitAppeal() {
   })
 }
 
-/** 이슈 스레드 개설 — 응답이 상세가 아니라 스레드 id라 상세를 다시 읽는다 */
-export function useOpenIssue() {
+/**
+ * [해지 요청](C4 · 기-05) — 계약 API라 응답이 공구 상세가 아니다. 공구 상세 · 목록 · 요약 · 해지 요청을
+ * 다시 읽어 버튼(`canRequestTermination`)과 「처리 대기」 표시를 서버 값으로 맞춘다.
+ */
+export function useRequestTermination() {
   const invalidate = useInvalidateGroupBuy()
 
   return useMutation({
-    mutationFn: (variables: { groupBuyId: number; body: IssueOpenBody }) =>
-      groupBuyService.openIssue(variables.groupBuyId, variables.body),
-    onSuccess: invalidate,
-  })
-}
-
-export function useCheckFulfillment() {
-  const apply = useApplyDetail()
-
-  return useMutation({
     mutationFn: (variables: {
-      groupBuyId: number
-      body: FulfillmentCheckBody
+      contractId: number
+      body: TerminationRequestBody
     }) =>
-      groupBuyService.checkFulfillment(variables.groupBuyId, variables.body),
-    onSuccess: apply,
+      groupBuyService.requestTermination(variables.contractId, variables.body),
+    onSuccess: invalidate,
   })
 }

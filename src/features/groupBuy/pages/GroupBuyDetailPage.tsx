@@ -1,9 +1,11 @@
 import RecordNav from "@/common/components/RecordNav/RecordNav"
 import Btn from "@/features/contracts/components/shared/Btn"
+import SanctionNotice from "@/features/contracts/components/shared/SanctionNotice"
+import { OPEN_COUNTERPARTY_HELD_NOTICE } from "@/features/groupBuy/constants/suspension"
+import { useAccountSuspension } from "@/features/suspension"
 import {
   AfterEndTasksCard,
   ClosureReasonCard,
-  FulfillmentCard,
 } from "@/features/groupBuy/components/detail/ClosedSections"
 import {
   GroupBuyInfoCard,
@@ -25,24 +27,29 @@ import {
   AppealModal,
   EarlyCloseRequestModal,
   ExtensionRequestModal,
-  FulfillmentCheckModal,
-  IssueOpenModal,
   SuspensionRequestModal,
+  TerminationRequestModal,
 } from "@/features/groupBuy/components/modals/GroupBuyModals"
-import { GROUP_BUY_LIST_PATH } from "@/features/groupBuy/constants/params"
 import {
-  useCheckFulfillment,
+  GROUP_BUY_LIST_PATH,
+  TERMINATION_TEXT,
+} from "@/features/groupBuy/constants/params"
+import {
   useConfirmStock,
-  useOpenIssue,
   useRequestEarlyClose,
   useRequestExtension,
   useRequestSuspension,
+  useRequestTermination,
   useSubmitAppeal,
 } from "@/features/groupBuy/hooks/useGroupBuyMutations"
-import { useGetGroupBuyDetail } from "@/features/groupBuy/hooks/useGroupBuyQueries"
+import {
+  useGetContractTermination,
+  useGetGroupBuyDetail,
+} from "@/features/groupBuy/hooks/useGroupBuyQueries"
 import { headerMeta, sellingSituation } from "@/features/groupBuy/utils/view"
 import { usePageSubtitle } from "@/common/components/MainLayout/usePageSubtitle"
 import { useMarketStore } from "@/common/stores/useMarketStore"
+import { isApiNotReady } from "@/common/utils/devMock"
 import { useCallback, useMemo, useState } from "react"
 import toast from "react-hot-toast"
 import {
@@ -55,8 +62,7 @@ type ModalKind =
   | "extension"
   | "earlyClose"
   | "suspension"
-  | "issue"
-  | "fulfillment"
+  | "termination"
   | "appeal"
   | null
 
@@ -89,7 +95,16 @@ export default function GroupBuyDetailPage() {
     isError,
   } = useGetGroupBuyDetail(groupBuyId, navParams)
   const [modal, setModal] = useState<ModalKind>(null)
+  // 해지 요청 처리 대기 표시 — 오픈 전 공구에서만 원 계약의 요청을 읽는다
+  const beforeOpen =
+    detail?.groupBuy.status === "PREPARING" ||
+    detail?.groupBuy.status === "READY"
+  const { data: termination } = useGetContractTermination(
+    detail?.contract.contractId,
+    beforeOpen
+  )
 
+  const { isSuspended } = useAccountSuspension()
   const { mutate: confirmStock, isPending: isConfirming } = useConfirmStock()
   const { mutate: requestExtension, isPending: isExtending } =
     useRequestExtension()
@@ -97,9 +112,8 @@ export default function GroupBuyDetailPage() {
     useRequestEarlyClose()
   const { mutate: requestSuspension, isPending: isSuspending } =
     useRequestSuspension()
-  const { mutate: openIssue, isPending: isOpeningIssue } = useOpenIssue()
-  const { mutate: checkFulfillment, isPending: isChecking } =
-    useCheckFulfillment()
+  const { mutate: requestTermination, isPending: isTerminating } =
+    useRequestTermination()
   const { mutate: submitAppeal, isPending: isAppealing } = useSubmitAppeal()
 
   const closeModal = useCallback(() => setModal(null), [])
@@ -167,7 +181,13 @@ export default function GroupBuyDetailPage() {
     }
   }
   const goSales = () => navigate("/sales/orders")
-  const goSettlement = () => navigate("/settlement/history")
+  // 정산이 생겼으면 그 정산 상세로(서버 `afterEnd.settlementId`), 아니면 정산 목록으로
+  const goSettlement = () =>
+    navigate(
+      detail.afterEnd?.settlementId
+        ? `/settlement/history/${detail.afterEnd.settlementId}`
+        : "/settlement/history"
+    )
 
   const showSituationCard =
     situation !== null &&
@@ -191,6 +211,16 @@ export default function GroupBuyDetailPage() {
           onNext={nextId !== null ? () => goToRecord(nextId) : undefined}
         />
       </div>
+
+      {/* 시안 15 R2 — 상대 정지로 오픈이 멈춘 공구. 내 정지는 셸 배너가 같은 말을 해 따로 두지 않는다 */}
+      {detail.sanctionHold?.kind === "COUNTERPARTY" && (
+        <SanctionNotice
+          tone="neutral"
+          title={OPEN_COUNTERPARTY_HELD_NOTICE.title}
+        >
+          {OPEN_COUNTERPARTY_HELD_NOTICE.body}
+        </SanctionNotice>
+      )}
 
       <div className="grid grid-cols-[1fr_320px] items-start gap-4">
         <div className="flex min-w-0 flex-col gap-4">
@@ -222,23 +252,13 @@ export default function GroupBuyDetailPage() {
 
           {status === "SUSPENDED" && <ClosureReasonCard detail={detail} />}
 
+          {/* rev.5 — 이행 확인 카드는 폐기됐다(서버 afterEnd.fulfillment 항상 null) */}
           {status === "ENDED" && (
-            <>
-              <AfterEndTasksCard
-                detail={detail}
-                onGoSales={goSales}
-                onOpenIssue={() => setModal("issue")}
-                onOpenThread={openThreadById}
-              />
-              {!detail.afterEnd?.openIssue && (
-                <FulfillmentCard
-                  detail={detail}
-                  onCheck={() => setModal("fulfillment")}
-                  onGoSettlement={goSettlement}
-                  onOpenThread={openThreadById}
-                />
-              )}
-            </>
+            <AfterEndTasksCard
+              detail={detail}
+              onGoSales={goSales}
+              onOpenThread={openThreadById}
+            />
           )}
 
           {(isSelling || status === "SETTLED" || status === "SUSPENDED") && (
@@ -261,6 +281,8 @@ export default function GroupBuyDetailPage() {
           <StatusRailCard
             detail={detail}
             situation={situation}
+            termination={termination ?? null}
+            suspended={isSuspended}
             actions={{
               onOpenThread: openPairThread,
               onGoSales: goSales,
@@ -268,15 +290,15 @@ export default function GroupBuyDetailPage() {
               onExtension: () => setModal("extension"),
               onEarlyClose: () => setModal("earlyClose"),
               onSuspension: () => setModal("suspension"),
+              onTermination: () => setModal("termination"),
               onAppeal: () => setModal("appeal"),
-              onOpenIssue: () => setModal("issue"),
             }}
           />
           <HistoryCard detail={detail} />
         </div>
       </div>
 
-      {modal === "extension" && (
+      {modal === "extension" && !isSuspended && (
         <ExtensionRequestModal
           detail={detail}
           isPending={isExtending}
@@ -327,11 +349,8 @@ export default function GroupBuyDetailPage() {
               {
                 onSuccess: () => {
                   closeModal()
-                  // 준비완료(시작 전)에서 보낸 요청은 「진행」이 아니라 시작 일정이 그대로다
                   toast.success(
-                    detail.groupBuy.status === "READY"
-                      ? "중단을 요청했습니다. 검토 결과가 나올 때까지 시작 일정은 그대로입니다."
-                      : "중단을 요청했습니다. 검토 중에도 공구는 계속 진행됩니다."
+                    "중단을 요청했습니다. 검토 중에도 공구는 계속 진행됩니다."
                   )
                 },
               }
@@ -339,38 +358,24 @@ export default function GroupBuyDetailPage() {
           }
         />
       )}
-      {modal === "issue" && (
-        <IssueOpenModal
+      {modal === "termination" && (
+        <TerminationRequestModal
           detail={detail}
-          isPending={isOpeningIssue}
+          isPending={isTerminating}
           onClose={closeModal}
           onConfirm={body =>
-            openIssue(
-              { groupBuyId, body },
+            requestTermination(
+              { contractId: detail.contract.contractId, body },
               {
                 onSuccess: () => {
                   closeModal()
-                  toast.success(
-                    "이슈 스레드를 열었습니다. 연결·소통에서 이어가세요."
-                  )
+                  toast.success(TERMINATION_TEXT.toast)
                 },
-              }
-            )
-          }
-        />
-      )}
-      {modal === "fulfillment" && (
-        <FulfillmentCheckModal
-          detail={detail}
-          isPending={isChecking}
-          onClose={closeModal}
-          onConfirm={body =>
-            checkFulfillment(
-              { groupBuyId, body },
-              {
-                onSuccess: () => {
-                  closeModal()
-                  toast.success("계약 이행 확인을 제출했습니다.")
+                onError: error => {
+                  // 아직 배포되지 않은 서버(404)는 공용 토스트 없이 ApiNotReadyError로 온다
+                  if (isApiNotReady(error)) {
+                    toast.error("아직 준비 중인 기능입니다.")
+                  }
                 },
               }
             )

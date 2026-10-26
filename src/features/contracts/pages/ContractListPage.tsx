@@ -5,7 +5,10 @@ import { useParams } from "@/common/hooks/useParams"
 import ContractEmptyState from "@/features/contracts/components/ContractEmptyState/ContractEmptyState"
 import ContractStatusTabs from "@/features/contracts/components/ContractStatusTabs/ContractStatusTabs"
 import ContractToolbar from "@/features/contracts/components/ContractToolbar/ContractToolbar"
-import { CONTRACT_COLUMNS } from "@/features/contracts/constants/columns"
+import {
+  CONTRACT_COLUMNS,
+  widenStatusForHold,
+} from "@/features/contracts/constants/columns"
 import {
   CONTRACT_INITIAL_PARAMS,
   CONTRACT_LIST_PATH,
@@ -24,6 +27,7 @@ import type {
   ContractSortType,
   ContractTab,
 } from "@/features/contracts/types"
+import { useAccountSuspension } from "@/features/suspension"
 import { useCallback, useMemo } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 
@@ -51,6 +55,8 @@ export default function ContractListPage() {
   const { data: summary } = useGetContractSummary(true)
   const { mutateAsync: createContract, isPending: isCreating } =
     useCreateContract()
+  // 정지 중엔 새 계약을 시작하지 않는다 — 서버도 409로 막지만(CONTRACT_CREATE) 누르기 전에 비활성으로 알린다
+  const { isSuspended } = useAccountSuspension()
 
   const pageInfo = usePaginationInfo({
     data: contractList?.pageInfo,
@@ -96,12 +102,12 @@ export default function ContractListPage() {
     계약번호는 여기서 붙지 않는다(검토 요청 시점에 부여).
   */
   const handleCreate = useCallback(async () => {
-    if (isCreating) {
+    if (isCreating || isSuspended) {
       return
     }
     const created = await createContract({})
     navigate(`${CONTRACT_LIST_PATH}/${created.contractId}`)
-  }, [createContract, isCreating, navigate])
+  }, [createContract, isCreating, isSuspended, navigate])
 
   const hasCondition = params.tab !== "ALL" || !!params.keyword
   /*
@@ -109,6 +115,12 @@ export default function ContractListPage() {
     검색 결과가 없으면(A2a) 표 머리는 남기고 「총 N건」 줄만 걷는다.
   */
   const isEmpty = !isLoading && (contractList?.content.length ?? 0) === 0
+
+  const hasHold = !!contractList?.content.some(row => row.sanctionHold)
+  const columns = useMemo(
+    () => widenStatusForHold(CONTRACT_COLUMNS, "statusLabel", hasHold),
+    [hasHold]
+  )
 
   const emptyState = useMemo(
     () => (
@@ -146,6 +158,7 @@ export default function ContractListPage() {
         onSearch={update}
         onCreate={handleCreate}
         isCreating={isCreating}
+        createBlocked={isSuspended}
       />
 
       {isEmpty && !hasCondition ? (
@@ -198,7 +211,7 @@ export default function ContractListPage() {
 
           <Table<ContractListItem, "contractId">
             rowKey="contractId"
-            columns={CONTRACT_COLUMNS}
+            columns={columns}
             data={contractList?.content ?? []}
             pageInfo={pageInfo}
             isLoading={isLoading}

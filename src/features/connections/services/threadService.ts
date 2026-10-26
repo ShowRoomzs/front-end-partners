@@ -35,6 +35,46 @@ export interface AttachmentSummary {
   sortOrder: number | null
 }
 
+/**
+ * 스레드 종류 — 같은 상대의 줄이 여럿일 수 있어 이 값으로 구분한다.
+ * GROUP_BUY_ISSUE · GROUP_BUY_FULFILLMENT는 폐기 이력이라 새로 생기지 않는다.
+ */
+export type ThreadKind =
+  | "CONNECTION"
+  | "SETTLEMENT_ADJUSTMENT"
+  | "GROUP_BUY_ISSUE"
+  | "GROUP_BUY_FULFILLMENT"
+
+/** 정산 조정 협의 상태 — 백엔드 `AdjustmentStatus`. WITHDRAWN = 요청 철회(1021 기-14 · 원래 금액 확정) */
+export type AdjustmentStatus = "OPEN" | "AGREED" | "EXPIRED" | "WITHDRAWN"
+
+/** 뷰어 기준 차례 — 반대 뒤에는 OPEN_FLOOR(양측 모두 제안 가능). 서버가 정한다 */
+export type AdjustmentTurn = "MY_TURN" | "THEIR_TURN" | "OPEN_FLOOR" | "CLOSED"
+
+export type AdjustmentTone =
+  | "INFO"
+  | "SUCCESS"
+  | "WARNING"
+  | "DANGER"
+  | "NEUTRAL"
+
+/** 정산 조정의 당사자 — 백엔드 `SettlementParty` */
+export type SettlementParty = "SELLER" | "CREATOR"
+
+/** 목록 줄의 정산 조정 표시(`ThreadAdjustmentBadge`) — kind = SETTLEMENT_ADJUSTMENT일 때만 */
+export interface ThreadAdjustmentBadge {
+  adjustmentId: number
+  status: AdjustmentStatus
+  statusLabel: string
+  turn: AdjustmentTurn
+  /** 「내 응답 필요」 · 「상대 응답 대기」 · 「협의 중」 · 「종결」 */
+  turnLabel: string
+  turnTone: AdjustmentTone
+  deadlineAt: string
+  /** D-N — 종결 뒤 null */
+  remainingBusinessDays: number | null
+}
+
 export interface ThreadListItem {
   threadId: number
   counterpartName: string
@@ -49,10 +89,125 @@ export interface ThreadListItem {
   lastMessagePreview: string | null
   lastMessageAt: string | null
   unreadCount: number
+  kind: ThreadKind
+  /** 공구 3자 스레드(이슈)의 공구 — CONNECTION이면 null */
+  groupBuyId: number | null
+  groupBuyTitle: string | null
+  adjustment: ThreadAdjustmentBadge | null
 }
 
 export interface ThreadSummaryResponse {
   unreadCount: number
+}
+
+/** 시스템 카드 종류 — 백엔드 `MessageCardType`(계약 4 · 공구 1 · 정산 조정 9 · 계정 이용 정지 2) */
+export type MessageCardType =
+  | "CONTRACT_RESEND_REQUEST"
+  | "CONTRACT_ADMIN_CANCELED"
+  | "CONTRACT_CLOSE_CONSENT_REQUEST"
+  | "CONTRACT_TERMINATED"
+  | "GROUP_BUY_SUSPENSION_NOTICE"
+  | "ACCOUNT_SUSPENDED"
+  | "ACCOUNT_SUSPENSION_RELEASED"
+  | "SETTLEMENT_ADJUSTMENT_WITHDRAWN"
+  | "SETTLEMENT_ADJUSTMENT_OPENED"
+  | "SETTLEMENT_ADJUSTMENT_REQUEST"
+  | "SETTLEMENT_ADJUSTMENT_COUNTER"
+  | "SETTLEMENT_ADJUSTMENT_ACCEPTED"
+  | "SETTLEMENT_ADJUSTMENT_REJECTED"
+  | "SETTLEMENT_ADJUSTMENT_DEADLINE_NOTICE"
+  | "SETTLEMENT_ADJUSTMENT_AGREED"
+  | "SETTLEMENT_ADJUSTMENT_EXPIRED"
+
+/** 정산 조정 카드의 사실(생성 시점 스냅샷) — 카드 종류마다 채워지는 칸이 다르다(빈 칸은 응답에서 빠진다) */
+export interface MessageCardAdjustment {
+  settlementId?: number
+  settlementNumber?: string
+  groupBuyId?: number
+  adjustmentId?: number
+  proposalId?: number
+  seq?: number
+  proposerType?: SettlementParty
+  proposerName?: string
+  originalRewardAmount?: number
+  rewardAmount?: number
+  reason?: string
+  deadlineAt?: string
+  responderType?: SettlementParty
+  responderName?: string
+  respondedAt?: string
+  finalRewardAmount?: number
+  agreedByType?: SettlementParty
+  agreedByName?: string
+  closedAt?: string
+}
+
+/** [계정 이용 정지 · 해제] 카드의 사실 — 1017 이후 카드에만, 기간 · 이의 기한은 1021 이후 정지 카드에만 */
+export interface MessageCardSanction {
+  memberType?: "BRAND" | "CREATOR"
+  reasonCode?: string
+  reasonLabel?: string
+  reasonDetail?: string
+  payoutHeld?: boolean
+  /** 정지 종료일(포함) — KST 날짜 */
+  endsOn?: string
+  /** 자동 해제 = 종료일 다음 날 00:00 */
+  autoReleaseAt?: string
+  periodDays?: number
+  /** 이의 신청 기한 — 통지 + N영업일 23:59:59 */
+  appealDeadlineAt?: string
+}
+
+/** [취소 · 해지 동의 확인 · 해지 결과 · 직권 중단 사전 통지] 안내 카드의 사실(1021) — 버튼 없음 · 답글로 의견 */
+export interface MessageCardNotice {
+  kind?: "CANCEL" | "TERMINATE" | "ADMIN_SUSPENSION"
+  body?: string
+  groupBuyClosed?: boolean
+  groupBuyId?: number
+  groupBuyNumber?: string
+  reasonClause?: string
+  reasonClauseLabel?: string
+  executeScheduledAt?: string
+  appealDeadlineAt?: string
+  counterpartyNoticed?: boolean
+  counterpartyType?: SettlementParty | null
+  counterpartyName?: string | null
+}
+
+export interface MessageCardDetail {
+  requesterType?: SettlementParty
+  requesterName?: string
+  requestedAt?: string
+  reasonLabel?: string
+  processedAt?: string
+  notifiedBothParties?: boolean
+  adjustment?: MessageCardAdjustment
+  sanction?: MessageCardSanction
+  notice?: MessageCardNotice
+}
+
+export interface MessageCardAction {
+  /** RESEND_NOTICE(재발송 요청) · ADJUSTMENT_RESPOND(정산 조정 제안) */
+  type: string
+  /** PENDING 응답 대기 · DONE 응답됨 · CLOSED 응답 없이 만료 */
+  state: "PENDING" | "DONE" | "CLOSED"
+  doneAt: string | null
+  /** 「동의」 · 「반대」 · 「다른 금액 제안으로 응답됨」 · 「기한 만료」 · 「요청 철회」 */
+  resultLabel: string | null
+  /** 뷰어가 지금 이 카드에 답할 수 있다 — 버튼 종류는 `…/threads/{id}/adjustment`의 permissions */
+  respondable: boolean
+}
+
+/** 시스템 카드(`MessageCardResponse`) — 운영자 개인 정보는 담기지 않는다 */
+export interface MessageCard {
+  cardType: MessageCardType
+  title: string
+  tone: "WARNING" | "NEUTRAL"
+  contractId: number | null
+  contractNumber: string | null
+  groupBuyTitle: string | null
+  detail: MessageCardDetail | null
+  action: MessageCardAction | null
 }
 
 export interface MessageItem {
@@ -63,6 +218,10 @@ export interface MessageItem {
   content: string | null
   attachments: Array<AttachmentSummary>
   createdAt: string
+  /** TEXT 말풍선 · SYSTEM 시스템 카드 */
+  messageType: "TEXT" | "SYSTEM"
+  /** messageType = SYSTEM일 때만 */
+  card: MessageCard | null
 }
 
 export interface MessageListResponse {

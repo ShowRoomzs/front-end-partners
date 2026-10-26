@@ -19,6 +19,7 @@ import {
 } from "@/features/settlement/components/list/SettlementListParts"
 import AdjustmentRequestModal from "@/features/settlement/components/modals/AdjustmentRequestModal"
 import {
+  CONNECTIONS_PATH,
   PERFORMANCE_PATH,
   SETTLEMENT_LIST_PATH,
   SETTLEMENT_TONE_VARIANT,
@@ -32,6 +33,7 @@ import type {
 import {
   formatMonthDayTime,
   formatPeriod,
+  formatWon,
 } from "@/features/settlement/utils/format"
 import { isAxiosError } from "axios"
 import { Loader2 } from "lucide-react"
@@ -119,7 +121,12 @@ export default function SettlementDetailPage() {
     <SettlementDetailView
       detail={detail}
       onGoList={goList}
-      onGoPerformance={() => navigate(PERFORMANCE_PATH)}
+      onGoPerformance={() =>
+        navigate(`${PERFORMANCE_PATH}/${detail.groupBuy.groupBuyId}`)
+      }
+      onOpenThread={threadId =>
+        navigate(`${CONNECTIONS_PATH}?threadId=${threadId}`)
+      }
     />
   )
 }
@@ -128,8 +135,10 @@ function SettlementDetailView(props: {
   detail: SettlementDetail
   onGoList: () => void
   onGoPerformance: () => void
+  /** 이슈 스레드(ui-partner-14) — 연결·소통에서 그 스레드를 연다 */
+  onOpenThread: (threadId: number) => void
 }) {
-  const { detail, onGoList, onGoPerformance } = props
+  const { detail, onGoList, onGoPerformance, onOpenThread } = props
   const [adjustOpen, setAdjustOpen] = useState(false)
   const [statementDownloading, setStatementDownloading] = useState(false)
   const [taxDownloadingId, setTaxDownloadingId] = useState<number | null>(null)
@@ -137,11 +146,9 @@ function SettlementDetailView(props: {
   // 확인 기간이 지나거나 협의가 이미 있으면 버튼만 비활성 — 에러 문구 없음(§41-3)
   const canRequestAdjustment = detail.actions.canRequestAdjustment
 
-  // 이슈 스레드(ui-partner-14) 화면이 아직 없다 — 생기면 adjustment.threadId로 보낸다
-  const handleOpenThread = () =>
-    toast(
-      "이슈 스레드 화면은 준비 중입니다. 화면이 열리면 이곳에서 조정 협의를 이어갈 수 있습니다."
-    )
+  const handleOpenThread = () => {
+    if (detail.adjustment) onOpenThread(detail.adjustment.threadId)
+  }
 
   // 실패 문구는 서비스가 서버 메시지로 띄운다(파일 응답이라 공용 인터셉터는 끈다)
   const handleDownloadStatement = async () => {
@@ -199,6 +206,25 @@ function SettlementDetailView(props: {
         }
       />
 
+      {/* 시안 15 S5 — 내 지급 행이 보류됐으면 금액 위에 알린다(배포 전 서버는 payoutHold가 없다) */}
+      {detail.payoutHold && (
+        <div className="mb-3 flex gap-2.5 rounded-[8px] bg-sz-danger-bg px-3.5 py-2.5 text-[12px] leading-[1.6] text-sz-danger-text [&_b]:font-semibold">
+          {detail.payoutHold.sanction ? (
+            <div>
+              <b>지급 정지 · 계정 이용 정지 중</b> — 확정된 금액{" "}
+              <b>{formatWon(detail.breakdown.brandPayoutAmount)}</b>은 정지가
+              풀리면 다음 영업일에 지급됩니다. 인플루언서 몫은 예정대로
+              지급됩니다.
+            </div>
+          ) : (
+            <div>
+              <b>{detail.payoutHold.label}</b> —{" "}
+              {detail.payoutHold.scheduleLabel}
+            </div>
+          )}
+        </div>
+      )}
+
       {detail.status === "REVIEWING" && (
         <Notice tone="info" className="mb-3 flex items-center gap-2">
           <div className="flex-1">
@@ -208,7 +234,8 @@ function SettlementDetailView(props: {
             </b>{" "}
             요청이 없으면 다음 날 자동 확정됩니다. 확인 기간은{" "}
             <b className="font-semibold">주문 종결 후 3영업일</b>(주말·공휴일
-            제외)입니다.
+            제외)입니다. 확인 기간 중에 환불이 생기면 정산이 재계산되고 확인
+            기간이 다시 시작됩니다.
           </div>
           <Btn
             variant="secondary"

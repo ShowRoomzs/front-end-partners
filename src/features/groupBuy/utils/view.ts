@@ -3,7 +3,11 @@ import {
   formatDateTimeShort,
   parseServerDateTime,
 } from "@/common/utils/formatDate"
-import type { GroupBuyDetailResponse } from "@/features/groupBuy/types"
+import { POST_STATUS_LABEL_OVERRIDE } from "@/features/groupBuy/constants/params"
+import type {
+  GroupBuyDetailResponse,
+  GroupBuyPostStatus,
+} from "@/features/groupBuy/types"
 import dayjs from "dayjs"
 
 export type Detail = GroupBuyDetailResponse
@@ -45,6 +49,19 @@ export function dDay(value: string | null | undefined): string | null {
     return null
   }
   return diff === 0 ? "D-day" : `D-${diff}`
+}
+
+/** 운영자 노출 중지 — 옛 서버 `HIDDEN` · 새 서버 `EXPOSURE_SUSPENDED` 둘 다(기-08) */
+export function isExposureSuspended(status: GroupBuyPostStatus): boolean {
+  return status === "EXPOSURE_SUSPENDED" || status === "HIDDEN"
+}
+
+/** 게시물 배지 문구 — 서버 라벨을 쓰되 옛 「숨김」은 「노출 중지」로 덮는다 */
+export function postStatusLabel(
+  status: GroupBuyPostStatus,
+  serverLabel: string
+): string {
+  return POST_STATUS_LABEL_OVERRIDE[status] ?? serverLabel
 }
 
 export function isSelling(detail: Detail) {
@@ -294,6 +311,8 @@ export function headerMeta(detail: Detail): string {
           ? `${d(groupBuy.endedAt)} 중단`
           : `${d(groupBuy.endedAt)} 운영자 직권 중단`,
       ].join(" · ")
+    case "TERMINATED":
+      return [...head, `${d(groupBuy.endedAt)} 해지`].join(" · ")
     default:
       return head.join(" · ")
   }

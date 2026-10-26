@@ -205,11 +205,11 @@ export const CANCEL_REASON_OPTIONS: Array<{
 /**
  * 취소 요청 거부 사유(E7) — 서버는 자유 문장(`reason`) 하나를 받는다. 선택지는 화면이 정한
  * 문장이고, 기타만 직접 입력이다. 고른 문장이 그대로 소비자에게 전달된다.
+ * 「주문 제작·맞춤 상품」은 기-33으로 삭제했다.
  */
 export const REJECT_REASON_OPTIONS = [
   "이미 포장·출고가 완료됨",
   "택배사 집화가 완료됨",
-  "주문 제작·맞춤 상품",
 ] as const
 
 export const REJECT_REASON_ETC = "기타(직접 입력)"
