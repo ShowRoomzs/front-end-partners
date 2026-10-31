@@ -17,7 +17,11 @@ import {
   optionsOfProduct,
   totalMinQuantity,
 } from "@/features/contracts/utils/contractForm"
-import { formatNumber, unitReward } from "@/features/contracts/utils/format"
+import {
+  formatNumber,
+  formatPercent,
+  unitReward,
+} from "@/features/contracts/utils/format"
 import {
   formatIntegerInput,
   parseIntegerInput,
@@ -45,6 +49,9 @@ const COL = {
 
 const RO_CELL = "pt-[9px] text-[12px] tabular-nums text-sz-n-600"
 
+/** 시안 `.it-sum` — 머리글 아래 보조 문구(옵션가 포함 · 1개당 · 옵션 합계) */
+const HEAD_SUB = "block font-normal"
+
 /**
  * 시안 B1~B3 「계약 상품 항목」 — 공구가·리워드율·최소 물량의 출생지(§25-6-3).
  * 상품을 고르기 전에는 나머지 칸이 잠기고, 상품을 바꾸면 그 행이 초기화된다.
@@ -71,11 +78,19 @@ export default function ItemsCard(props: ItemsCardProps) {
         <div className="min-w-[1060px] overflow-hidden rounded-[6px] border border-sz-n-200">
           <div className="flex gap-14 border-b border-sz-n-200 bg-sz-n-50 py-2 pl-3 pr-7 text-[11px] font-semibold text-sz-n-500">
             <div className={COL.product}>상품</div>
-            <div className={COL.list}>정가</div>
-            <div className={COL.price}>공구가</div>
+            <div className={COL.list}>
+              정가<span className={HEAD_SUB}>옵션가 포함</span>
+            </div>
+            <div className={COL.price}>
+              공구가<span className={HEAD_SUB}>옵션가 포함</span>
+            </div>
             <div className={COL.rate}>리워드율</div>
-            <div className={COL.est}>예상 리워드</div>
-            <div className={COL.qty}>최소 물량</div>
+            <div className={COL.est}>
+              예상 리워드<span className={HEAD_SUB}>1개당</span>
+            </div>
+            <div className={COL.qty}>
+              최소 물량<span className={HEAD_SUB}>옵션 합계</span>
+            </div>
             <div className={COL.del} />
           </div>
           {values.items.map(item => (
@@ -268,6 +283,8 @@ function ItemRow(props: ItemRowProps) {
             item.groupBuyPrice !== null && extra !== null
               ? item.groupBuyPrice + extra
               : null
+          // rev.10 — 옵션 행 예상 리워드 = 옵션 판매가 × 리워드율(정산이 실제 결제 금액에 곱하는 것과 같다)
+          const optionReward = unitReward(salePrice, item.rewardRate)
           const variant = product?.options.find(
             candidate => candidate.variantId === option.variantId
           )
@@ -299,8 +316,12 @@ function ItemRow(props: ItemRowProps) {
               >
                 {salePrice === null ? "—" : formatNumber(salePrice)}
               </div>
-              <div className={COL.rate} />
-              <div className={COL.est} />
+              <div className={cn(COL.rate, RO_CELL, "pt-[7px] text-sz-n-400")}>
+                {product ? formatPercent(item.rewardRate) : "—"}
+              </div>
+              <div className={cn(COL.est, RO_CELL, "pt-[7px]")}>
+                {optionReward === null ? "—" : formatNumber(optionReward)}
+              </div>
               <div className={COL.qty}>
                 <SuffixInput
                   suffix="개"

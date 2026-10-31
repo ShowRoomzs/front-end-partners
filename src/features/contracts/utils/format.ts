@@ -16,6 +16,14 @@ export function formatKRW(value: number | null | undefined): string {
     : `${value.toLocaleString("ko-KR")}원`
 }
 
+/** 옵션가 — "+30,000원" / "+0원" / "-5,000원" */
+export function formatOptionExtra(value: number | null | undefined): string {
+  if (value === null || value === undefined) {
+    return "—"
+  }
+  return `${value < 0 ? "-" : "+"}${Math.abs(value).toLocaleString("ko-KR")}원`
+}
+
 /** 리워드율 — "15%" / "12.5%". 서버가 소수 첫째 자리까지 내리므로 `.0`은 지운다 */
 export function formatPercent(value: number | null | undefined): string {
   if (value === null || value === undefined) {
