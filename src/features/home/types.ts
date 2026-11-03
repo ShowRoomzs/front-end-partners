@@ -259,6 +259,8 @@ export interface NotificationItem {
     id: number | null
     /** 문의 종류 · 기본정보 탭 · 스레드 메시지 id */
     sub: string | null
+    /** 주문 id — ORDER_GROUP일 때만. 파트너는 id(하위주문)로 상세를 연다 */
+    orderId?: number | null
   } | null
   imageKind: string | null
   imageUrl: string | null

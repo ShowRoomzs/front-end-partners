@@ -5,7 +5,8 @@ import type { NotificationItem } from "@/features/home/types"
  * 지워진 대상은 상세 화면이 404를 받아 처리한다(서버가 생존을 확인하지 않는다 — 1017 설계서 1-0 ④).
  * 이동할 화면이 없으면 null(읽음 처리만 한다).
  *
- * 주문 · 클레임은 목록에서 상세 모달을 여는 구조라 아직 id로 바로 열 수 없다 — 해당 목록으로 보낸다.
+ * 주문 · 클레임은 목록 화면의 상세 모달이라 `?detail=<id>`로 보낸다(useDetailParam).
+ * ORDER_GROUP의 id는 하위주문(배송 묶음) id라 파트너 주문 상세 id와 같다 — `orderId`(주문 id)는 앱 경로용이다.
  */
 export function notificationTargetPath(
   target: NotificationItem["target"]
@@ -33,9 +34,9 @@ export function notificationTargetPath(
     case "BASIC_INFO_TAB":
       return sub ? `/store/basic?tab=${sub}` : "/store/basic"
     case "ORDER_GROUP":
-      return "/sales/orders?tab=ALL"
+      return id ? `/sales/orders?tab=ALL&detail=${id}` : "/sales/orders?tab=ALL"
     case "CLAIM":
-      return "/sales/claims?tab=ALL"
+      return id ? `/sales/claims?tab=ALL&detail=${id}` : "/sales/claims?tab=ALL"
     case "ACCOUNT_STATUS":
       return "/connections?operator=1"
     default:

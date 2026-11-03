@@ -5,6 +5,7 @@ import {
 import ListViewWrapper from "@/common/components/ListViewWrapper/ListViewWrapper"
 import Notice from "@/common/components/Notice/Notice"
 import Pagination from "@/common/components/Pagination/Pagination"
+import { useDetailParam } from "@/common/hooks/useDetailParam"
 import { usePaginationInfo } from "@/common/hooks/usePaginationInfo"
 import { useParams } from "@/common/hooks/useParams"
 import Btn from "@/features/contracts/components/shared/Btn"
@@ -92,6 +93,8 @@ export default function ClaimListPage() {
   const [drafts, setDrafts] = useState<Record<number, ReshipDraft>>({})
   const [busyIds, setBusyIds] = useState<Set<number>>(new Set())
   const [detailId, setDetailId] = useState<number | null>(null)
+  // 알림에서 온 건(`?detail=<클레임 id>`)은 상세를 바로 연다
+  useDetailParam(setDetailId)
   const [exportOpen, setExportOpen] = useState(false)
   const [uploadOpen, setUploadOpen] = useState(false)
 

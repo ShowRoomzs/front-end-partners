@@ -6,6 +6,7 @@ import { confirm } from "@/common/components/ConfirmModal/confirm"
 import ListViewWrapper from "@/common/components/ListViewWrapper/ListViewWrapper"
 import Notice, { type NoticeTone } from "@/common/components/Notice/Notice"
 import Pagination from "@/common/components/Pagination/Pagination"
+import { useDetailParam } from "@/common/hooks/useDetailParam"
 import { usePaginationInfo } from "@/common/hooks/usePaginationInfo"
 import { useParams } from "@/common/hooks/useParams"
 import Btn from "@/features/contracts/components/shared/Btn"
@@ -168,6 +169,8 @@ export default function OrderListPage() {
     id: number
     navigationIds: Array<number>
   } | null>(null)
+  // 알림에서 온 건(`?detail=<하위주문 id>`)은 상세를 바로 연다
+  useDetailParam(id => setDetail({ id, navigationIds: [id] }))
   const [prepareIds, setPrepareIds] = useState<Array<number> | null>(null)
   const [cancelTarget, setCancelTarget] = useState<DirectCancelTarget | null>(
     null
