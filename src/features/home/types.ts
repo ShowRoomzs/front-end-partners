@@ -2,9 +2,8 @@
   파트너센터 홈 — 백엔드 main `api/seller/home/dto/SellerHomeDto.java`(1017 설계서 4절)와
   알림함 `api/common/notification/dto/NotificationItem.java` · `NotificationSummary.java`를 그대로 옮겼다.
 
-  시각 두 종류:
-  - `Live.asOf` · 알림 `createdAt` — `now()` → UTC 벽시계 → `parseServerDateTime`
-  - 공구 `startAt` · `endAt` · 계약 `groupBuyStartAt` · 달력 날짜 · 지급 예정일 — 입력값 · 기한 → 벽시계 그대로(`dayjs`)
+  시각: `LocalDateTime`은 모두 UTC 순간 + "Z"(58 시간대 규약) — `dayjs(v)` · `parseServerDateTime` 둘 다 로컬로 바꾼다.
+  날짜(`LocalDate` — 달력 날짜 · 지급 예정일)는 KST 날짜 그대로다.
 */
 import type { ContractStatus } from "@/features/contracts/types"
 import type { GroupBuyStatus } from "@/features/groupBuy/types"

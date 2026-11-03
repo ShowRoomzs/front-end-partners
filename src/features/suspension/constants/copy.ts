@@ -10,8 +10,9 @@ export const SUSPENSION_COPY = {
   bannerTitle: "계정 이용이 정지되었습니다",
   bannerDescription:
     "진행 중인 주문과 공구는 계속 처리해 주세요. 새 상품 · 계약 · 공구 등록은 정지 해제 후 가능합니다.",
-  /** 기-02 【잠정】 — 통지 후 영업일 수는 결정 노트 값 그대로(서버는 기한 날짜만 내린다) */
-  appealDeadlineRule: "통지 후 3영업일 이상",
+  /** 기-02 【잠정】 — 영업일 수는 서버 `term.appealBusinessDays`. 없으면 결정 노트 값(3) */
+  appealDeadlineRule: (days: number | undefined) =>
+    `통지 후 ${days ?? 3}영업일 이상`,
   /** 기-03 【잠정】 정지 중 탈퇴 허용 — 조건은 기본정보 관리 4-G2와 같다 */
   withdrawalAllowedPrefix: "정지 중에도 ",
   withdrawalAllowedStrong: "탈퇴 신청",

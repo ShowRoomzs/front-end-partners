@@ -5,7 +5,8 @@ import type { MemberAccountSanction } from "@/features/suspension/types"
 import {
   formatSuspendedAt,
   formatSuspendedOn,
-  formatWallDate,
+  formatEndsOn,
+  formatTermDate,
 } from "@/features/suspension/utils/format"
 import {
   SETTLEMENT_ACCOUNT_PATH,
@@ -44,9 +45,9 @@ function BannerBody(props: {
   const navigate = useNavigate()
   const [expanded, setExpanded] = useState(false)
   const term = sanction.term ?? null
-  const endsOn = formatWallDate(term?.endsOn)
-  const autoRelease = formatWallDate(term?.autoReleaseAt)
-  const appealDeadline = formatWallDate(term?.appealDeadlineAt)
+  const endsOn = formatEndsOn(term?.endsOn)
+  const autoRelease = formatTermDate(term?.autoReleaseAt)
+  const appealDeadline = formatTermDate(term?.appealDeadlineAt)
 
   return (
     <div
@@ -94,7 +95,10 @@ function BannerBody(props: {
                 · 자동 해제일 <b>{autoRelease}</b>
               </>
             )}{" "}
-            · 이의 신청 기한 <b>{SUSPENSION_COPY.appealDeadlineRule}</b>
+            · 이의 신청 기한{" "}
+            <b>
+              {SUSPENSION_COPY.appealDeadlineRule(term?.appealBusinessDays)}
+            </b>
             {appealDeadline && `(${appealDeadline}까지)`} ·{" "}
             {SUSPENSION_COPY.withdrawalAllowedPrefix}
             <b>{SUSPENSION_COPY.withdrawalAllowedStrong}</b>

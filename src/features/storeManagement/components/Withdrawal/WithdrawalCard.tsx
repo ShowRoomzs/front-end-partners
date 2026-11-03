@@ -45,7 +45,7 @@ const OPERATOR_THREAD_PATH = "/connections?operator=1"
 const formatCount = (count: number) => `${count.toLocaleString("ko-KR")}건`
 const sumCount = (rows: Array<WithdrawalBreakdown>) =>
   rows.reduce((sum, row) => sum + row.count, 0)
-/** 예상일 · 합의 기한 — 서버가 정한 KST 날짜/기한이라 시간대 변환 없이 읽는다 */
+/** 예상일(KST 날짜) · 합의 기한(UTC 순간 "Z") — dayjs가 로컬로 읽는다 */
 const formatMonthDay = (date: string) => dayjs(date).format("MM.DD")
 
 function CardHeader(props: { children: ReactNode; pending?: boolean }) {
@@ -280,7 +280,7 @@ function PendingCard(props: {
       <div className="px-5 py-4">
         <div className="flex flex-wrap gap-7">
           <Meta label="신청일시">
-            {/* 신청 시각은 서버 now() 이벤트(UTC 벽시계) — formatDateTimeShort가 KST로 바꾼다 */}
+            {/* 신청 시각(UTC) — formatDateTimeShort가 로컬로 바꾼다 */}
             <span className="tabular-nums">
               {formatDateTimeShort(request.requestedAt)}
             </span>

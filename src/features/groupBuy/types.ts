@@ -59,6 +59,7 @@ export type GroupBuyRemarkCode =
   | "ADMIN_SUSPENSION_NOTICED"
   | "SUSPENSION_REQUEST_REVIEWING"
   | "EARLY_CLOSE_REQUEST_REVIEWING"
+  | "TERMINATION_REQUESTED"
   | "EXTENSION_PENDING"
   | "SUSPENDED_BY_ADMIN"
 
@@ -153,6 +154,8 @@ export interface GroupBuyListItem {
     code: GroupBuyRemarkCode
     appealDeadlineAt: string | null
   } | null
+  /** 원 계약의 가장 최근 해지 요청(58 6-3) — 요청이 없으면 null */
+  terminationRequest?: GroupBuyTerminationRequest | null
   /**
    * 정지 보류 보조 배지(1017 설계서 8-5) — 오픈 전 공구만 · 내 정지 경고 / 상대 사정 중립.
    * main 필드라 배포 전 개발 서버는 내리지 않는다(undefined → 배지 없음).
@@ -389,7 +392,11 @@ export interface GroupBuyDetailResponse {
      * 아직 배포되지 않은 서버는 내리지 않는다(undefined → 버튼 없음).
      */
     canRequestTermination?: boolean
+    /** 계정 이용 정지로 막힌 버튼의 안내(정지 중일 때만) — 정지면 서버가 canRequestExtension을 false로 내린다 */
+    suspensionBlockedMessage?: string | null
   }
+  /** 원 계약의 가장 최근 해지 요청(상태 무관 · 58 6-3) — 요청이 없으면 null */
+  terminationRequest?: GroupBuyTerminationRequest | null
   history: Array<GroupBuyHistoryEntry>
   /** 목록 이웃 — 상세 조회에 목록 조건(tab·keyword·sort)을 보낼 때만. 실행 API 응답은 둘 다 null */
   navigation: {
@@ -459,15 +466,14 @@ export interface TerminationRequestBody {
   memo?: string
 }
 
-/** 계약 상세 `terminationRequest` — 공구 상세에는 해지 요청 블록이 없어 계약 상세에서 읽는다 */
-export interface ContractTerminationRequest {
-  requestId: number
+/** 공구 상세 · 목록 `terminationRequest` — back-end `GroupBuyTerminationRequestView`(계약 상세와 같은 출처) */
+export interface GroupBuyTerminationRequest {
   /** PENDING(처리 대기) · HANDLED(해지 처리됨) · WITHDRAWN(요청 철회) · LAPSED(공구 오픈으로 닫힘) */
   status: "PENDING" | "HANDLED" | "WITHDRAWN" | "LAPSED"
   statusLabel: string
   reasonCode: string
   reasonLabel: string
-  memo: string | null
+  /** 지금은 브랜드(SELLER)만 요청할 수 있다 */
+  requesterType: string
   requestedAt: string
-  closedAt: string | null
 }

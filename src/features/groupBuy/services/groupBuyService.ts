@@ -11,7 +11,6 @@ import type {
   AppealAttachmentPresignBody,
   AppealAttachmentPresignResponse,
   AppealSubmitBody,
-  ContractTerminationRequest,
   DetailNavParams,
   EarlyCloseRequestBody,
   ExtensionRequestBody,
@@ -173,25 +172,6 @@ export const groupBuyService = {
       async () => {
         const { requestTerminationMock } = await import("./groupBuy.mock")
         return requestTerminationMock(contractId, body)
-      }
-    ),
-
-  /**
-   * 원 계약의 해지 요청 — 공구 상세에는 해지 요청 블록이 없다(계약 상세 `terminationRequest`).
-   * 아직 배포되지 않은 서버의 계약 상세에는 이 필드가 없어 null이 된다.
-   */
-  getContractTermination: (contractId: number) =>
-    callOrMock(
-      "공구 해지 요청",
-      async () => {
-        const { data } = await apiInstance.get<{
-          terminationRequest?: ContractTerminationRequest | null
-        }>(`/seller/contracts/${contractId}`, { suppressErrorToast: true })
-        return data.terminationRequest ?? null
-      },
-      async () => {
-        const { contractTerminationMock } = await import("./groupBuy.mock")
-        return contractTerminationMock(contractId)
       }
     ),
 }

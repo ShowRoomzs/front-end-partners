@@ -294,6 +294,8 @@ export interface ClaimPurchaseConfirm {
 
 export interface ClaimDetailResponse {
   summary: ClaimListItem
+  /** 판정 전 운임 미리보기 — 판정 전 단계가 아니면 null */
+  freightPreview?: ClaimFreightPreviewResponse | null
   orderNumber: string
   deliveryGroupId: number
   /** 마스킹된 값 */
@@ -377,8 +379,21 @@ export interface ClaimFreightPreview {
   freight: number
   /** 교환 재발송 배송비(기본 배송비 + 권역 추가비) */
   reshipFee: number
-  /** 원래 결제액 — 이를 넘는 환급분은 운영자가 계좌로 송금한다 */
-  originalPaidAmount: number
+  /** 원래 결제액 — 이를 넘는 환급분은 운영자가 계좌로 송금한다. 결제가 없는 주문이면 null */
+  originalPaidAmount: number | null
+}
+
+/**
+ * 상세 `freightPreview`(58 5-4) — 판정 전 단계(요청 · 회수 중 · 도착 · 검수 대기)에만 온다.
+ * 판정 뒤 금액은 `inspection`이 말한다.
+ */
+export interface ClaimFreightPreviewResponse {
+  baseDeliveryFee: number
+  regionSurcharge: number
+  reshipFee: number
+  originalPaidAmount: number | null
+  /** PG로 더 돌려줄 수 있는 금액(취소 가능 잔액 − 집행 대기 환불) */
+  pgRefundableAmount: number | null
 }
 
 export interface ReshipItem {

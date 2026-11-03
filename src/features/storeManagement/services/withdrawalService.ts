@@ -48,7 +48,7 @@ export interface WithdrawalAdjustmentItem {
   settlementNumber: string | null
   /** 정산별 이슈 스레드 */
   threadId: number | null
-  /** 합의 기한 — 서버가 정한 기한(KST 벽시계) */
+  /** 합의 기한 — UTC 순간("Z") */
   deadlineAt: string | null
   turn: "MY_TURN" | "THEIR_TURN" | "OPEN_FLOOR" | "CLOSED" | null
 }
@@ -86,7 +86,7 @@ export interface WithdrawalCondition {
 
 export interface PendingWithdrawal {
   requestId: number
-  /** 신청 시각 — 서버 now() 이벤트(UTC 벽시계) */
+  /** 신청 시각 — UTC 순간("Z") */
   requestedAt: string
   reason: string | null
   /** 미선택이면 「선택하지 않음」 */
@@ -98,7 +98,7 @@ export interface PendingWithdrawal {
 
 export interface WithdrawalRejection {
   requestId: number
-  /** 반려 시각 — 서버 now() 이벤트(UTC 벽시계) */
+  /** 반려 시각 — UTC 순간("Z") */
   rejectedAt: string
   reasonCode: string
   reasonLabel: string

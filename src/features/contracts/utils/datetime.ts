@@ -10,8 +10,8 @@ import utc from "dayjs/plugin/utc"
 dayjs.extend(utc)
 
 /**
- * 서버 `LocalDateTime`은 시간대가 없는 UTC 벽시계다(`parseServerDateTime` 주석 참고).
- * 표시가 UTC→로컬로 읽으므로 전송은 로컬→UTC로 써야 저장→재조회가 같은 시각으로 돌아온다.
+ * 서버 `LocalDateTime`은 UTC 순간이다(`parseServerDateTime` 주석 참고). 오프셋 없는 입력도 UTC로 받으므로
+ * 전송은 로컬→UTC로 써야 저장→재조회가 같은 시각으로 돌아온다.
  */
 export function toServerDateTime(value: Dayjs): string {
   return value.utc().format("YYYY-MM-DDTHH:mm:ss")

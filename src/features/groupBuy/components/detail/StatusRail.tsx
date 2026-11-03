@@ -9,7 +9,7 @@ import { NoticeSummary } from "@/features/groupBuy/components/detail/ProgressSec
 import { B, GbBadge } from "@/features/groupBuy/components/shared/GbParts"
 import { TERMINATION_TEXT } from "@/features/groupBuy/constants/params"
 import { EXTENSION_SUSPENDED_TEXT } from "@/features/groupBuy/constants/suspension"
-import type { ContractTerminationRequest } from "@/features/groupBuy/types"
+import type { GroupBuyTerminationRequest } from "@/features/groupBuy/types"
 import { toGroupBuyHistoryItems } from "@/features/groupBuy/utils/history"
 import {
   type Detail,
@@ -130,9 +130,9 @@ function terminationButton(detail: Detail, actions: RailActions) {
   )
 }
 
-/** 해지 요청 처리 대기 — 계약 상세의 요청을 읽는다(공구 상세에는 해지 요청 블록이 없다) */
+/** 해지 요청 처리 대기 — 공구 상세의 `terminationRequest` */
 function TerminationPendingHint(props: {
-  request: ContractTerminationRequest
+  request: GroupBuyTerminationRequest
 }) {
   return (
     <Hint>
@@ -152,10 +152,11 @@ export function StatusRailCard(props: {
   situation: SellingSituation | null
   actions: RailActions
   /** 원 계약의 해지 요청 — 처리 대기(PENDING)일 때만 표시한다 */
-  termination: ContractTerminationRequest | null
+  termination: GroupBuyTerminationRequest | null
   /**
    * 계정 이용 정지(시안 15 S3a) — [기간 연장 요청]만 비활성(판매 기간을 늘리는 새 일).
-   * 조기 마감 · 중단은 판매를 줄이는 쪽이라 그대로 둔다. 서버 permissions는 정지를 반영하지 않아 FE가 막는다.
+   * 조기 마감 · 중단은 판매를 줄이는 쪽이라 그대로 둔다. 서버도 정지면 canRequestExtension을 false로
+   * 내리지만(58 5-2), 계정 상태가 먼저 오면 그 사이에도 막히도록 FE 판정을 같이 둔다.
    */
   suspended?: boolean
 }) {

@@ -40,9 +40,6 @@ function useInvalidateGroupBuy() {
     queryClient.invalidateQueries({ queryKey: [GROUP_BUY_QUERY_KEYS.DETAIL] })
     queryClient.invalidateQueries({ queryKey: [GROUP_BUY_QUERY_KEYS.LIST] })
     queryClient.invalidateQueries({ queryKey: [GROUP_BUY_QUERY_KEYS.SUMMARY] })
-    queryClient.invalidateQueries({
-      queryKey: [GROUP_BUY_QUERY_KEYS.TERMINATION],
-    })
   }
 }
 

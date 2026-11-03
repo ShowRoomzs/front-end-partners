@@ -16,12 +16,13 @@ function remarkText(remark: NonNullable<GroupBuyListItem["remark"]>) {
       return remark.appealDeadlineAt
         ? `직권 중단 예정 · 소명 기한 ${formatMonthDay(remark.appealDeadlineAt)}`
         : "직권 중단 예정"
-    // 기-05 뒤로 중단 요청은 진행중에만 걸린다(준비완료 건은 그 전에 보낸 옛 데이터). 해지 요청은
-    // 계약에 걸려 서버가 비고 코드를 내리지 않는다
+    // 기-05 뒤로 중단 요청은 진행중에만 걸린다(준비완료 건은 그 전에 보낸 옛 데이터)
     case "SUSPENSION_REQUEST_REVIEWING":
       return "중단 요청 검토 중"
     case "EARLY_CLOSE_REQUEST_REVIEWING":
       return "조기 마감 요청 검토 중"
+    case "TERMINATION_REQUESTED":
+      return "해지 요청 처리 대기"
     case "EXTENSION_PENDING":
       return "연장 요청 대기"
     case "SUSPENDED_BY_ADMIN":

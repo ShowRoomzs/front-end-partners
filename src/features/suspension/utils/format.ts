@@ -10,6 +10,10 @@ export const formatSuspendedAt = (sanction: MemberAccountSanction) =>
 export const formatSuspendedOn = (sanction: MemberAccountSanction) =>
   parseServerDateTime(sanction.suspendedAt).format("YYYY.MM.DD")
 
-/** 종료일 · 자동 해제 · 이의 기한은 벽시계 그대로 읽는다 */
-export const formatWallDate = (value: string | null | undefined) =>
+/** 정지 종료일 — 시각 없는 KST 날짜(`LocalDate`) */
+export const formatEndsOn = (value: string | null | undefined) =>
   value ? dayjs(value).format("YYYY.MM.DD") : null
+
+/** 자동 해제 · 이의 기한 — 서버가 KST 날짜로 계산한 UTC 순간 → 로컬 날짜 */
+export const formatTermDate = (value: string | null | undefined) =>
+  value ? parseServerDateTime(value).format("YYYY.MM.DD") : null

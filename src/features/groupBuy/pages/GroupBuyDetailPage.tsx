@@ -42,10 +42,7 @@ import {
   useRequestTermination,
   useSubmitAppeal,
 } from "@/features/groupBuy/hooks/useGroupBuyMutations"
-import {
-  useGetContractTermination,
-  useGetGroupBuyDetail,
-} from "@/features/groupBuy/hooks/useGroupBuyQueries"
+import { useGetGroupBuyDetail } from "@/features/groupBuy/hooks/useGroupBuyQueries"
 import { headerMeta, sellingSituation } from "@/features/groupBuy/utils/view"
 import { usePageSubtitle } from "@/common/components/MainLayout/usePageSubtitle"
 import { useMarketStore } from "@/common/stores/useMarketStore"
@@ -95,15 +92,6 @@ export default function GroupBuyDetailPage() {
     isError,
   } = useGetGroupBuyDetail(groupBuyId, navParams)
   const [modal, setModal] = useState<ModalKind>(null)
-  // 해지 요청 처리 대기 표시 — 오픈 전 공구에서만 원 계약의 요청을 읽는다
-  const beforeOpen =
-    detail?.groupBuy.status === "PREPARING" ||
-    detail?.groupBuy.status === "READY"
-  const { data: termination } = useGetContractTermination(
-    detail?.contract.contractId,
-    beforeOpen
-  )
-
   const { isSuspended } = useAccountSuspension()
   const { mutate: confirmStock, isPending: isConfirming } = useConfirmStock()
   const { mutate: requestExtension, isPending: isExtending } =
@@ -281,7 +269,7 @@ export default function GroupBuyDetailPage() {
           <StatusRailCard
             detail={detail}
             situation={situation}
-            termination={termination ?? null}
+            termination={detail.terminationRequest ?? null}
             suspended={isSuspended}
             actions={{
               onOpenThread: openPairThread,

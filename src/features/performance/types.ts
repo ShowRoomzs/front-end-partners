@@ -3,8 +3,7 @@ import type { BaseParams, PageInfo } from "@/common/types/page"
 /*
   성과 관리(ui-partner-12 rev.8) — 백엔드 `SellerPerformanceDto`(origin/main · 48 설계서 3절) 그대로.
   비율은 % 값(소수 1자리 · 93.0 = 93.0%) · ROAS는 % 정수(578 = 578%) · 금액은 원.
-  날짜: 공구 기간(`periodStart` · `periodEnd`)과 지급 예정일 · 정산 확인 기한은 입력 · 기한이라 KST 벽시계,
-  원가 저장 시각 · 지급 완료 시각은 이벤트 시각이라 UTC 벽시계(`parseServerDateTime`).
+  시각: `LocalDateTime`은 모두 UTC 순간 + "Z"(58 시간대 규약 · 기한도 같다). 날짜(`LocalDate`)는 KST 날짜.
 */
 
 /** 성과 상태 5종 = 정산 상태 + 집계 중(서버가 파생 · 분배 실패는 지급 완료로 접힌다) */

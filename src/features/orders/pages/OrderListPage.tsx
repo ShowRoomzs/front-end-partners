@@ -1,3 +1,7 @@
+import {
+  businessDaysText,
+  usePolicyValues,
+} from "@/common/hooks/usePolicyValues"
 import { confirm } from "@/common/components/ConfirmModal/confirm"
 import ListViewWrapper from "@/common/components/ListViewWrapper/ListViewWrapper"
 import Notice, { type NoticeTone } from "@/common/components/Notice/Notice"
@@ -127,6 +131,8 @@ function skippedSummary(skipped: BatchActionResponse["skipped"]) {
  */
 export default function OrderListPage() {
   const navigate = useNavigate()
+  // A2f 취소 요청 응답 기한(서버 policy-values)
+  const { data: policy } = usePolicyValues()
   const {
     params,
     localParams,
@@ -936,11 +942,17 @@ export default function OrderListPage() {
           </Notice>
         )}
 
-        {/* 시안 A2f 안내 중 「1영업일 · 자동 승인 · PG 즉시 환불」 문장은 뺐다 — 응답 기한·자동 승인 필드가 서버에 없고 환불은 운영자가 집행한다 */}
+        {/* 시안 A2f — 응답 기한은 서버 `policy-values`. 「PG가 즉시 환불」은 뺐다(환불은 환불 큐로 집행된다) */}
         {tab === "CANCEL_REQUESTED" && (
           <Notice tone="warn" className="mb-3">
-            요청이 걸린 <B>하위주문 전체</B>가 송장을 등록할 수 없습니다 — 같은
-            박스로 나가므로 항목만 잠그면 분리 발송이 생깁니다. 처리하면 주문은{" "}
+            <B>
+              취소 요청은 접수 후{" "}
+              {businessDaysText(policy?.cancelRequestRespondBusinessDays)}
+              (주말·공휴일 제외) 안에 승인·거부해 주세요.
+            </B>{" "}
+            기한이 지나면 <B>자동으로 승인</B>됩니다. 요청이 걸린{" "}
+            <B>하위주문 전체</B>가 송장을 등록할 수 없습니다 — 같은 박스로
+            나가므로 항목만 잠그면 분리 발송이 생깁니다. 처리하면 주문은{" "}
             <B>원래 탭(신규·상품준비중)</B>으로 돌아갑니다.
           </Notice>
         )}

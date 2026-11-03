@@ -14,8 +14,6 @@ export const GROUP_BUY_QUERY_KEYS = {
   LIST: "sellerGroupBuyList",
   SUMMARY: "sellerGroupBuySummary",
   DETAIL: "sellerGroupBuyDetail",
-  /** 계약 상세의 해지 요청 — 공구 상세에 해지 요청 블록이 없어 따로 읽는다 */
-  TERMINATION: "sellerGroupBuyContractTermination",
 } as const
 
 /**

@@ -1,3 +1,5 @@
+import type { ContractStatus } from "@/features/contracts/types"
+import { contractStatusLabel } from "@/features/contracts/utils/statusBadge"
 import StatusBadge, {
   type StatusBadgeVariant,
 } from "@/common/components/StatusBadge/StatusBadge"
@@ -28,9 +30,10 @@ const CONTRACT_TONE: Record<string, StatusBadgeVariant> = {
   CONCLUSION_PENDING: "info",
 }
 
-/** 개발 서버 옛 라벨 「체결 처리 대기」 → 기-05 「공구 생성 대기」(main은 이미 바뀌었다 · 배포 대기) */
+/** 계약 배지 라벨 — 계약 관리와 같은 덮어쓰기(`contractStatusLabel`) */
 const contractLabel = (row: HomeContractRow) =>
-  row.status === "CONCLUSION_PENDING" ? "공구 생성 대기" : row.statusLabel
+  // 홈 행 상태는 열린 문자열이다 — 모르는 값은 덮어쓰기 표에 없어 서버 라벨 그대로
+  contractStatusLabel(row.status as ContractStatus, row.statusLabel)
 
 /** 공구 · 게시물 배지 색 — 서버 `GroupBuyTone`과 같다 */
 const GROUP_BUY_TONE: Record<string, StatusBadgeVariant> = {
@@ -163,7 +166,7 @@ export function UpcomingCard(props: {
                 <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-sz-n-900">
                   {row.name}
                 </span>
-                {/* 공구 시작은 입력값이라 KST 벽시계 그대로 */}
+                {/* 공구 시작 — UTC 순간("Z") → 로컬 */}
                 <span className="shrink-0 text-[11px] text-sz-n-700 tabular-nums">
                   {dayjs(row.startAt).format("MM.DD")} 오픈
                 </span>
