@@ -1,6 +1,6 @@
 import { mockDelay } from "@/common/utils/devMock"
 import type {
-  ContractTerminationRequest,
+  GroupBuyTerminationRequest,
   GroupBuyDetailResponse,
   GroupBuyHistoryEntry,
   TerminationRequestBody,
@@ -14,7 +14,7 @@ import type {
 */
 
 /** 이 탭에서 목업으로 보낸 해지 요청 — 새로고침하면 비워진다 */
-const requested = new Map<number, ContractTerminationRequest>()
+const requested = new Map<number, GroupBuyTerminationRequest>()
 
 const REASON_LABEL: Record<string, string> = {
   QUALITY_ISSUE: "상품 품질 이슈",
@@ -334,13 +334,15 @@ function ended(
   }
 }
 
-/** 해지 요청을 목업으로 보낸 뒤에는 서버 판정대로 버튼을 닫는다 */
+/** 해지 요청을 목업으로 보낸 뒤에는 서버처럼 요청 블록을 붙이고 버튼을 닫는다 */
 function withRequested(detail: GroupBuyDetailResponse): GroupBuyDetailResponse {
-  if (!requested.has(detail.contract.contractId)) {
+  const request = requested.get(detail.contract.contractId)
+  if (!request) {
     return detail
   }
   return {
     ...detail,
+    terminationRequest: request,
     permissions: { ...detail.permissions, canRequestTermination: false },
   }
 }
@@ -403,14 +405,12 @@ export function mockDetail(
       )
     case "gb-termination":
       requested.set(CONTRACT_ID, {
-        requestId: 9,
         status: "PENDING",
         statusLabel: "처리 대기",
         reasonCode: "NEGOTIATION_BROKEN",
         reasonLabel: REASON_LABEL.NEGOTIATION_BROKEN,
-        memo: null,
-        requestedAt: "2026-08-12T01:10:00",
-        closedAt: null,
+        requesterType: "SELLER",
+        requestedAt: "2026-08-12T01:10:00Z",
       })
       return mockDelay(withRequested(detail))
     case "gb-terminated":
@@ -608,21 +608,13 @@ export function requestTerminationMock(
   body: TerminationRequestBody
 ): Promise<void> {
   requested.set(contractId, {
-    requestId: Date.now(),
     status: "PENDING",
     statusLabel: "처리 대기",
     reasonCode: body.reasonCode,
     reasonLabel: REASON_LABEL[body.reasonCode] ?? body.reasonCode,
-    memo: body.memo ?? null,
-    // 이벤트 시각은 서버처럼 UTC 벽시계로 둔다(`parseServerDateTime`이 KST로 읽는다)
-    requestedAt: new Date().toISOString().slice(0, 19),
-    closedAt: null,
+    requesterType: "SELLER",
+    // 서버처럼 UTC 시각에 Z를 붙인다
+    requestedAt: new Date().toISOString().slice(0, 19) + "Z",
   })
   return mockDelay(undefined)
-}
-
-export function contractTerminationMock(
-  contractId: number
-): Promise<ContractTerminationRequest | null> {
-  return mockDelay(requested.get(contractId) ?? null)
 }

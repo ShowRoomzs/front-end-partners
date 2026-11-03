@@ -45,7 +45,7 @@ export function useGetClaimDetail(claimId: number | null) {
   })
 }
 
-/** 판정 전 운임 미리보기 — 배포본은 null(서버에 원천 없음 · claimService 참고) */
+/** 판정 전 운임 미리보기 — 상세 `freightPreview`(판정 뒤 단계면 null · claimService 참고) */
 export function useGetClaimFreightPreview(
   detail: ClaimDetailResponse,
   enabled: boolean

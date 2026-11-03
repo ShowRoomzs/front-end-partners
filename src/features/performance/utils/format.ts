@@ -81,7 +81,7 @@ export function figureSub(
   return basis ? `${basis} · ${original}` : original
 }
 
-/** 08.01 ~ 08.07 · 상세는 2026.08.01 ~ 08.07 — 공구 기간은 입력 시각이라 KST 벽시계 그대로 */
+/** 08.01 ~ 08.07 · 상세는 2026.08.01 ~ 08.07 — UTC 순간("Z") → 로컬 날짜 */
 export function formatPeriod(start: string, end: string, withYear = false) {
   const s = dayjs(start)
   const e = dayjs(end)
@@ -99,27 +99,27 @@ export function formatListPeriod(from: string, to: string) {
   return `${s.format("YYYY.MM.DD")}~${e.format(s.year() === e.year() ? "MM.DD" : "YYYY.MM.DD")}`
 }
 
-/** 기한 · 예정일(KST 벽시계) → 10.20 */
+/** 기한 · 예정일 → 10.20 */
 export function formatMonthDay(date: string | null | undefined) {
   return date ? dayjs(date).format("MM.DD") : "—"
 }
 
-/** 이벤트 시각(UTC 벽시계 · 지급 완료 · 합의 응답) → 10.08 */
+/** 이벤트 시각(지급 완료 · 합의 응답) → 10.08 */
 export function formatEventMonthDay(date: string | null | undefined) {
   return date ? parseServerDateTime(date).format("MM.DD") : "—"
 }
 
-/** 이벤트 시각(UTC 벽시계) → 2026.10.20 */
+/** 이벤트 시각 → 2026.10.20 */
 export function formatEventDate(date: string | null | undefined) {
   return date ? parseServerDateTime(date).format("YYYY.MM.DD") : "—"
 }
 
-/** 이벤트 시각(UTC 벽시계) → 2026.10.12 14:20 */
+/** 이벤트 시각 → 2026.10.12 14:20 */
 export function formatEventDateTime(date: string | null | undefined) {
   return date ? parseServerDateTime(date).format("YYYY.MM.DD HH:mm") : "—"
 }
 
-/** 정산 확인 기한(KST) → 10.13 23:59 */
+/** 정산 확인 기한 → 10.13 23:59 */
 export function formatDueDateTime(date: string | null | undefined) {
   return date ? dayjs(date).format("MM.DD HH:mm") : "—"
 }

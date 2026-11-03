@@ -10,8 +10,8 @@ export function formatDate(date: Date) {
 /**
  * 서버가 내려준 시각 문자열을 로컬 시각으로 파싱한다.
  *
- * 백엔드는 시간대 표기가 붙은 값(Instant, "...Z")과 안 붙은 값(LocalDateTime)을
- * 섞어 내려준다. 시간대가 없으면 서버 JVM 기준 UTC 벽시계 시각이므로,
+ * 백엔드 시각(`LocalDateTime`)은 UTC 순간이고 "...Z"가 붙어 온다(58 시간대 규약 · 기한도
+ * 서버가 KST 날짜로 계산한 뒤 UTC로 바꿔 내린다). "Z"가 없는 값도 UTC로 읽는다 —
  * 그대로 dayjs에 넘기면 브라우저 로컬(KST)로 해석돼 9시간 어긋난다.
  */
 export function parseServerDateTime(date: string) {

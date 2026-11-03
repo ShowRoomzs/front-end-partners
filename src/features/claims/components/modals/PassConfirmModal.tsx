@@ -69,10 +69,9 @@ export default function PassConfirmModal(props: {
     refund && preview
       ? refund.requestExpectedAmount + deduction + preview.freight
       : null
+  const paid = preview?.originalPaidAmount ?? null
   const overPaid =
-    brandTotal !== null && preview
-      ? Math.max(0, brandTotal - preview.originalPaidAmount)
-      : 0
+    brandTotal !== null && paid !== null ? Math.max(0, brandTotal - paid) : 0
 
   return (
     <ModalShell
@@ -142,10 +141,10 @@ export default function PassConfirmModal(props: {
                 더해집니다(브랜드 부담)
               </b>
               .{" "}
-              {overPaid > 0 && preview ? (
+              {overPaid > 0 && paid !== null ? (
                 <>
-                  원래 결제액({formatWon(preview.originalPaidAmount)})을 넘는
-                  환급분 {formatWon(overPaid)}은{" "}
+                  원래 결제액({formatWon(paid)})을 넘는 환급분{" "}
+                  {formatWon(overPaid)}은{" "}
                 </>
               ) : (
                 "원래 결제액을 넘는 환급분은 "

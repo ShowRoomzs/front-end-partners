@@ -6,7 +6,7 @@ import type { BaseParams } from "@/common/types/page"
   원본: back-end `SellerSettlementDto`(목록·요약·상세·명세) · `SettlementPartyDto`(KPI·분해 행·조정 내역 —
   스튜디오와 공용) · `SettlementAdjustmentDto`(조정 미리보기·요청). 이름은 서버를 따른다.
 
-  - 날짜: `LocalDateTime`은 "2026-10-05T23:59:59", `LocalDate`는 "2026-10-12" 문자열(시간대 없음)
+  - 날짜: `LocalDateTime`은 UTC 순간 "2026-10-05T14:59:59Z"(58 시간대 규약 · 기한도 같다), `LocalDate`는 KST 날짜 "2026-10-12"
   - 요율: 분해 행의 `rate`는 **비율**(0.0300 = 3%)이고 명세 행의 `rewardRate`만 **% 값**(10.0 = 10%)이다
   - 라벨·톤은 서버가 정한다(`statusLabel` · `statusTone` · `turnLabel` …) — 화면은 그대로 그린다
   - 응답에 없는 것은 서버가 안 내리는 것이다: 고정 지급비 · 인플루언서 원천징수 분해 · 이력 · 소비자 식별 정보

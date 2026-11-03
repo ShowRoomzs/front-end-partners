@@ -53,7 +53,7 @@ export default function LiveGroupBuyCard(props: {
   )
 }
 
-/** 마감까지 남은 시간 — 종료 시각은 KST 벽시계 그대로 */
+/** 마감까지 남은 시간 — 종료 시각은 UTC 순간("Z") */
 function remainingText(endAt: string) {
   const end = dayjs(endAt)
   const minutes = end.diff(dayjs(), "minute")

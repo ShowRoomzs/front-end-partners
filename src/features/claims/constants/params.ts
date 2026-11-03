@@ -171,12 +171,6 @@ export const CLAIM_SUMMARY_POLL_INTERVAL = 30_000
  */
 export const INSPECT_DUE_LABEL = "2영업일"
 
-/**
- * 【잠정】 기-17 자동 입고 = 택배 도착 후 N영업일 [정책값 미정]. 서버 설정
- * `order.claim.auto-receive-business-days`는 응답에 내려오지 않는다 — 숫자를 짐작해 적지 않는다.
- */
-export const AUTO_RECEIVE_LABEL = "N영업일"
-
 /** 착불 신청 사유의 접수 이름 — B2 「불량 접수라 착불 회수」 */
 export const SELLER_BORNE_INTAKE_LABEL: Partial<Record<ClaimReason, string>> = {
   DAMAGED_OR_DEFECTIVE: "불량",

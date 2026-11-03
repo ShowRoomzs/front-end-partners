@@ -1,3 +1,4 @@
+import { usePolicyValues } from "@/common/hooks/usePolicyValues"
 import { confirm } from "@/common/components/ConfirmModal/confirm"
 import Notice from "@/common/components/Notice/Notice"
 import { parseServerDateTime } from "@/common/utils/formatDate"
@@ -1382,15 +1383,23 @@ function InlineInvoice(props: {
   )
 }
 
+/** 추적 정지 뒤 소비자 선택이 열리기까지 — 「7일」 · 값이 없으면 「N일」 */
+function useStallChoiceDays() {
+  const { data: policy } = usePolicyValues()
+  const days = policy?.stallConsumerChoiceDays
+  return typeof days === "number" ? `${days}일` : "N일"
+}
+
 /**
  * 시안 C7b 「소비자 선택」 행(1021 기-15 【잠정】) — 선택은 소비자가 앱에서 하고, 브랜드는 결과대로 처리한다.
  * 재발송은 [송장 수정]으로 새 송장을 넣고, 환불은 [소비자 환불 처리](분실 판정과 같은 효과 · PG 자동 환불).
- * 개방 일수 N은 서버 설정값이다 — 서버가 남은 일수를 주지 않으면 「N일」로 둔다.
+ * 개방 일수는 서버 `policy-values.stallConsumerChoiceDays` — 남은 일수가 오면 그것을 쓴다.
  */
 function StallChoiceRow(props: { detail: OrderDetailResponse }) {
   const { detail } = props
   const choice = detail.stallChoice ?? null
   const refund = useRefundStallChoice()
+  const choiceDays = useStallChoiceDays()
 
   const handleRefund = async () => {
     if (refund.isPending) return
@@ -1410,7 +1419,7 @@ function StallChoiceRow(props: { detail: OrderDetailResponse }) {
   let sub: ReactNode =
     choice?.daysUntilOpen != null
       ? `${choice.daysUntilOpen}일 뒤 열림`
-      : "추적 정지 N일 뒤 열림"
+      : `추적 정지 ${choiceDays} 뒤 열림`
   if (choice?.state === "OPEN") {
     badge = <StatusBadge variant="info">선택 대기</StatusBadge>
     sub = "소비자가 재발송 / 환불을 고를 수 있습니다"
@@ -1458,6 +1467,7 @@ function StallChoiceRow(props: { detail: OrderDetailResponse }) {
 function ShippingBox(props: { detail: OrderDetailResponse }) {
   const { detail } = props
   const { timeline, status, overlays } = detail
+  const stallChoiceDays = useStallChoiceDays()
   // 구매확정은 배송이 끝난 건 — 시안 C10처럼 상태 상자의 배송완료 행으로 충분하다
   if (status === "CONFIRMED") {
     return null
@@ -1491,7 +1501,7 @@ function ShippingBox(props: { detail: OrderDetailResponse }) {
           </div>
           <StallChoiceRow detail={detail} />
           <Notice tone="neutral" className="mt-2">
-            <B>[잠정]</B> 추적 정지 N일 뒤{" "}
+            <B>[잠정]</B> 추적 정지 {stallChoiceDays} 뒤{" "}
             <B>소비자가 재발송 / 환불을 선택할 수 있습니다.</B> 선택 결과는 이
             주문의 처리 이력에 남습니다.
           </Notice>

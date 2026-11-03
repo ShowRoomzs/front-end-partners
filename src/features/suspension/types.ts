@@ -2,9 +2,9 @@
   계정 이용 정지 — 백엔드 main `api/common/account/dto/MemberAccountStatusResponse.java` ·
   `api/common/sanction/SanctionHoldView.java`를 그대로 옮겼다(1017 설계서 8-10 · 1021 기-02).
 
-  시각은 두 종류가 섞인다.
-  - `suspendedAt` — 운영자가 정지한 순간(`now()`) → UTC 벽시계 → `parseServerDateTime`
-  - `endsOn` · `autoReleaseAt` · `appealDeadlineAt` — 종료일과 거기서 나온 기한 → 벽시계 그대로(`dayjs`)
+  시각(`LocalDateTime`)은 모두 UTC 순간에 "Z"가 붙어 온다(백엔드 58 시간대 규약) → `parseServerDateTime`.
+  기한(`autoReleaseAt` · `appealDeadlineAt`)도 서버가 KST 날짜로 계산한 뒤 UTC로 바꿔 내린다.
+  `endsOn`은 시각 없는 KST 날짜(`LocalDate`)라 그대로 읽는다.
 */
 
 /** 브랜드는 DORMANT도 있다. 모르는 값이 와도 깨지지 않게 문자열로 연다 */
@@ -27,6 +27,8 @@ export interface MemberSanctionTerm {
   appealDeadlineAt: string | null
   /** 소명 검토 N영업일 — [정책값 미정]이면 null */
   appealReviewBusinessDays: number | null
+  /** 이의 신청 기한 = 통지 + N영업일(58 6-1) */
+  appealBusinessDays?: number
 }
 
 export interface MemberAccountSanction {

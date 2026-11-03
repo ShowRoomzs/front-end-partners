@@ -99,8 +99,7 @@ export function formatDateTime(date: string) {
 }
 
 /**
- * 합의 기한 — "2026.09.12". 기한은 정산 화면과 같은 값이라 정산 관리처럼 서버 값을 그대로 읽는다
- * (이벤트 시각과 달리 「그날 23:59:59」로 정해진 날짜다).
+ * 합의 기한 — "2026.09.12". 서버가 「KST 그날 23:59:59」를 UTC 순간("Z")으로 내린다 → 로컬 날짜.
  */
 export function formatDeadline(date: string) {
   return dayjs(date).format("YYYY.MM.DD")

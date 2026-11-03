@@ -20,12 +20,11 @@ import type {
 import { isInspection1021Ready } from "@/features/claims/utils/inspection"
 
 /*
-  1021 검수 판정(기-17 · 기-93)은 백엔드 main에 있고 개발 서버에는 아직 없다(2026-10-24).
-  - 상세: 실호출 그대로. 개발 서버(`pnpm dev`)만 빠진 1021 필드를 목업으로 채운다(`claim.mock.ts`).
-  - 사유 번복: `callOrMock` — 배포본은 404면 ApiNotReadyError, 개발 서버는 목업.
-  - 통과 귀책 변경: 배포 전 서버는 본문을 무시하므로, 그 서버에 브랜드 귀책을 보내는 일은 개발 서버 목업만 받는다
-    (배포본은 화면이 선택지를 열지 않는다 — utils/inspection).
-  - 운임 미리보기: 서버에 원천이 없다 → 개발 서버만 목업 · 배포본 null.
+  1021 검수 판정(기-17 · 기-93)은 개발 서버에 배포돼 있다(10-26 확인).
+  - 상세: 실호출 그대로. 개발 서버(`pnpm dev`)만 서버가 비워 둔 1021 필드를 목업으로 채운다(`claim.mock.ts`).
+  - 사유 번복: `callOrMock` — 404면 배포본은 ApiNotReadyError, 개발 서버는 목업.
+  - 통과 귀책 변경: 서버가 `faultToSeller`를 받는다. 선택지 노출은 utils/inspection이 정한다.
+  - 운임 미리보기: 상세 `freightPreview`(58 5-4 · 판정 전 단계만). 없으면 개발 서버만 목업 · 배포본 null.
   `?mock=` 시나리오는 없다 — 상태는 실제 판정 버튼으로 바꾼다.
 */
 
@@ -93,12 +92,20 @@ export const claimService = {
   },
 
   /**
-   * 판정 전 운임 미리보기(B2b · B1r · M1 금액 줄) — 서버 상세에 기본 배송비 · 원래 결제액이 없다.
-   * 배포본은 null을 돌려 금액 줄을 그리지 않는다(안내 문구만). 서버가 값을 내려 주면 이 함수만 바꾼다.
+   * 판정 전 운임 미리보기(B2b · B1r · M1 금액 줄) — 상세 `freightPreview`(58 5-4).
+   * 서버 값이 없으면(판정 뒤 단계) 배포본은 null을 돌려 금액 줄을 그리지 않는다(안내 문구만).
    */
   getFreightPreview: async (
     detail: ClaimDetailResponse
   ): Promise<ClaimFreightPreview | null> => {
+    const server = detail.freightPreview
+    if (server) {
+      return {
+        freight: server.baseDeliveryFee,
+        reshipFee: server.reshipFee,
+        originalPaidAmount: server.originalPaidAmount,
+      }
+    }
     if (!DEV_MOCK_ENABLED) return null
     const { freightPreviewMock } = await import("./claim.mock")
     return freightPreviewMock(detail)

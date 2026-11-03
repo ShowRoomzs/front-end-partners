@@ -14,17 +14,19 @@ const BASE_SANCTION: MemberAccountSanction = {
   reason: "PRODUCT_INFO_FALSE",
   reasonLabel: "상품 정보 허위·과장",
   reasonDetail: null,
-  suspendedAt: "2026-10-08T05:20:00",
+  suspendedAt: "2026-10-08T05:20:00Z",
   payoutHeld: false,
   operatorChannelThreadId: null,
   suspendCardMessageId: null,
   term: {
     endsOn: "2026-11-07",
-    autoReleaseAt: "2026-11-08T00:00:00",
+    // 서버처럼 KST 날짜를 UTC 순간으로(KST 11-08 00:00 = 11-07 15:00Z)
+    autoReleaseAt: "2026-11-07T15:00:00Z",
     // 시안 표기(30일)를 따른다 — 서버 공식(시작 · 종료일 포함)이면 31일이다
     periodDays: 30,
-    appealDeadlineAt: "2026-10-14T23:59:59",
+    appealDeadlineAt: "2026-10-14T14:59:59Z",
     appealReviewBusinessDays: null,
+    appealBusinessDays: 3,
   },
 }
 
@@ -65,8 +67,9 @@ export function getAccountStatusMock(scenario: string | null) {
             endsOn: null,
             autoReleaseAt: null,
             periodDays: null,
-            appealDeadlineAt: "2026-10-14T23:59:59",
+            appealDeadlineAt: "2026-10-14T14:59:59Z",
             appealReviewBusinessDays: null,
+            appealBusinessDays: 3,
           },
         })
       )
