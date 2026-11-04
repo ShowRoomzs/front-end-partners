@@ -2,7 +2,6 @@ import NotReady from "@/common/components/NotReady/NotReady"
 import Notice from "@/common/components/Notice/Notice"
 import StatusBadge from "@/common/components/StatusBadge/StatusBadge"
 import { useMarketStore } from "@/common/stores/useMarketStore"
-import { isApiNotReady } from "@/common/utils/devMock"
 import Btn from "@/features/contracts/components/shared/Btn"
 import { CONTRACT_LIST_PATH } from "@/features/contracts/constants/params"
 import { B } from "@/features/performance/components/PerformanceParts"
@@ -88,26 +87,13 @@ export default function PerformanceDetailPage() {
   }
 
   if (isError || !detail) {
-    const notReady = isApiNotReady(error)
-    // 남의 공구 · 없는 공구는 404 — 배포 전(경로 자체가 없음)도 404라 「준비 중」이 먼저다
+    // 남의 공구 · 없는 공구는 404
     const notFound =
       !Number.isFinite(id) ||
       (isAxiosError(error) && error.response?.status === 404)
     return (
       <div className="overflow-hidden rounded-[8px] border border-sz-n-200 bg-white">
-        {notReady ? (
-          <NotReady
-            title="성과 관리 화면은 준비 중입니다"
-            action={
-              <Btn variant="secondary" onClick={goList}>
-                목록으로
-              </Btn>
-            }
-          >
-            서버 반영이 끝나면 공구별 판매 성과를 이 화면에서 확인할 수
-            있습니다.
-          </NotReady>
-        ) : notFound ? (
+        {notFound ? (
           <NotReady
             title="공구 성과를 찾을 수 없습니다"
             action={

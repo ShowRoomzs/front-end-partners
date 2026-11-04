@@ -1,4 +1,3 @@
-import { isApiNotReady } from "@/common/utils/devMock"
 import { PERFORMANCE_QUERY_KEYS } from "@/features/performance/constants/params"
 import { performanceService } from "@/features/performance/services/performanceService"
 import type {
@@ -12,16 +11,12 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 
-/** 「준비 중」(배포 전 404)은 다시 시도해도 같다 — 재시도로 화면이 늦게 뜨지 않게 한다 */
-const retryUnlessNotReady = (count: number, error: unknown) =>
-  !isApiNotReady(error) && count < 2
-
 export function useGetPerformanceList(params: PerformanceListParams) {
   return useQuery({
     queryKey: [PERFORMANCE_QUERY_KEYS.LIST, params],
     queryFn: () => performanceService.getList(params),
     placeholderData: keepPreviousData,
-    retry: retryUnlessNotReady,
+    retry: 2,
   })
 }
 
@@ -29,7 +24,7 @@ export function useGetPerformanceSummary() {
   return useQuery({
     queryKey: [PERFORMANCE_QUERY_KEYS.SUMMARY],
     queryFn: performanceService.getSummary,
-    retry: retryUnlessNotReady,
+    retry: 2,
   })
 }
 

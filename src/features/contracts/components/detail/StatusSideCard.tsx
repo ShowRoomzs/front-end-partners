@@ -395,7 +395,7 @@ export default function StatusSideCard(props: StatusSideCardProps) {
               공구 관리에서 보기 ↗
             </Btn>
           )}
-          {/* 기-05 — main 필드라 개발 서버 응답엔 없고(undefined) 그때는 그리지 않는다 */}
+          {/* 기-05 — 값이 없으면(undefined) 그리지 않는다 */}
           {permissions.canRequestTermination === true && (
             <Btn
               variant="ghost"

@@ -1,27 +1,10 @@
 import { apiInstance } from "@/common/lib/apiInstance"
-import {
-  ApiNotReadyError,
-  callOrMock,
-  DEV_MOCK_ENABLED,
-  mockScenario,
-} from "@/common/utils/devMock"
 import type { AccountInfoResponse } from "@/features/storeManagement/services/basicInfoService"
 
 /**
  * 브랜드 탈퇴 **신청**(ui-partner-06 4-F ~ 4-I) — 실행은 운영자가 한다(§51-5 · 백엔드 51 설계서).
  *
- * 조회는 따로 없다 — `GET /v1/seller/basic-info/account` 응답의 `withdrawal` 블록이다. 백엔드 main(10-24)에
- * 생긴 필드라 개발 서버가 새 버전으로 배포되기 전에는 응답에 없다(undefined). 그때 배포본은 「준비 중」,
- * 개발 서버는 목업(`withdrawal.mock.ts`)으로 그린다. 신청 · 취소는 `callOrMock`.
- *
- * 개발 서버 목업 시나리오(`?tab=account&mock=…`) — 서버 값이 있어도 목업이 우선한다:
- * - (없음)                       4-F 신청 가능
- * - `withdraw-blocked`           4-G 잔여 건(시안 예시 — 공구 · 계약 삭제/운영팀 문의 · 주문 · 정산 지급 예정/조정 협의)
- * - `withdraw-blocked-more`      4-G 내역 전 갈래(정산 확인 중 · 조정 협의 2건 · 지급 보류 · 분배 실패 · 차감 대기 · 계약 4상태)
- * - `withdraw-suspended`         4-G2 계정 이용 정지로 브랜드 몫 지급 정지(정산 정보 수정하기)
- * - `withdraw-suspended-blocked` 정지 중 신청 불가(서버 설정이 끈 경우 · `suspensionBlockedReason`)
- * - `withdraw-pending`           4-I 운영자 검토 중(로그인 정보 잠금)
- * - `withdraw-rejected`          4-F + 가장 최근 신청 반려 이력
+ * 조회는 따로 없다 — `GET /v1/seller/basic-info/account` 응답의 `withdrawal` 블록이다.
  *
  * ⚠️ `DELETE /v1/seller/auth/withdraw`(즉시 삭제)는 쓰지 않는다 — 셀러는 409 `BRAND_WITHDRAWAL_REQUIRES_REQUEST`다.
  */
@@ -139,54 +122,22 @@ export interface WithdrawalRequestResponse {
   requestedAt: string
 }
 
-const FEATURE = "브랜드 탈퇴"
-
-/** 지금 화면이 목업으로 그려졌는가 — 목업 화면에서 누른 신청 · 취소를 실서버로 보내지 않기 위해서다 */
-let source: "real" | "mock" = "real"
-
-const isWithdrawalScenario = () =>
-  mockScenario()?.startsWith("withdraw") ?? false
-
-const loadMock = () => import("./withdrawal.mock")
-
 export const withdrawalService = {
   /** 계정 조회 응답에서 탈퇴 블록을 꺼낸다 — 마켓이 없는 계정은 null(카드를 두지 않는다) */
-  getStatus: async (
-    account: AccountInfoResponse
-  ): Promise<Withdrawal | null> => {
-    if (account.withdrawal !== undefined && !isWithdrawalScenario()) {
-      source = "real"
-      return account.withdrawal
-    }
-    if (!DEV_MOCK_ENABLED) throw new ApiNotReadyError(FEATURE)
-    source = "mock"
-    const m = await loadMock()
-    return m.getWithdrawalMock(account.loginEmail)
+  getStatus: async (account: AccountInfoResponse): Promise<Withdrawal | null> =>
+    account.withdrawal ?? null,
+
+  request: async (body: WithdrawalRequestBody) => {
+    const { data } = await apiInstance.post<WithdrawalRequestResponse>(
+      "/seller/basic-info/withdrawal-requests",
+      body
+    )
+    return data
   },
 
-  request: (body: WithdrawalRequestBody) =>
-    callOrMock<WithdrawalRequestResponse>(
-      `${FEATURE} 신청`,
-      async () => {
-        if (source === "mock") throw new Error("mock")
-        const { data } = await apiInstance.post<WithdrawalRequestResponse>(
-          "/seller/basic-info/withdrawal-requests",
-          body
-        )
-        return data
-      },
-      async () => (await loadMock()).requestWithdrawalMock(body)
-    ),
-
-  cancel: (requestId: number) =>
-    callOrMock<void>(
-      `${FEATURE} 신청 취소`,
-      async () => {
-        if (source === "mock") throw new Error("mock")
-        await apiInstance.post(
-          `/seller/basic-info/withdrawal-requests/${requestId}/cancel`
-        )
-      },
-      async () => (await loadMock()).cancelWithdrawalMock()
-    ),
+  cancel: async (requestId: number) => {
+    await apiInstance.post(
+      `/seller/basic-info/withdrawal-requests/${requestId}/cancel`
+    )
+  },
 }

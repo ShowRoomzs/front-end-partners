@@ -28,7 +28,6 @@ import {
   withdrawalService,
   type WithdrawalRequestBody,
 } from "@/features/storeManagement/services/withdrawalService"
-import { isApiNotReady } from "@/common/utils/devMock"
 import { cn } from "@/lib/utils"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
@@ -52,8 +51,7 @@ export default function AccountTab() {
   const [isSaving, setIsSaving] = useState(false)
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
 
-  // 브랜드 탈퇴 신청(4-F~4-I) — 계정 조회 응답의 `withdrawal` 블록. 배포 전 서버는 이 블록이 없어
-  // 배포본은 「준비 중」, 개발 서버는 목업(withdrawalService)
+  // 브랜드 탈퇴 신청(4-F~4-I) — 계정 조회 응답의 `withdrawal` 블록
   const queryClient = useQueryClient()
   const withdrawalQuery = useQuery({
     // 계정 응답의 블록을 키에 넣는다 — 계정을 다시 읽으면 탈퇴 카드도 따라 바뀐다
@@ -88,7 +86,7 @@ export default function AccountTab() {
   })
   /**
    * 4-I — 검토 중에는 신원(이메일·비밀번호) 변경을 잠근다. 서버 `identityLock`이 기준이고,
-   * 배포 전 서버(필드 없음) · 목업은 탈퇴 블록의 PENDING으로 맞춘다.
+   * 그 필드가 없으면 탈퇴 블록의 PENDING으로 맞춘다.
    */
   const isWithdrawalPending =
     data?.identityLock === "WITHDRAWAL_PENDING" ||
@@ -349,7 +347,6 @@ export default function AccountTab() {
 
       <WithdrawalCard
         withdrawal={withdrawalQuery.data}
-        isNotReady={isApiNotReady(withdrawalQuery.error)}
         isLoading={withdrawalQuery.isLoading}
         isSubmitting={requestWithdrawal.isPending}
         isCanceling={cancelWithdrawal.isPending}

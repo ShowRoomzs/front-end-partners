@@ -2,7 +2,6 @@ import NotReady from "@/common/components/NotReady/NotReady"
 import Pagination from "@/common/components/Pagination/Pagination"
 import { usePaginationInfo } from "@/common/hooks/usePaginationInfo"
 import { useParams } from "@/common/hooks/useParams"
-import { isApiNotReady } from "@/common/utils/devMock"
 import { SELECT_SM_CLASS } from "@/features/claims/components/list/ClaimListParts"
 import { SELECT_CHEVRON_STYLE } from "@/features/contracts/constants/params"
 import Btn from "@/features/contracts/components/shared/Btn"
@@ -56,28 +55,13 @@ export default function PerformanceListPage() {
   } = useParams<PerformanceListParams>(PERFORMANCE_INITIAL_PARAMS)
 
   const { data: list, isLoading, error } = useGetPerformanceList(params)
-  const { data: summary, error: summaryError } = useGetPerformanceSummary()
+  const { data: summary } = useGetPerformanceSummary()
   const rows = list?.content ?? []
 
   const pageInfo = usePaginationInfo({
     data: list?.pageInfo,
     onPageChange: page => updateParam("page", page),
   })
-
-  // 배포본에서 서버에 아직 경로가 없으면(배포 전) 가짜 값 대신 「준비 중」만 그린다
-  if (isApiNotReady(error) || isApiNotReady(summaryError)) {
-    return (
-      <div className={SETTLEMENT_PAGE_CLASS}>
-        <SettlementPageHeader title="성과 관리" description={DESCRIPTION} />
-        <div className="overflow-hidden rounded-[8px] border border-sz-n-200 bg-white">
-          <NotReady title="성과 관리 화면은 준비 중입니다">
-            서버 반영이 끝나면 공구별 판매 성과를 이 화면에서 확인할 수
-            있습니다.
-          </NotReady>
-        </div>
-      </div>
-    )
-  }
 
   const totalCount = summary
     ? Object.values(summary.statusCounts).reduce((sum, n) => sum + n, 0)

@@ -1,4 +1,3 @@
-import { isApiNotReady } from "@/common/utils/devMock"
 import { useMarketStore } from "@/common/stores/useMarketStore"
 import { getMenuTypeByRole, type Role } from "@/common/types/role"
 import { accountStatusService } from "@/features/suspension/services/accountStatusService"
@@ -11,15 +10,13 @@ export const ACCOUNT_STATUS_QUERY_KEY = ["seller", "account-status"] as const
 const ACCOUNT_STATUS_STALE_TIME = 60_000
 
 export interface AccountSuspension {
-  /** 정지 중인가 — 조회 전 · 실패 · 「준비 중」이면 false(가짜 정지를 만들지 않는다) */
+  /** 정지 중인가 — 조회 전 · 실패면 false(가짜 정지를 만들지 않는다) */
   isSuspended: boolean
   /** 정지 상세 — 정지가 아니면 null */
   sanction: MemberAccountSanction | null
   /** 탈퇴 신청 심사 중 */
   withdrawalPending: boolean
   isLoading: boolean
-  /** 배포본에서 API가 아직 없을 때 */
-  isNotReady: boolean
 }
 
 /**
@@ -46,6 +43,5 @@ export function useAccountSuspension(): AccountSuspension {
     sanction,
     withdrawalPending: query.data?.withdrawalPending ?? false,
     isLoading: enabled && query.isLoading,
-    isNotReady: isApiNotReady(query.error),
   }
 }

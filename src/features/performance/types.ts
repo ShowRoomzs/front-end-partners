@@ -54,8 +54,6 @@ export interface PerformanceListParams extends BaseParams {
   status: Array<PerformanceStatus>
   keyword: string
   sort: PerformanceSort
-  /** 개발 서버 `?mock=` 시나리오 — 필터를 바꿔도 주소에서 사라지지 않게 검색 조건과 같이 든다(서버에는 안 보낸다) */
-  mock: string | null
 }
 
 export interface PerformanceListItem {

@@ -158,7 +158,7 @@ export interface GroupBuyListItem {
   terminationRequest?: GroupBuyTerminationRequest | null
   /**
    * 정지 보류 보조 배지(1017 설계서 8-5) — 오픈 전 공구만 · 내 정지 경고 / 상대 사정 중립.
-   * main 필드라 배포 전 개발 서버는 내리지 않는다(undefined → 배지 없음).
+   * 없으면(undefined) 배지 없음.
    */
   sanctionHold?: SanctionHoldView | null
 }
@@ -389,7 +389,7 @@ export interface GroupBuyDetailResponse {
     canOpenPairThread: boolean
     /**
      * [해지 요청](B3 · C4 · 1021 기-05) — 준비중 · 준비완료 ∧ 계약 해지 요청 없음. 실행은 계약 API.
-     * 아직 배포되지 않은 서버는 내리지 않는다(undefined → 버튼 없음).
+     * 없으면(undefined) 버튼 없음.
      */
     canRequestTermination?: boolean
     /** 계정 이용 정지로 막힌 버튼의 안내(정지 중일 때만) — 정지면 서버가 canRequestExtension을 false로 내린다 */

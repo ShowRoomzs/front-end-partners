@@ -127,7 +127,7 @@ export interface ContractListItem {
   entryMode: ContractEntryMode
   /**
    * 정지 보류 보조 배지(1017 설계서 8-4 · 8-5) — 내 정지 경고 · 상대 사정 / 편집 불가 중립.
-   * main 필드라 배포 전 개발 서버는 내리지 않는다(undefined → 배지 없음).
+   * 없으면(undefined) 배지 없음.
    */
   sanctionHold?: SanctionHoldView | null
 }
@@ -376,7 +376,7 @@ export interface ContractPermissions {
   canRequestResend: boolean
   canRecordPayment: boolean
   canDuplicate: boolean
-  /** [해지 요청](B5) — main에만 있다. 없으면(개발 서버) 버튼을 그리지 않는다 */
+  /** [해지 요청](B5) — 없으면 버튼을 그리지 않는다 */
   canRequestTermination?: boolean
   canWithdrawTermination?: boolean
   canRecordDraftApproval?: boolean
@@ -393,7 +393,7 @@ export interface ContractHistoryEntry {
 
 /**
  * 상세 — 화면 14종(B2a·B3c·B3d·B4·B4a·B4b·B4c·B5·B5a·B5b·B6·B7·B8·B9)이 이 응답 하나를 쓴다.
- * 끝의 선택 필드는 main(1017 · 1021)에서 늘어난 것이라 배포 전 개발 서버 응답엔 없다 — 없으면 그 블록을 숨긴다.
+ * 끝의 선택 필드는 1017 · 1021에서 늘어난 것이다 — 없으면 그 블록을 숨긴다.
  */
 export interface ContractDetailResponse {
   contractId: number

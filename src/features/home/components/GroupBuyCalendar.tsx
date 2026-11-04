@@ -1,5 +1,3 @@
-import NotReady from "@/common/components/NotReady/NotReady"
-import { isApiNotReady } from "@/common/utils/devMock"
 import { HomeCard } from "@/features/home/components/HomeCard"
 import {
   contractDetailPath,
@@ -117,7 +115,7 @@ export default function GroupBuyCalendar() {
   const navigate = useNavigate()
   const [month, setMonth] = useState(() => dayjs().startOf("month"))
   const monthKey = month.format("YYYY-MM")
-  const { data, error } = useGetHomeCalendar(monthKey)
+  const { data } = useGetHomeCalendar(monthKey)
 
   const weeks = useMemo(() => buildWeeks(month, data), [month, data])
   const holidays = useMemo(
@@ -173,116 +171,111 @@ export default function GroupBuyCalendar() {
         </>
       }
     >
-      {isApiNotReady(error) ? (
-        <NotReady title="준비 중인 기능입니다." />
-      ) : (
-        <>
-          <div className="grid grid-cols-7 border-b border-sz-n-100">
-            {WEEKDAYS.map(label => (
-              <span
-                key={label}
-                className="px-2.5 py-1.5 text-[11px] text-sz-n-500"
-              >
-                {label}
-              </span>
-            ))}
-          </div>
-          {weeks.map(week => (
-            <div
-              key={week.days[0].format("YYYY-MM-DD")}
-              className="relative grid grid-cols-7 border-t border-sz-n-100 first-of-type:border-t-0"
+      <>
+        <div className="grid grid-cols-7 border-b border-sz-n-100">
+          {WEEKDAYS.map(label => (
+            <span
+              key={label}
+              className="px-2.5 py-1.5 text-[11px] text-sz-n-500"
             >
-              {week.days.map((date, col) => {
-                const key = date.format("YYYY-MM-DD")
-                const holiday = holidays.get(key)
-                // 주말 · 공휴일(대체공휴일 포함) — 영업일 계산을 눈으로 보이게
-                const off = date.day() === 0 || date.day() === 6 || !!holiday
-                const outside = date.month() !== month.month()
-                const deadlines = deadlinesByDay.get(key) ?? []
-                const isToday = key === today
-                return (
+              {label}
+            </span>
+          ))}
+        </div>
+        {weeks.map(week => (
+          <div
+            key={week.days[0].format("YYYY-MM-DD")}
+            className="relative grid grid-cols-7 border-t border-sz-n-100 first-of-type:border-t-0"
+          >
+            {week.days.map((date, col) => {
+              const key = date.format("YYYY-MM-DD")
+              const holiday = holidays.get(key)
+              // 주말 · 공휴일(대체공휴일 포함) — 영업일 계산을 눈으로 보이게
+              const off = date.day() === 0 || date.day() === 6 || !!holiday
+              const outside = date.month() !== month.month()
+              const deadlines = deadlinesByDay.get(key) ?? []
+              const isToday = key === today
+              return (
+                <div
+                  key={key}
+                  className={cn(
+                    "relative h-[92px] border-l border-sz-n-100 px-2 py-[5px] first:border-l-0",
+                    off && "bg-sz-n-50",
+                    isToday &&
+                      "shadow-[inset_0_0_0_1.5px_var(--color-sz-accent-500)]"
+                  )}
+                >
                   <div
-                    key={key}
                     className={cn(
-                      "relative h-[92px] border-l border-sz-n-100 px-2 py-[5px] first:border-l-0",
-                      off && "bg-sz-n-50",
-                      isToday &&
-                        "shadow-[inset_0_0_0_1.5px_var(--color-sz-accent-500)]"
+                      "flex items-baseline gap-1 text-[11px] tabular-nums",
+                      outside ? "text-sz-n-300" : "text-sz-n-700"
                     )}
                   >
-                    <div
-                      className={cn(
-                        "flex items-baseline gap-1 text-[11px] tabular-nums",
-                        outside ? "text-sz-n-300" : "text-sz-n-700"
-                      )}
-                    >
-                      <b className={cn(isToday && "text-sz-accent-500")}>
-                        {date.date()}
-                      </b>
-                      {holiday && (
-                        <em className="text-[10px] text-sz-n-500 not-italic">
-                          {holiday}
-                        </em>
-                      )}
-                    </div>
-                    {week.overflow[col] > 0 && (
-                      <span className="absolute top-[5px] right-1.5 text-[10px] text-sz-n-500">
-                        +{week.overflow[col]}
-                      </span>
-                    )}
-                    {deadlines.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => openDeadline(deadlines[0])}
-                        title={deadlines.map(d => d.label).join("\n")}
-                        className="absolute right-1.5 bottom-1.5 left-2 flex cursor-pointer items-center gap-1 overflow-hidden text-left text-[10px] whitespace-nowrap text-sz-n-700"
-                      >
-                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-sz-n-700" />
-                        <span className="truncate">
-                          {deadlines[0].label}
-                          {deadlines.length > 1 &&
-                            ` 외 ${deadlines.length - 1}`}
-                        </span>
-                      </button>
+                    <b className={cn(isToday && "text-sz-accent-500")}>
+                      {date.date()}
+                    </b>
+                    {holiday && (
+                      <em className="text-[10px] text-sz-n-500 not-italic">
+                        {holiday}
+                      </em>
                     )}
                   </div>
-                )
-              })}
-
-              {week.bars.map(bar => {
-                const span = bar.endCol - bar.startCol + 1
-                const inset = (bar.starts ? 4 : 0) + (bar.ends ? 4 : 0)
-                return (
-                  <button
-                    key={bar.gb.groupBuyId}
-                    type="button"
-                    onClick={() =>
-                      navigate(groupBuyDetailPath(bar.gb.groupBuyId))
-                    }
-                    title={`${bar.gb.name}${barSuffix(bar.gb)}`}
-                    className={cn(
-                      "absolute z-[1] flex h-[17px] cursor-pointer items-center overflow-hidden px-[7px] text-[10.5px] font-semibold text-ellipsis whitespace-nowrap",
-                      BAR_TONE[bar.gb.status] ?? BAR_TONE.UPCOMING,
-                      bar.starts && "rounded-l-[4px]",
-                      bar.ends && "rounded-r-[4px]"
-                    )}
-                    style={{
-                      left: `calc(${bar.startCol} * 100% / 7 + ${bar.starts ? 4 : 0}px)`,
-                      width: `calc(${span} * 100% / 7 - ${inset}px)`,
-                      top: BAR_TOP + bar.row * BAR_STEP,
-                    }}
-                  >
-                    <span className="truncate">
-                      {bar.gb.name}
-                      {bar.starts && barSuffix(bar.gb)}
+                  {week.overflow[col] > 0 && (
+                    <span className="absolute top-[5px] right-1.5 text-[10px] text-sz-n-500">
+                      +{week.overflow[col]}
                     </span>
-                  </button>
-                )
-              })}
-            </div>
-          ))}
-        </>
-      )}
+                  )}
+                  {deadlines.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => openDeadline(deadlines[0])}
+                      title={deadlines.map(d => d.label).join("\n")}
+                      className="absolute right-1.5 bottom-1.5 left-2 flex cursor-pointer items-center gap-1 overflow-hidden text-left text-[10px] whitespace-nowrap text-sz-n-700"
+                    >
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-sz-n-700" />
+                      <span className="truncate">
+                        {deadlines[0].label}
+                        {deadlines.length > 1 && ` 외 ${deadlines.length - 1}`}
+                      </span>
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+
+            {week.bars.map(bar => {
+              const span = bar.endCol - bar.startCol + 1
+              const inset = (bar.starts ? 4 : 0) + (bar.ends ? 4 : 0)
+              return (
+                <button
+                  key={bar.gb.groupBuyId}
+                  type="button"
+                  onClick={() =>
+                    navigate(groupBuyDetailPath(bar.gb.groupBuyId))
+                  }
+                  title={`${bar.gb.name}${barSuffix(bar.gb)}`}
+                  className={cn(
+                    "absolute z-[1] flex h-[17px] cursor-pointer items-center overflow-hidden px-[7px] text-[10.5px] font-semibold text-ellipsis whitespace-nowrap",
+                    BAR_TONE[bar.gb.status] ?? BAR_TONE.UPCOMING,
+                    bar.starts && "rounded-l-[4px]",
+                    bar.ends && "rounded-r-[4px]"
+                  )}
+                  style={{
+                    left: `calc(${bar.startCol} * 100% / 7 + ${bar.starts ? 4 : 0}px)`,
+                    width: `calc(${span} * 100% / 7 - ${inset}px)`,
+                    top: BAR_TOP + bar.row * BAR_STEP,
+                  }}
+                >
+                  <span className="truncate">
+                    {bar.gb.name}
+                    {bar.starts && barSuffix(bar.gb)}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        ))}
+      </>
     </HomeCard>
   )
 }

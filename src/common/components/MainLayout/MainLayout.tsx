@@ -223,7 +223,7 @@ export default function MainLayout() {
             isFullBleed ? "overflow-hidden" : "overflow-auto p-6"
           }`}
         >
-          {/* 계정 이용 정지 배너(ui-partner-15 S1) — 정지가 아니거나 서버 미배포면 그리지 않는다 */}
+          {/* 계정 이용 정지 배너(ui-partner-15 S1) — 정지가 아니거나 조회에 실패하면 그리지 않는다 */}
           {menuType === "SELLER" && !isFullBleed && <SuspensionBanner />}
           {/* 디자인시스템 H1 — 20px/600(bold 아님) */}
           {pageTitle && (

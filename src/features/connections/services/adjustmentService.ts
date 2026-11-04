@@ -1,5 +1,4 @@
 import { apiInstance } from "@/common/lib/apiInstance"
-import { callOrMock, DEV_MOCK_ENABLED } from "@/common/utils/devMock"
 import type {
   AdjustmentStatus,
   AdjustmentTone,
@@ -38,8 +37,8 @@ export interface AdjustmentPermissions {
   /** 메시지 전송 — 종결이면 false */
   canSend: boolean
   /**
-   * [요청 철회](기-14) — 처음 요청한 쪽 ∧ 최신 제안이 내 것 ∧ 응답 대기. 1021 백엔드에서 생긴 값이라
-   * 아직 배포되지 않은 서버는 내려 주지 않는다 → 없으면 버튼을 두지 않는다.
+   * [요청 철회](기-14) — 처음 요청한 쪽 ∧ 최신 제안이 내 것 ∧ 응답 대기. 1021 백엔드에서 생긴 값 —
+   * 없으면 버튼을 두지 않는다.
    */
   canWithdraw?: boolean
 }
@@ -90,29 +89,16 @@ export const adjustmentService = {
     const { data } = await apiInstance.get<AdjustmentView>(
       `/seller/threads/${threadId}/adjustment`
     )
-    if (DEV_MOCK_ENABLED) {
-      // 개발 서버: 철회 권한을 목업으로 채우고, 목업으로 철회한 건은 폴링이 다시 읽어도 철회 상태로 남긴다
-      const { applyMockWithdrawal } = await import("./adjustment.mock")
-      return applyMockWithdrawal(data)
-    }
     return data
   },
 
   /** [요청 철회] — 409 `SETTLEMENT_ADJUSTMENT_WITHDRAW_NOT_ALLOWED`(그사이 상대가 응답함)는 인터셉터가 알린다 */
-  withdraw: (view: AdjustmentView) =>
-    callOrMock(
-      "정산 조정 요청 철회",
-      async () => {
-        const { data } = await apiInstance.post<AdjustmentView>(
-          `/seller/settlement-adjustments/${view.adjustmentId}/withdraw`
-        )
-        return data
-      },
-      async () => {
-        const { withdrawMock } = await import("./adjustment.mock")
-        return withdrawMock(view)
-      }
-    ),
+  withdraw: async (view: AdjustmentView) => {
+    const { data } = await apiInstance.post<AdjustmentView>(
+      `/seller/settlement-adjustments/${view.adjustmentId}/withdraw`
+    )
+    return data
+  },
 
   counter: async (adjustmentId: number, body: AdjustmentCounterBody) => {
     const { data } = await apiInstance.post<AdjustmentView>(
