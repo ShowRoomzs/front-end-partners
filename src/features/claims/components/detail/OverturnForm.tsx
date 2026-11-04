@@ -1,4 +1,3 @@
-import { isApiNotReady } from "@/common/utils/devMock"
 import Btn from "@/features/contracts/components/shared/Btn"
 import { TEXTAREA_CLASS } from "@/features/contracts/components/shared/styles"
 import { EvidenceField } from "@/features/claims/components/detail/EvidenceField"
@@ -15,7 +14,6 @@ import { useEvidenceUpload } from "@/features/claims/hooks/useEvidenceUpload"
 import type { ClaimDetailResponse } from "@/features/claims/types"
 import { formatWon } from "@/features/claims/utils/format"
 import { cn } from "@/lib/utils"
-import { isAxiosError } from "axios"
 import type { ReactNode } from "react"
 import { useState } from "react"
 import toast from "react-hot-toast"
@@ -68,17 +66,8 @@ export default function OverturnForm(props: {
         "사유 번복을 제출했습니다. 소비자에게 재발송 배송비 결제가 요청됩니다."
       )
       onCancel()
-    } catch (error) {
-      // 실호출은 전역 토스트를 끄고 보낸다(아직 없는 경로의 404 때문) — 서버 메시지는 여기서 띄운다
-      if (isApiNotReady(error)) {
-        toast.error("아직 준비 중인 기능입니다.")
-        return
-      }
-      toast.error(
-        (isAxiosError(error)
-          ? (error.response?.data as { message?: string } | undefined)?.message
-          : undefined) ?? "사유 번복을 제출하지 못했습니다."
-      )
+    } catch {
+      // 토스트는 apiInstance가 띄운다
     }
   }
 

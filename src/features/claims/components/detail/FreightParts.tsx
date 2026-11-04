@@ -7,7 +7,7 @@ export const MWARN_CLASS =
 
 /**
  * 기-93 — 브랜드 귀책(착불)으로 신청한 건이 소비자 귀책으로 바뀔 때(사유 번복 B2b · 반려 B1r).
- * 운임 금액은 서버 미리보기가 없어 배포본에서는 이 안내만 보인다.
+ * 운임 금액은 서버 미리보기(`freightPreview`)가 있을 때만 함께 보이고, 없으면 이 안내만 보인다.
  */
 export function CollectFreightNotice() {
   return (

@@ -1,4 +1,3 @@
-import { DEV_MOCK_ENABLED } from "@/common/utils/devMock"
 import { SELLER_BORNE_REASONS } from "@/features/claims/constants/params"
 import type { ClaimDetailResponse } from "@/features/claims/types"
 
@@ -6,7 +5,6 @@ import type { ClaimDetailResponse } from "@/features/claims/types"
   검수 3갈래 · 통과 귀책 변경(1021 기-17 · 기-93) — 개발 서버에는 배포돼 있다(10-26).
   이 기능을 모르는 옛 서버는 `actions.canOverturn`을 내려 주지 않고, 통과 요청 본문(`faultToSeller`)을 **조용히 무시**한다.
   그래서 그 값의 유무로 서버가 이 기능을 아는지 가른다 — 모르는 서버에 귀책을 바꿔 보내면 소비자 귀책으로 통과돼 버린다.
-  개발 서버(`pnpm dev`)는 화면 확인을 위해 항상 연다(제출은 claimService가 목업으로 받는다).
 */
 
 /** 서버가 1021 검수 판정(사유 번복 · 통과 귀책 변경)을 아는가 */
@@ -23,8 +21,7 @@ export const isSellerBorne = (detail: ClaimDetailResponse) =>
  */
 export function canOverturnOf(detail: ClaimDetailResponse) {
   if (detail.summary.type !== "EXCHANGE") return false
-  if (isInspection1021Ready(detail)) return detail.actions.canOverturn === true
-  return DEV_MOCK_ENABLED && detail.actions.canPass && isSellerBorne(detail)
+  return detail.actions.canOverturn === true
 }
 
 /**
@@ -33,5 +30,5 @@ export function canOverturnOf(detail: ClaimDetailResponse) {
  */
 export function canChangeFaultOnPass(detail: ClaimDetailResponse) {
   if (detail.summary.type !== "RETURN" || isSellerBorne(detail)) return false
-  return isInspection1021Ready(detail) || DEV_MOCK_ENABLED
+  return isInspection1021Ready(detail)
 }

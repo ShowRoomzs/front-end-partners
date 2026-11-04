@@ -1,8 +1,8 @@
 import type { ReactNode } from "react"
 
 /**
- * 백엔드 API가 아직 없는 화면의 배포본 표시(`common/utils/devMock.ts`).
- * 화면 골격은 그대로 두고 데이터 자리만 이 안내로 바꾼다 — 가짜 값을 보여주지 않는다.
+ * 데이터 자리에 두는 가운데 정렬 안내(불러오기 실패 · 찾을 수 없음 · 이용 제한 등).
+ * 화면 골격은 그대로 두고 데이터 자리만 이 안내로 바꾼다.
  */
 export default function NotReady(props: {
   title: string

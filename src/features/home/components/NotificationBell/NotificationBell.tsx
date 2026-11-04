@@ -1,4 +1,3 @@
-import { isApiNotReady } from "@/common/utils/devMock"
 import { parseServerDateTime } from "@/common/utils/formatDate"
 import {
   useGetNotificationList,
@@ -17,7 +16,7 @@ import { useNavigate } from "react-router-dom"
  * 안 읽은 수를 인디고 숫자 배지로(GNB 배지와 같은 원칙 — 숫자만), 누르면 전체 / 안 읽음 드롭다운.
  * 줄을 누르면 읽음 처리 · 드롭다운 닫힘 · 그 건의 상세로 이동한다.
  *
- * 배포본에서 알림 API가 아직 없으면(`ApiNotReadyError`) 종 자체를 그리지 않는다 — 빈 종이 「알림 없음」으로 오독된다.
+ * 요약 첫 조회가 실패하면 종 자체를 그리지 않는다 — 빈 종이 「알림 없음」으로 오독된다.
  */
 export default function NotificationBell(props: { enabled: boolean }) {
   const { enabled } = props
@@ -41,8 +40,8 @@ export default function NotificationBell(props: { enabled: boolean }) {
     }
   }, [open])
 
-  // 「준비 중」뿐 아니라 첫 조회가 실패한 경우도 숨긴다 — 받은 적 있는 값이 있으면 그대로 둔다
-  if (!enabled || (error && (isApiNotReady(error) || !summary))) return null
+  // 첫 조회가 실패하면 숨긴다 — 받은 적 있는 값이 있으면 그대로 둔다
+  if (!enabled || (error && !summary)) return null
 
   const unreadCount = summary?.unreadCount ?? 0
 

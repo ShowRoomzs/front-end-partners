@@ -2,7 +2,6 @@ import DetailCard from "@/common/components/DetailCard/DetailCard"
 import HistoryList from "@/common/components/HistoryList/HistoryList"
 import RecordNav from "@/common/components/RecordNav/RecordNav"
 import { confirm } from "@/common/components/ConfirmModal/confirm"
-import { isApiNotReady } from "@/common/utils/devMock"
 import ClosureReasonCard from "@/features/contracts/components/detail/ClosureReasonCard"
 import ContentObligationCard from "@/features/contracts/components/detail/ContentObligationCard"
 import ContractItemsCard from "@/features/contracts/components/detail/ContractItemsCard"
@@ -40,7 +39,6 @@ import {
   headerMeta,
   type ContractViewState,
 } from "@/features/contracts/utils/contractView"
-import { getApiErrorMessage } from "@/features/contracts/utils/apiError"
 import { toHistoryItems } from "@/features/contracts/utils/history"
 import { useAccountSuspension } from "@/features/suspension"
 import { useCallback, useState } from "react"
@@ -67,7 +65,7 @@ export default function ContractReadView(props: ContractReadViewProps) {
 
   /*
     서명 진행중 체결 보류 안내(시안 15 S4b · R1). 배지와 같은 서버 판정(sanctionHold)을 따르되,
-    배포 전 서버는 필드가 없어 내 정지는 계정 상태로도 본다. 상대 정지는 서버 값으로만 안다.
+    필드가 없는 응답이어도 내 정지는 계정 상태로도 본다. 상대 정지는 서버 값으로만 안다.
   */
   const isSigning = detail.status === "SIGNING"
   const holdKind = detail.sanctionHold?.kind
@@ -220,15 +218,6 @@ export default function ContractReadView(props: ContractReadViewProps) {
     navigate,
   ])
 
-  /** 해지 요청 · 철회는 아직 없는 경로일 수 있어 실호출이 토스트를 끄고 온다 — 문구는 여기서 고른다 */
-  const toastTerminationError = useCallback((error: unknown) => {
-    toast.error(
-      isApiNotReady(error)
-        ? "아직 준비 중인 기능입니다."
-        : (getApiErrorMessage(error) ?? "요청을 처리하지 못했습니다.")
-    )
-  }, [])
-
   const handleRequestTermination = useCallback(
     async (memo: string) => {
       if (isRequestingTermination) {
@@ -243,11 +232,11 @@ export default function ContractReadView(props: ContractReadViewProps) {
         toast.success(
           "해지를 요청했습니다. 운영자가 상대 의사를 확인한 뒤 처리합니다."
         )
-      } catch (error) {
-        toastTerminationError(error)
+      } catch {
+        // 인터셉터가 서버 문구를 토스트로 띄운다
       }
     },
-    [detail, isRequestingTermination, requestTermination, toastTerminationError]
+    [detail, isRequestingTermination, requestTermination]
   )
 
   const handleWithdrawTermination = useCallback(async () => {
@@ -265,10 +254,10 @@ export default function ContractReadView(props: ContractReadViewProps) {
     try {
       await withdrawTermination(detail)
       toast.success("해지 요청을 철회했습니다.")
-    } catch (error) {
-      toastTerminationError(error)
+    } catch {
+      // 인터셉터가 서버 문구를 토스트로 띄운다
     }
-  }, [detail, isWithdrawing, toastTerminationError, withdrawTermination])
+  }, [detail, isWithdrawing, withdrawTermination])
 
   const handleDelete = useCallback(async () => {
     if (isDeleting) {

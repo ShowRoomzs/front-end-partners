@@ -247,7 +247,7 @@ export function StatusRailCard(props: {
           value: dt(pendingTermination.requestedAt),
         })
       }
-      // 시작 전에는 「중단」 버튼을 두지 않는다(기-05 — 「중단」은 진행중만). 아직 배포되지 않은 서버가
+      // 시작 전에는 「중단」 버튼을 두지 않는다(기-05 — 「중단」은 진행중만). 옛 서버가
       // 준비완료에 canRequestSuspension을 내려도 해지 요청으로만 받는다.
       const terminate = terminationButton(detail, actions)
       if (terminate) {

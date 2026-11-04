@@ -1,4 +1,3 @@
-import NotReady from "@/common/components/NotReady/NotReady"
 import StatusBadge from "@/common/components/StatusBadge/StatusBadge"
 import { formatDateTimeShort } from "@/common/utils/formatDate"
 import { Button } from "@/components/ui/button"
@@ -22,7 +21,7 @@ import type {
 import { cn } from "@/lib/utils"
 import dayjs from "dayjs"
 import { useState, type ReactNode } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link } from "react-router-dom"
 
 /** 서버는 이동 대상 코드만 내린다 — 라우트는 FE가 만든다 */
 const TARGET_LINK: Record<WithdrawalTarget, { label: string; to: string }> = {
@@ -95,8 +94,6 @@ function Strong({ children }: { children: ReactNode }) {
 export default function WithdrawalCard(props: {
   /** null = 마켓이 없는 계정(서버가 블록을 내리지 않는다) — 카드를 두지 않는다 */
   withdrawal: Withdrawal | null | undefined
-  /** 배포본에서 서버가 아직 탈퇴 블록을 모른다 */
-  isNotReady: boolean
   isLoading: boolean
   isSubmitting: boolean
   isCanceling: boolean
@@ -105,42 +102,13 @@ export default function WithdrawalCard(props: {
 }) {
   const {
     withdrawal,
-    isNotReady,
     isLoading,
     isSubmitting,
     isCanceling,
     onRequest,
     onCancel,
   } = props
-  const navigate = useNavigate()
   const [isModalOpen, setIsModalOpen] = useState(false)
-
-  if (isNotReady) {
-    return (
-      <div className="mt-4">
-        <StoreFormCard>
-          <CardHeader>브랜드 탈퇴</CardHeader>
-          <NotReady
-            title="탈퇴 신청 화면은 준비 중입니다"
-            action={
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className={STORE_BUTTON_CLASS}
-                onClick={() => navigate(OPERATOR_THREAD_PATH)}
-              >
-                운영자 문의
-              </Button>
-            }
-          >
-            탈퇴는 신청 후 운영자가 처리합니다. 지금은 운영자 문의로 접수해
-            주세요.
-          </NotReady>
-        </StoreFormCard>
-      </div>
-    )
-  }
 
   if (withdrawal === null) return null
 

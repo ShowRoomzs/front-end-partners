@@ -91,7 +91,7 @@ export function useAdjustmentActions(threadId: number) {
     onError: () => refetchView(queryClient, threadId),
   })
 
-  // [요청 철회] — 개발 서버 목업만(서비스가 배포본에서 막는다)
+  // [요청 철회](기-14)
   const withdraw = useMutation({
     mutationFn: (view: AdjustmentView) => adjustmentService.withdraw(view),
     onSuccess: view => applyView(queryClient, threadId, view),

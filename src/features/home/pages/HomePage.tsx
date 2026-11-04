@@ -1,5 +1,4 @@
 import NotReady from "@/common/components/NotReady/NotReady"
-import { isApiNotReady } from "@/common/utils/devMock"
 import Btn from "@/features/contracts/components/shared/Btn"
 import {
   ContractsCard,
@@ -24,7 +23,7 @@ import type { ReactNode } from "react"
  * 읽는 순서: (가이드) → 처리 대기 → 진행 중 공구 실시간 → 공구 일정 달력 → 계약 진행 · 오픈 예정 · 정산.
  */
 export default function HomePage() {
-  const { data: home, error, isLoading, refetch } = useGetHome()
+  const { data: home, isLoading, refetch } = useGetHome()
   const { data: live } = useGetHomeLive(home?.live)
   const suspension = useAccountSuspension()
   // 계정 상태 API와 홈 응답의 account는 같은 블록이다 — 어느 쪽이 먼저 오든 정지 표시를 맞춘다
@@ -50,16 +49,10 @@ export default function HomePage() {
       <>
         {header}
         <Panel>
-          {isApiNotReady(error) ? (
-            <NotReady title="준비 중인 기능입니다.">
-              파트너센터 대시보드는 아직 준비 중입니다.
-            </NotReady>
-          ) : (
-            <NotReady
-              title="홈을 불러오지 못했습니다."
-              action={<Btn onClick={() => refetch()}>다시 시도</Btn>}
-            />
-          )}
+          <NotReady
+            title="홈을 불러오지 못했습니다."
+            action={<Btn onClick={() => refetch()}>다시 시도</Btn>}
+          />
         </Panel>
       </>
     )

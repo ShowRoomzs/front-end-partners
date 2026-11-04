@@ -56,7 +56,6 @@ export const PERFORMANCE_INITIAL_PARAMS: PerformanceListParams = {
   sort: "ENDED_DESC",
   page: 1,
   size: 20,
-  mock: null,
 }
 
 /** 원가 입력 한도 — 서버 검증(0 이상 10억 이하 정수)과 같다 */

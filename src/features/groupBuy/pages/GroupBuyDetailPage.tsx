@@ -46,7 +46,6 @@ import { useGetGroupBuyDetail } from "@/features/groupBuy/hooks/useGroupBuyQueri
 import { headerMeta, sellingSituation } from "@/features/groupBuy/utils/view"
 import { usePageSubtitle } from "@/common/components/MainLayout/usePageSubtitle"
 import { useMarketStore } from "@/common/stores/useMarketStore"
-import { isApiNotReady } from "@/common/utils/devMock"
 import { useCallback, useMemo, useState } from "react"
 import toast from "react-hot-toast"
 import {
@@ -358,12 +357,6 @@ export default function GroupBuyDetailPage() {
                 onSuccess: () => {
                   closeModal()
                   toast.success(TERMINATION_TEXT.toast)
-                },
-                onError: error => {
-                  // 아직 배포되지 않은 서버(404)는 공용 토스트 없이 ApiNotReadyError로 온다
-                  if (isApiNotReady(error)) {
-                    toast.error("아직 준비 중인 기능입니다.")
-                  }
                 },
               }
             )

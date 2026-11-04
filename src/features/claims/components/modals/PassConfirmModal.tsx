@@ -34,8 +34,8 @@ function SumRow(props: { label: string; children: ReactNode }) {
 /**
  * 시안 M1 — 검수 통과 확인. 통과는 되돌릴 수 없고, 반품이면 승인 즉시 PG가 자동 환불한다.
  * 기-17: 귀책은 신청 때 귀책이 기본값이고 여기서 브랜드 귀책으로 바꿀 수 있다(선불 반품만 · utils/inspection).
- * 기-93: 브랜드 귀책이면 선불 운임 · 차감한 최초 배송비가 환불에 더해진다 — 금액 줄은 서버 미리보기가 생길 때까지
- * 개발 서버 목업에서만 그린다(배포본은 안내 문구만).
+ * 기-93: 브랜드 귀책이면 선불 운임 · 차감한 최초 배송비가 환불에 더해진다 — 금액 줄은 서버 미리보기(`freightPreview`)가
+ * 있을 때만 그린다(없으면 안내 문구만).
  */
 export default function PassConfirmModal(props: {
   isOpen: boolean

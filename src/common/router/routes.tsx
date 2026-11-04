@@ -63,7 +63,7 @@ export const mainRoutes: Array<RouteObject> = [
     element: <MainLayout />,
     errorElement: <ErrorPage />,
     children: [
-      // GNB #1 홈(ui-partner-16) — 서버 미배포면 화면 안에서 「준비 중」
+      // GNB #1 홈(ui-partner-16)
       { index: true, element: <HomePage /> },
       // Seller - 기본정보 관리(§15) — 사업자 정보·배송·반품 정책·정산 계좌·담당자·CS·계정 5탭이
       // 전부 한 페이지 안에서 쿼리파라미터(?tab=)로 전환되므로 하위 라우트가 필요 없다.
@@ -135,7 +135,7 @@ export const mainRoutes: Array<RouteObject> = [
         path: "group-buy/:groupBuyId",
         element: <GroupBuyDetailPage />,
       },
-      // Seller - 성과 관리(ui-partner-12) — 서버 미배포면 화면 안에서 「준비 중」
+      // Seller - 성과 관리(ui-partner-12)
       {
         path: "performance",
         element: <PerformanceListPage />,

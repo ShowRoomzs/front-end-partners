@@ -122,8 +122,7 @@ export function useDuplicateContract() {
 }
 
 /**
- * 해지 요청 · 철회(기-05) — 응답이 상세 전체라 상세 캐시는 그 값으로 바로 바꾼다.
- * 개발 서버 목업은 재조회하면 시나리오 원본이 오므로 무효화하지 않는다(목업은 따로 붙잡아 둔다).
+ * 해지 요청 · 철회(기-05) — 응답이 상세 전체라 상세 캐시는 그 값으로 바로 바꾼다(다시 읽지 않는다).
  */
 function useApplyContractDetail() {
   const queryClient = useQueryClient()
@@ -148,8 +147,7 @@ export function useRequestTermination() {
     }) =>
       contractService.requestTermination(
         variables.detail.contractId,
-        variables.body,
-        variables.detail
+        variables.body
       ),
     onSuccess: apply,
   })
@@ -160,7 +158,7 @@ export function useWithdrawTermination() {
 
   return useMutation({
     mutationFn: (detail: ContractDetailResponse) =>
-      contractService.withdrawTermination(detail.contractId, detail),
+      contractService.withdrawTermination(detail.contractId),
     onSuccess: apply,
   })
 }

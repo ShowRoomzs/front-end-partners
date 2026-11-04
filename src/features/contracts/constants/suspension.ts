@@ -1,5 +1,3 @@
-import { isSuspendedScenario } from "@/features/suspension"
-
 /*
   계정 이용 정지 · 상대 계정 보류 문구 — 시안 ui-partner-15 rev.3 S4a · S4b · R1.
   명칭(기-01)이 【잠정】이라 바뀌면 이 파일과 `@/features/suspension`의 copy만 고친다.
@@ -36,15 +34,3 @@ export const DEADLINE_PAUSED_NOTE = {
   MINE: "정지 중 멈춤 · 해제 후 남은 기한부터",
   COUNTERPARTY: "보류 중 멈춤 · 해제 후 남은 기한부터",
 } as const
-
-/**
- * 개발 서버 목업 — 상대 인플루언서 정지(시안 15 R1 · R2). 내 정지 시나리오(`suspended*`)는
- * `@/features/suspension`의 `isSuspendedScenario`가 가른다. 계약 · 공구 서비스가 함께 쓴다.
- */
-export const COUNTERPARTY_SUSPENDED_SCENARIO = "counterparty-suspended"
-
-/** 정지 목업 시나리오면 상대 정지인지(true) · 내 정지인지(false), 아니면 null */
-export function sanctionMockKind(scenario: string | null): boolean | null {
-  if (scenario === COUNTERPARTY_SUSPENDED_SCENARIO) return true
-  return isSuspendedScenario(scenario) ? false : null
-}

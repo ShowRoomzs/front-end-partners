@@ -237,8 +237,8 @@ export interface ClaimDetailActions {
   canRegisterReshipment: boolean
   canUpdateReshipment: boolean
   /**
-   * [사유 번복] — 입고 확인 뒤 · 착불(브랜드 귀책) 신청 건. 1021 백엔드(main)에서 생긴 값이라
-   * 아직 배포되지 않은 서버는 내려 주지 않는다(undefined) — 그 서버는 귀책 변경 · 사유 번복을 모른다.
+   * [사유 번복] — 입고 확인 뒤 · 착불(브랜드 귀책) 신청 건. 1021 백엔드에서 생긴 값이라
+   * 옛 서버는 내려 주지 않는다(undefined) — 그 서버는 귀책 변경 · 사유 번복을 모른다(utils/inspection).
    */
   canOverturn?: boolean
 }
@@ -316,7 +316,7 @@ export interface ClaimDetailResponse {
   notices: Array<ClaimNotice>
   history: Array<ClaimHistoryItem>
   actions: ClaimDetailActions
-  /** 1021 서버부터 — 판정이 기록됐거나 운임 정산 행이 있을 때만(아직 배포 전 서버는 undefined) */
+  /** 1021 서버부터 — 판정이 기록됐거나 운임 정산 행이 있을 때만(옛 서버는 undefined) */
   inspection?: ClaimInspection | null
 }
 
@@ -370,9 +370,8 @@ export interface ClaimOverturnBody {
 }
 
 /**
- * 판정 전 운임 미리보기 — **서버에 아직 없는 값**(B2b · B1r · M1 금액 줄).
- * 상세 응답에는 판정 뒤의 운임 행(`inspection.freight`)만 있어, 판정 전에 「착불 운임 3,000원」을 그릴 원천이 없다.
- * 개발 서버만 목업으로 채우고 배포본은 null(금액 줄을 그리지 않는다).
+ * 판정 전 운임 미리보기(B2b · B1r · M1 금액 줄) — 상세 `freightPreview`(58 5-4 · 판정 전 단계만)를 화면용으로 옮긴 값.
+ * 서버 값이 없으면 null(금액 줄을 그리지 않는다).
  */
 export interface ClaimFreightPreview {
   /** 운임 정액 = 그 주문의 기본 배송비(기-93 보완) — 착불 운임 · 선불 운임 */

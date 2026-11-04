@@ -25,11 +25,8 @@ export default function BasicInfoPage() {
     : "business"
 
   const handleChangeTab = (key: BasicInfoTabKey) => {
-    // 개발용 `?mock=` 시나리오는 탭을 옮겨도 유지한다(devMock.ts)
     const next = new URLSearchParams()
     if (key !== "business") next.set("tab", key)
-    const mock = searchParams.get("mock")
-    if (mock) next.set("mock", mock)
     setSearchParams(next)
   }
 
