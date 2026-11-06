@@ -79,7 +79,7 @@ export interface SettlementListItem {
   statusLabel: string
   statusTone: SettlementTone
   schedule: SettlementSchedule
-  /** 내 지급 행 보류 이유 — 보류가 아니면 null · 배포 전 서버는 없음 */
+  /** 내 지급 행 보류 이유 — 보류가 아니면 null */
   payoutHold?: PayoutHold | null
 }
 
@@ -109,13 +109,12 @@ export interface SettlementSummary {
   statusCounts: SettlementStatusCounts
   /** GNB 「정산 관리」 배지 = 요청 창이 열린 정산 확인 중 건수 */
   attentionCount: number
-  /** 조정 협의 「내 응답 필요」 수(1017 · 개발 서버 배포 전에는 없다) */
+  /** 조정 협의 「내 응답 필요」 수(1017) */
   adjustmentMyTurnCount?: number
 }
 
 /**
  * 내 지급 행 보류 이유(1017 · ui-partner-15 S5) — 정산 상태는 「지급 예정」 그대로이고 이 보조 정보로 보인다.
- * 개발 서버 배포 전에는 응답에 없다(undefined).
  */
 export interface PayoutHold {
   /** PayoutBlockReason — BRAND_SUSPENDED 등 */
@@ -178,10 +177,10 @@ export interface SettlementBreakdown {
   consumerDeliveryFee: number
   /**
    * + 반품 시 차감한 최초 배송비(1021 기-18) — 무료배송 · 소비자 귀책 반품에서 환불액에서 뺀 금액 · 브랜드 정산에 남는다.
-   * 개발 서버 배포 전에는 없다(undefined) — 그때는 줄을 그리지 않는다.
+   * 건수가 0이면 줄을 그리지 않는다.
    */
   returnDeductionFee?: SettlementAmountCount
-  /** ± 운임 정산(1021 기-93) — amount는 부호 있음(소비자 부담 +, 환급 −). 배포 전에는 없다 */
+  /** ± 운임 정산(1021 기-93) — amount는 부호 있음(소비자 부담 +, 환급 −) */
   freightAdjustment?: SettlementAmountCount
   /** 차감 전 브랜드 수취액 */
   brandPayoutBeforeClawback: number
@@ -216,7 +215,7 @@ export interface SettlementPayout {
   statusLabel: string
   dueDate: string | null
   paidAt: string | null
-  /** [내 행] 보류 이유 — 「지급 정지 · 해제 다음 영업일 지급」(1017 · 배포 전 서버는 없음) */
+  /** [내 행] 보류 이유 — 「지급 정지 · 해제 다음 영업일 지급」(1017) */
   hold?: PayoutHold | null
 }
 
@@ -397,7 +396,7 @@ export interface SettlementDetail {
   items: Array<SettlementItem>
   itemTotalCount: number
   actions: SettlementActions
-  /** 내 지급 행 보류 이유(S5 「지급 정지 · 계정 이용 정지 중」) — 보류가 아니면 null · 배포 전 서버는 없음 */
+  /** 내 지급 행 보류 이유(S5 「지급 정지 · 계정 이용 정지 중」) — 보류가 아니면 null */
   payoutHold?: PayoutHold | null
 }
 

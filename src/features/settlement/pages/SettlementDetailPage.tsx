@@ -206,7 +206,7 @@ function SettlementDetailView(props: {
         }
       />
 
-      {/* 시안 15 S5 — 내 지급 행이 보류됐으면 금액 위에 알린다(배포 전 서버는 payoutHold가 없다) */}
+      {/* 시안 15 S5 — 내 지급 행이 보류됐으면 금액 위에 알린다 */}
       {detail.payoutHold && (
         <div className="mb-3 flex gap-2.5 rounded-[8px] bg-sz-danger-bg px-3.5 py-2.5 text-[12px] leading-[1.6] text-sz-danger-text [&_b]:font-semibold">
           {detail.payoutHold.sanction ? (

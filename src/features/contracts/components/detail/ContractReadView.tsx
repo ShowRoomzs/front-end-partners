@@ -350,7 +350,7 @@ export default function ContractReadView(props: ContractReadViewProps) {
             <ContentObligationCard content={detail.content} />
           )}
 
-          {/* 기-30 — main 필드라 개발 서버 응답엔 없다(undefined면 카드째 숨김) */}
+          {/* 기-30 — 값이 없으면 카드째 숨김 */}
           {isConcluded && detail.draftApprovals && (
             <DraftApprovalsCard approvals={detail.draftApprovals} />
           )}

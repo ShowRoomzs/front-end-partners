@@ -58,7 +58,7 @@ export default function TerminationRequestModal(
             · {detail.counterparty.showroomName ?? "—"}
           </span>
         </TermRow>
-        {/* 성립 일시는 main 필드 — 개발 서버 응답엔 없어 줄째 뺀다 */}
+        {/* 성립 일시가 없으면(양측 서명 전) 줄째 뺀다 */}
         {detail.establishedAt && (
           <TermRow
             label="계약 성립"

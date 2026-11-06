@@ -8,7 +8,7 @@ import type { SanctionHoldView } from "@/features/suspension"
 
 /**
  * 상태 10종 — 3서피스 공통(§25-2). 「서명 진행중」을 쪼개지 않는다.
- * `TERMINATED`(해지)는 1021 기-05로 main에 생겼고 개발 서버는 아직 내려 주지 않는다.
+ * `TERMINATED`(해지)는 1021 기-05로 생겼다.
  */
 export type ContractStatus =
   | "DRAFT"
@@ -252,7 +252,7 @@ export interface ContractFixedFee {
   amount: number | null
   trigger: FixedFeeTrigger | null
   triggerLabel: string | null
-  /** 지급 시점 정의(툴팁 · 기-28) — main에만 있어 개발 서버 응답엔 없다 */
+  /** 지급 시점 정의(툴팁 · 기-28) */
   triggerDescription?: string | null
   /** 지급 시점 뒤 N영업일 안에 지급 — null이면 [정책값 미정](화면은 「N영업일」) */
   paymentBusinessDays?: number | null
@@ -427,7 +427,7 @@ export interface ContractDetailResponse {
   establishedAt?: string | null
   terminationRequest?: ContractTerminationRequest | null
   draftApprovals?: Array<ContractDraftApproval>
-  /** 정지 보류 보조 배지 — 목록과 같다(main 필드 · 없으면 배지 없음) */
+  /** 정지 보류 보조 배지 — 목록과 같다(없으면 배지 없음) */
   sanctionHold?: SanctionHoldView | null
   /** 서명 기한이 멈춰 있는가 — 서명 진행중 ∧ 당사자 정지 보류(해제 후 남은 기한부터) */
   signatureDeadlinePaused?: boolean

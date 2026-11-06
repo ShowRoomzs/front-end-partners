@@ -81,7 +81,7 @@ export interface HomeContractRow {
   hold: SanctionHoldView | null
 }
 
-/** 서버 main은 HIDDEN → EXPOSURE_SUSPENDED로 바뀌었다 — 개발 서버 옛 값도 받는다 */
+/** 서버는 HIDDEN → EXPOSURE_SUSPENDED로 바뀌었다 — 옛 값도 받는다 */
 export type HomePostStatus =
   | "NOT_WRITTEN"
   | "WRITING"

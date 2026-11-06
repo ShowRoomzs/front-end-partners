@@ -60,7 +60,6 @@ export const SELLER_MENU: MenuConfig = {
       path: "/settlement/history",
       matchPaths: ["/settlement"],
     },
-    // 아직 화면이 없다 — 플레이스홀더로 연결된다.
     {
       id: "performance",
       label: "성과 관리",

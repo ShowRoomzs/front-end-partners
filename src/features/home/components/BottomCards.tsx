@@ -51,7 +51,7 @@ const POST_TONE: Record<string, StatusBadgeVariant> = {
   HIDDEN: "danger",
   CLOSED: "neutral",
 }
-/** 개발 서버 옛 값 HIDDEN(「숨김」) → 기-08 「노출 중지」 */
+/** 옛 값 HIDDEN(「숨김」)이 남아 있으면 기-08 「노출 중지」로 */
 const postLabel = (row: HomeUpcomingRow) =>
   row.postStatus === "HIDDEN" ? "노출 중지" : row.postStatusLabel
 

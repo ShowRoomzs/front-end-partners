@@ -91,7 +91,7 @@ export interface CompanyInfo {
 }
 
 export const settlementService = {
-  /** 배포 전 서버는 404 — 화면이 기본값(시안 값)으로 그리므로 토스트를 끈다 */
+  /** 실패해도 화면이 기본값(시안 값)으로 그리므로 토스트를 끈다 */
   getCompanyInfo: async () => {
     const { data } = await apiInstance.get<CompanyInfo>(
       "/common/company-info",

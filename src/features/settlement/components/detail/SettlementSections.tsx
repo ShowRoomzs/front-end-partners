@@ -364,7 +364,7 @@ export function BreakdownCard({ detail }: Props) {
             note={`교환·반려 재발송 배송비 · 소비자 결제분(귀책 번복 시 브랜드가 낸 착불 운임 청구분 포함) · 브랜드 수취액에만 가산 · 리워드 기준 판매금액에 포함하지 않음${b.reshipFee.count === 0 ? " · 이 공구 해당 없음" : ` · ${b.reshipFee.count}건`}`}
             amount={formatPlusWon(b.reshipFee.amount)}
           />
-          {/* 기-18 · 기-93 — 1021 서버에서 생긴 줄이라 배포 전 응답에는 없다 */}
+          {/* 기-18 · 기-93 — 1021에 생긴 줄 · 건수가 있을 때만 */}
           {b.returnDeductionFee && b.returnDeductionFee.count > 0 && (
             <SubRow
               label="반품 시 차감한 최초 배송비"
