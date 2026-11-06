@@ -60,6 +60,11 @@ export default function ConnectionsPage() {
 
       {selectedThread ? (
         <ThreadPanel key={selectedThread.threadId} thread={selectedThread} />
+      ) : isLoading ? (
+        // 목록을 받기 전엔 고를 스레드가 없다 — 「대화를 선택해 주세요」가 잠깐 비치지 않게
+        <div className="flex flex-1 items-center justify-center bg-sz-n-50 text-[12px] text-sz-n-500">
+          대화를 불러오는 중…
+        </div>
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 bg-sz-n-50 p-10 text-center">
           <div className="text-[13px] font-semibold text-sz-n-600">
