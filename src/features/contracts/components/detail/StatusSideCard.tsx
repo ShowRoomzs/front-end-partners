@@ -320,7 +320,7 @@ export default function StatusSideCard(props: StatusSideCardProps) {
       case "terminated":
         return (
           <>
-            {/* 성립 일시는 main 필드 — 개발 서버 응답엔 없어 줄째 뺀다 */}
+            {/* 성립 일시가 없으면(양측 서명 전 해지) 줄째 뺀다 */}
             {detail.establishedAt && (
               <MetaRow label="계약 성립" value={time(detail.establishedAt)} />
             )}

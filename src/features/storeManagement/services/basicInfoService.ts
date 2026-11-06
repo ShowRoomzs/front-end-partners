@@ -89,7 +89,7 @@ export interface AccountInfoResponse {
   lastEmailChangedAt: string | null
   nextEmailChangeableAt: string | null
   /*
-    아래 셋은 1021 백엔드(main)에서 생긴 값이라 개발 서버가 새 버전으로 배포되기 전에는 없다(undefined).
+    아래 셋은 1021 백엔드에서 생긴 값이다.
   */
   passwordChangeable?: boolean
   identityLock?: IdentityLock | null
@@ -122,8 +122,8 @@ export interface DeliveryPolicyResponse {
   /** 없으면 null = 무료배송 없음 */
   freeShippingThreshold: number | null
   /**
-   * 제주 추가비(V200 · 1021) — 개발 서버가 새 버전으로 배포되기 전에는 응답에 없다(undefined).
-   * 없으면 화면이 칸을 두지 않는다 — 옛 서버는 저장 요청의 이 값을 버리기 때문이다.
+   * 제주 추가비(V200 · 1021) — 응답에 없으면(undefined) 화면이 칸을 두지 않는다.
+   * 그 값을 모르는 서버는 저장 요청에서 버리기 때문이다.
    */
   jejuSurcharge?: number | null
   /** 도서산간 추가비 — 제주 제외 */
@@ -137,7 +137,7 @@ export interface UpdateDeliveryPolicyRequest {
   defaultDeliveryFee: number
   /** 비우면(null) 무료배송 없음 — 0을 보내면 모든 주문이 무료배송이 된다 */
   freeShippingThreshold: number | null
-  /** 비우면(null) 0 — 서버가 제주 칸을 모르면(배포 전) 보내지 않는다 */
+  /** 비우면(null) 0 — 서버가 제주 칸을 모르면 보내지 않는다 */
   jejuSurcharge?: number | null
   /** 비우면(null) 0 */
   remoteAreaSurcharge: number | null

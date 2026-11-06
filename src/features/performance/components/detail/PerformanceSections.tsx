@@ -1053,7 +1053,7 @@ function SettlementLinkBody(props: {
             }
             amount={minus(b.platformFee.amount)}
           />
-          {/* 정산 관리 분해의 가산 줄 — 0원이면 숨긴다(서버: 0원 행 숨김은 FE). 1021 새 줄은 개발 서버가 아직 안 줄 수 있다 */}
+          {/* 정산 관리 분해의 가산 줄 — 0원이면 숨긴다(서버: 0원 행 숨김은 FE) */}
           {b.consumerDeliveryFee !== 0 && (
             <LinkRow
               label="배송비"

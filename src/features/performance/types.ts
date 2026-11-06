@@ -334,7 +334,7 @@ export interface PerformanceAmountCount {
 
 /**
  * 정산 분해 — 파트너 정산 관리(13) 상세의 `SellerSettlementDto.Breakdown` 그대로.
- * 1021에 생긴 줄(`returnDeductionFee` · `freightAdjustment`)은 개발 서버가 아직 안 줄 수 있어 선택으로 둔다.
+ * 1021에 생긴 줄(`returnDeductionFee` · `freightAdjustment`)은 서버가 늘 내리지만, 옛 응답에 대비해 선택으로 둔다.
  */
 export interface PerformanceSettlementBreakdown {
   grossOrderAmount: number

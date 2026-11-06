@@ -21,8 +21,8 @@ export const SETTLEMENT_QUERY_KEYS = {
 } as const
 
 /**
- * 세금계산서 공급자(기-35 · 시안 13 rev.9) — 서버 `GET /v1/common/company-info`가 개발 서버에 배포되기 전에 쓰는 값.
- * 배포되면 서버 값이 우선한다(설정값 `company.*`). 「(주)」는 붙이지 않는다.
+ * 세금계산서 공급자(기-35 · 시안 13 rev.9) — 서버 `GET /v1/common/company-info`를 못 받았을 때 쓰는 값.
+ * 서버 값이 우선한다(설정값 `company.*` · 빈 값은 null). 「(주)」는 붙이지 않는다.
  */
 export const TAX_INVOICE_SUPPLIER_FALLBACK = {
   name: "쇼룸즈",

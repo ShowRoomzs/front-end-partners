@@ -318,7 +318,7 @@ export interface OrderDetailResponse {
   history: Array<OrderHistoryItem>
   /**
    * 추적 정지 · 소비자 선택(10c C7b · 1021 기-15 【잠정】) — 추적 정지가 아니고 선택도 없으면 null.
-   * 개발 서버가 새 버전으로 배포되기 전에는 응답에 없다(undefined) — 그때는 「선택 전」 안내만 그린다.
+   * 값이 없으면(undefined) 「선택 전」 안내만 그린다.
    */
   stallChoice?: OrderStallChoice | null
 }

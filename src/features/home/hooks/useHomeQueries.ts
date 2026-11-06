@@ -54,7 +54,7 @@ export function useHideGuide() {
 
 /**
  * GNB 배지 — `GET /v1/seller/badges`. 셸(MainLayout)이 쓴다.
- * 배포 전(404)이면 data가 없고, 셸은 기존 메뉴별 `/summary` 계산으로 돌아간다.
+ * 실패하면 data가 없고, 셸은 기존 메뉴별 `/summary` 계산으로 돌아간다.
  */
 export function useGetSellerBadges(enabled: boolean) {
   return useQuery({

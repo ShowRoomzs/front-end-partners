@@ -403,7 +403,7 @@ export interface GroupBuyDetailResponse {
     prevGroupBuyId: number | null
     nextGroupBuyId: number | null
   } | null
-  /** 정지 보류 보조 배지 — 목록과 같다(main 필드 · 없으면 배지 없음) */
+  /** 정지 보류 보조 배지 — 목록과 같다(없으면 배지 없음) */
   sanctionHold?: SanctionHoldView | null
 }
 
