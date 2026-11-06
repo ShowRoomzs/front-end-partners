@@ -73,8 +73,13 @@ export default function ThreadPanel(props: ThreadPanelProps) {
   const { thread } = props
   const navigate = useNavigate()
 
-  const { messages, hasNextPage, isFetchingNextPage, fetchNextPage } =
-    useGetThreadMessages(thread.threadId)
+  const {
+    messages,
+    isLoading: isLoadingMessages,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useGetThreadMessages(thread.threadId)
   const { outgoing, send, retry, cancel } = useOutgoingMessages(thread.threadId)
   useMarkThreadRead(thread.threadId, thread.unreadCount)
   const { mutateAsync: createContract, isPending: isCreatingContract } =
@@ -261,6 +266,7 @@ export default function ThreadPanel(props: ThreadPanelProps) {
         messages={messages}
         outgoing={outgoing}
         counterpartName={thread.counterpartName}
+        isLoading={isLoadingMessages}
         hasOlderMessages={Boolean(hasNextPage)}
         isFetchingOlder={isFetchingNextPage}
         onLoadOlder={() => void fetchNextPage()}

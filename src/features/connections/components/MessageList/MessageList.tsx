@@ -20,6 +20,8 @@ interface MessageListProps {
   messages: Array<MessageItem>
   outgoing: Array<OutgoingMessage>
   counterpartName: string
+  /** 첫 페이지를 아직 못 받았다 — 빈 본문 대신 불러오는 중 안내를 띄운다 */
+  isLoading?: boolean
   hasOlderMessages: boolean
   isFetchingOlder: boolean
   onLoadOlder: () => void
@@ -51,6 +53,7 @@ export default function MessageList(props: MessageListProps) {
     messages,
     outgoing,
     counterpartName,
+    isLoading = false,
     hasOlderMessages,
     isFetchingOlder,
     onLoadOlder,
@@ -115,6 +118,12 @@ export default function MessageList(props: MessageListProps) {
       onScroll={handleScroll}
       className="flex flex-1 flex-col items-start gap-4 overflow-y-auto p-5"
     >
+      {isLoading && messages.length === 0 && (
+        <div className="my-auto self-center text-[12px] text-sz-n-500">
+          대화를 불러오는 중…
+        </div>
+      )}
+
       {isFetchingOlder && (
         <div className="self-center text-[11px] text-sz-n-400">
           이전 메시지를 불러오는 중…
