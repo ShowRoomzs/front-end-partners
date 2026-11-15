@@ -1,6 +1,20 @@
 import type { NotificationItem } from "@/features/home/types"
 
 /**
+ * 기본정보 탭 키 — 변경 요청 알림은 예전에 요청 유형(business_info · settlement_account)으로 왔다.
+ * 서버가 2026-11-15부터 탭 키(business · settlement)로 바꿔 내리지만, 예전 응답도 같은 탭으로 보낸다.
+ */
+const BASIC_INFO_TAB_ALIAS: Record<string, string> = {
+  business_info: "business",
+  settlement_account: "settlement",
+}
+
+function basicInfoTab(sub: string): string {
+  const key = sub.toLowerCase()
+  return BASIC_INFO_TAB_ALIAS[key] ?? key
+}
+
+/**
  * 알림을 누르면 갈 곳 — 목록이 아니라 그 건의 상세(16 rule 「알림 클릭 동작」 ①③).
  * 지워진 대상은 상세 화면이 404를 받아 처리한다(서버가 생존을 확인하지 않는다 — 1017 설계서 1-0 ④).
  * 이동할 화면이 없으면 null(읽음 처리만 한다).
@@ -32,7 +46,7 @@ export function notificationTargetPath(
       // 파트너센터에는 상품 문의 화면만 있다
       return sub === "PRODUCT" && id ? `/inquiry/product/${id}` : null
     case "BASIC_INFO_TAB":
-      return sub ? `/store/basic?tab=${sub}` : "/store/basic"
+      return sub ? `/store/basic?tab=${basicInfoTab(sub)}` : "/store/basic"
     case "ORDER_GROUP":
       return id ? `/sales/orders?tab=ALL&detail=${id}` : "/sales/orders?tab=ALL"
     case "CLAIM":
