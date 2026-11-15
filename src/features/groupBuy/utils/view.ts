@@ -3,9 +3,11 @@ import {
   formatDateTimeShort,
   parseServerDateTime,
 } from "@/common/utils/formatDate"
+import { unitReward } from "@/features/contracts/utils/format"
 import { POST_STATUS_LABEL_OVERRIDE } from "@/features/groupBuy/constants/params"
 import type {
   GroupBuyDetailResponse,
+  GroupBuyItemOption,
   GroupBuyPostStatus,
 } from "@/features/groupBuy/types"
 import dayjs from "dayjs"
@@ -173,6 +175,21 @@ export function quantityText(detail: Detail) {
 /** 이름 있는 옵션이 있는가 — 옵션 없는 상품은 이름 없는 1행으로 온다 */
 export function hasNamedOptions(item: Detail["items"][number]): boolean {
   return (item.options ?? []).some(option => option.variantName !== null)
+}
+
+/**
+ * 옵션 1개당 예상 리워드 — 서버 `options[].unitReward`(옵션 판매가 × 리워드율, 정산 · 계약서 PDF와 같은 값).
+ * 이 필드가 없던 응답이면 옵션 판매가로 같은 식을 계산하고, 그것도 안 되면 상품(기본 옵션) 값을 쓴다.
+ */
+export function optionUnitReward(
+  option: GroupBuyItemOption,
+  item: Detail["items"][number]
+): number | null {
+  return (
+    option.unitReward ??
+    unitReward(option.salePrice, item.rewardRate) ??
+    item.expectedUnitReward
+  )
 }
 
 /**

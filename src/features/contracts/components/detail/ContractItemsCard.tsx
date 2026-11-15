@@ -65,8 +65,10 @@ export default function ContractItemsCard(props: ContractItemsCardProps) {
                       {formatOptionExtra(option.optionExtraPrice)} — 정가{" "}
                       {formatNumber(option.regularPrice)} · 공구가{" "}
                       {formatNumber(option.salePrice)} · 예상 리워드{" "}
+                      {/* 서버 옵션 리워드(정산 · 계약서 PDF와 같은 값) — 이 필드가 없던 응답만 화면에서 계산한다 */}
                       {formatNumber(
-                        unitReward(option.salePrice, item.rewardRate)
+                        option.unitReward ??
+                          unitReward(option.salePrice, item.rewardRate)
                       )}{" "}
                       ·{" "}
                       {option.minQuantity === null

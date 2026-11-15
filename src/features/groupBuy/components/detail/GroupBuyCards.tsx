@@ -25,6 +25,7 @@ import {
   dt,
   hasNamedOptions,
   lastEventAt,
+  optionUnitReward,
   postStatusLabel,
   quantityText,
 } from "@/features/groupBuy/utils/view"
@@ -138,14 +139,17 @@ export function GroupBuyItemsCard(props: { detail: Detail }) {
                   : `${formatNumber(item.minQuantity)}개`}
               </B>
             </span>
-            {/* 옵션 상품은 옵션마다 판매가·최소 물량이 다르다 — 최소 물량은 옵션끼리 대체 충족되지 않는다 */}
+            {/* 옵션 상품은 옵션마다 판매가·예상 리워드·최소 물량이 다르다 — 최소 물량은 옵션끼리 대체 충족되지 않는다.
+                예상 리워드는 옵션 판매가 기준(정산 · 계약서 PDF와 같은 값, 계약 상세 rev.10과 같은 줄) */}
             {hasNamedOptions(item) && (
               <FSub>
                 옵션 —{" "}
                 {item.options
                   .map(
                     option =>
-                      `${option.variantName ?? "단품"} ${formatKRW(option.salePrice)} · 최소 ${
+                      `${option.variantName ?? "단품"} ${formatKRW(option.salePrice)} · 예상 리워드 ${formatKRW(
+                        optionUnitReward(option, item)
+                      )} · 최소 ${
                         option.minQuantity === null
                           ? "—"
                           : `${formatNumber(option.minQuantity)}개`

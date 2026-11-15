@@ -235,6 +235,7 @@ export interface GroupBuyDetailResponse {
     regularPrice: number | null
     groupBuyPrice: number | null
     rewardRate: number | null
+    /** 상품(기본 옵션) 1개당 예상 리워드 — 옵션가가 있는 옵션은 `options[].unitReward`를 쓴다 */
     expectedUnitReward: number | null
     /** 옵션별 최소 물량의 합계 */
     minQuantity: number | null
@@ -275,6 +276,7 @@ export interface GroupBuyDetailResponse {
     basis: "LIVE" | "SETTLED" | "AT_SUSPENSION"
     orderCount: number
     amount: number
+    /** 예상 리워드 합계 — Σ ⌊주문 단가(공구가 + 옵션가) × 리워드율⌋ × 수량. 정산과 같은 계산 */
     rewardAmount: number
     itemQuantities: Array<{ productId: number; quantity: number }>
   } | null
@@ -413,6 +415,11 @@ export interface GroupBuyItemOption {
   /** 옵션 판매가 = 공구가 + 옵션가 */
   salePrice: number | null
   minQuantity: number | null
+  /**
+   * 옵션 1개당 예상 리워드(원) = ⌊옵션 판매가 × 리워드율 ÷ 100⌋ — 정산 · 계약서 PDF와 같은 계산.
+   * 옵션가가 있으면 상품의 `expectedUnitReward`와 다르다. 이 필드가 없던 응답이면 없다
+   */
+  unitReward?: number | null
 }
 
 /** 상세 조회에 함께 보내는 목록 조건 — 서버가 이 범위로 이전/다음 공구를 계산한다 */
