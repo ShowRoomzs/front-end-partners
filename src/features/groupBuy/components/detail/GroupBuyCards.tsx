@@ -132,7 +132,10 @@ export function GroupBuyItemsCard(props: { detail: Detail }) {
               <B className="text-sz-n-900">{formatKRW(item.groupBuyPrice)}</B> ·
               리워드율{" "}
               <B className="text-sz-n-900">{formatPercent(item.rewardRate)}</B>{" "}
-              · 예상 리워드 {formatKRW(item.expectedUnitReward)} · 최소 물량{" "}
+              · 예상 리워드
+              {/* 옵션 상품의 상품 행 리워드는 기본 옵션 기준(백엔드 11-15) — 단품에는 붙이지 않는다 */}
+              {hasNamedOptions(item) && "(기본 옵션)"}{" "}
+              {formatKRW(item.expectedUnitReward)} · 최소 물량{" "}
               <B className="text-sz-n-900">
                 {item.minQuantity === null
                   ? "—"

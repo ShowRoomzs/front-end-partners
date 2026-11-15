@@ -15,6 +15,10 @@ interface ContractItemsCardProps {
   showSettlementNote: boolean
 }
 
+/** 옵션이 있는 상품인가 — 단품은 옵션 1개(`variantName` null)로 온다 */
+const hasNamedOptions = (item: ContractItem) =>
+  (item.options ?? []).some(option => option.variantName !== null)
+
 /** 「계약 상품 항목」 읽기 전용 — 정가 · 공구가 · 리워드율 · 예상 리워드 · 최소 물량 */
 export default function ContractItemsCard(props: ContractItemsCardProps) {
   const { items, showSettlementNote } = props
@@ -47,16 +51,17 @@ export default function ContractItemsCard(props: ContractItemsCardProps) {
               <b className="font-semibold text-sz-n-900">
                 {formatPercent(item.rewardRate)}
               </b>{" "}
-              · 예상 리워드 {formatKRW(item.unitReward)} · 최소 물량{" "}
+              · 예상 리워드
+              {/* 옵션 상품의 상품 행 리워드는 기본 옵션 기준(백엔드 11-15) — 단품에는 붙이지 않는다 */}
+              {hasNamedOptions(item) && "(기본 옵션)"}{" "}
+              {formatKRW(item.unitReward)} · 최소 물량{" "}
               <b className="font-semibold text-sz-n-900">
                 {item.minQuantity === null
                   ? "—"
                   : `${item.minQuantity.toLocaleString("ko-KR")}개`}
               </b>
               {/* rev.10 — 옵션이 있는 상품은 옵션별 정가 · 공구가 · 예상 리워드 · 최소 물량(옵션가 포함). 상품 행의 최소 물량은 그 합계다 */}
-              {(item.options ?? []).some(
-                option => option.variantName !== null
-              ) && (
+              {hasNamedOptions(item) && (
                 <div className="mt-1 text-[11px] text-sz-n-500">
                   {item.options.map((option, index) => (
                     <div key={option.contractItemOptionId}>
