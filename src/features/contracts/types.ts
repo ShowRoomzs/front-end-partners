@@ -225,7 +225,10 @@ export interface ContractItem {
   groupBuyPrice: number | null
   /** 리워드율(%) — 소수점 첫째 자리까지 */
   rewardRate: number | null
-  /** 1개당 예상 리워드(원) — 서버 파생값, 1원 단위 버림 */
+  /**
+   * 상품(기본 옵션) 1개당 예상 리워드(원) — 공구가 × 리워드율, 1원 단위 버림(서버 파생값).
+   * 옵션가가 있는 옵션은 `options[].unitReward`가 정산 · 계약서 PDF와 같은 값이다
+   */
   unitReward: number | null
   /** 옵션별 최소 물량의 합계(파생값) — 옵션 중 하나라도 비어 있으면 null */
   minQuantity: number | null
@@ -246,6 +249,11 @@ export interface ContractItemOption {
   /** 옵션 판매가 = 공구가 + 옵션가. 공구가가 없으면 null */
   salePrice: number | null
   minQuantity: number | null
+  /**
+   * 옵션 1개당 예상 리워드(원) = ⌊옵션 판매가 × 리워드율 ÷ 100⌋ — 정산 · 계약서 PDF와 같은 계산.
+   * 이 필드가 없던 응답이나 공구가 · 리워드율이 비어 있으면 null
+   */
+  unitReward?: number | null
 }
 
 export interface ContractFixedFee {
