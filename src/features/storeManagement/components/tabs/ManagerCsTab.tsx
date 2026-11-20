@@ -267,6 +267,7 @@ export default function ManagerCsTab() {
             placeholder="클릭하면 주소 검색창이 열립니다"
             onSearchClick={handleAddressSearch}
             readOnly
+            compact
           />
         </StoreField>
         <StoreField

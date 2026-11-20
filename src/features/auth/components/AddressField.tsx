@@ -1,4 +1,5 @@
 import { authInputClass } from "@/common/components/Auth/authStyles"
+import { cn } from "@/lib/utils"
 
 type AddressFieldProps = {
   id?: string
@@ -16,6 +17,11 @@ type AddressFieldProps = {
    * prop 자체는 남겨 둔다 — 나중에 자유 입력이 필요한 화면이 생길 수 있다.
    */
   readOnly?: boolean
+  /**
+   * 기본정보 관리(시안 06 `.inp` · `.btn-search`) 규격 — 높이 32px · 버튼 「주소 검색」.
+   * 끄면 가입 · 온보딩(auth 화면) 규격 40px이다.
+   */
+  compact?: boolean
 }
 
 // 우편번호 검색 팝업으로만 채우는 주소 입력. 팝업-agnostic 인터페이스(onSearchClick)로
@@ -30,6 +36,7 @@ export function AddressField({
   disabled,
   onSearchClick,
   readOnly,
+  compact = false,
 }: AddressFieldProps) {
   return (
     <div className="flex w-full gap-2">
@@ -44,7 +51,10 @@ export function AddressField({
         readOnly={readOnly}
         className={authInputClass(
           hasError,
-          readOnly ? "flex-1 cursor-pointer" : "flex-1"
+          cn(
+            readOnly ? "flex-1 cursor-pointer" : "flex-1",
+            compact && "h-8 px-2.5"
+          )
         )}
         onClick={readOnly ? onSearchClick : undefined}
       />
@@ -53,9 +63,12 @@ export function AddressField({
           type="button"
           onClick={onSearchClick}
           disabled={disabled}
-          className="h-10 whitespace-nowrap rounded-[6px] border border-sz-n-300 bg-white px-4 text-[12px] font-medium text-sz-n-700 hover:enabled:bg-sz-n-100 disabled:cursor-not-allowed disabled:opacity-60"
+          className={cn(
+            "h-10 whitespace-nowrap rounded-[6px] border border-sz-n-300 bg-white px-4 text-[12px] font-medium text-sz-n-700 hover:enabled:bg-sz-n-100 disabled:cursor-not-allowed disabled:opacity-60",
+            compact && "h-8 px-3.5"
+          )}
         >
-          🔍 검색
+          {compact ? "주소 검색" : "🔍 검색"}
         </button>
       )}
     </div>

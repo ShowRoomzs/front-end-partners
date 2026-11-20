@@ -96,10 +96,10 @@ export function EditorToolbar(props: EditorToolbarProps) {
   ]
 
   return (
-    <div className="border-b bg-sz-n-50 p-2 relative overflow-visible">
+    <div className="border-b border-sz-n-300 bg-sz-n-50 p-2 relative overflow-visible">
       <div className="flex flex-wrap gap-1 items-center relative overflow-visible">
         {/* Text Formatting */}
-        <div className="flex gap-1 border-r pr-2">
+        <div className="flex gap-1 border-r border-sz-n-200 pr-2">
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBold().run()}
             isActive={editor.isActive("bold")}
@@ -134,7 +134,7 @@ export function EditorToolbar(props: EditorToolbarProps) {
         </div>
 
         {/* Headings */}
-        <div className="flex gap-1 border-r pr-2">
+        <div className="flex gap-1 border-r border-sz-n-200 pr-2">
           <ToolbarButton
             onClick={() =>
               editor.chain().focus().toggleHeading({ level: 1 }).run()
@@ -167,7 +167,7 @@ export function EditorToolbar(props: EditorToolbarProps) {
         </div>
 
         {/* Lists */}
-        <div className="flex gap-1 border-r pr-2">
+        <div className="flex gap-1 border-r border-sz-n-200 pr-2">
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBulletList().run()}
             isActive={editor.isActive("bulletList")}
@@ -186,7 +186,7 @@ export function EditorToolbar(props: EditorToolbarProps) {
         </div>
 
         {/* Alignment */}
-        <div className="flex gap-1 border-r pr-2">
+        <div className="flex gap-1 border-r border-sz-n-200 pr-2">
           <ToolbarButton
             onClick={() => editor.chain().focus().setTextAlign("left").run()}
             isActive={editor.isActive({ textAlign: "left" })}
@@ -213,7 +213,7 @@ export function EditorToolbar(props: EditorToolbarProps) {
         </div>
 
         {/* Quote */}
-        <div className="flex gap-1 border-r pr-2">
+        <div className="flex gap-1 border-r border-sz-n-200 pr-2">
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
             isActive={editor.isActive("blockquote")}
@@ -245,7 +245,7 @@ export function EditorToolbar(props: EditorToolbarProps) {
                     addLink()
                   }
                 }}
-                className="border rounded px-2 py-1 text-sm w-64"
+                className="h-8 w-64 rounded-[6px] border border-sz-n-300 bg-white px-2.5 text-[13px] text-sz-n-900 outline-none placeholder:text-sz-n-400 focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50"
                 autoFocus
               />
               <Button size="sm" onClick={addLink}>
@@ -263,7 +263,7 @@ export function EditorToolbar(props: EditorToolbarProps) {
         </div>
 
         {/* Image */}
-        <div className="flex gap-1 border-r pr-2">
+        <div className="flex gap-1 border-r border-sz-n-200 pr-2">
           <ToolbarButton onClick={onImageUpload} title="Insert Image">
             <ImageIcon className="w-4 h-4" />
           </ToolbarButton>
