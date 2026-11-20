@@ -43,7 +43,7 @@ const EXTRA_ROWS: Array<{ key: ExtraKey; label: string; sub: string }> = [
 ]
 
 const INPUT =
-  "h-[30px] w-full rounded-[6px] border border-sz-n-300 bg-white px-[9px] text-right text-[12px] text-sz-n-900 tabular-nums outline-none placeholder:text-sz-n-400 focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50 disabled:cursor-not-allowed disabled:bg-sz-n-50 disabled:text-sz-n-400"
+  "h-8 w-full rounded-[6px] border border-sz-n-300 bg-white px-[9px] text-right text-[13px] text-sz-n-900 tabular-nums outline-none placeholder:text-sz-n-400 focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50 disabled:cursor-not-allowed disabled:bg-sz-n-50 disabled:text-sz-n-400"
 
 /** 숫자만 받고 서버 한도(10억)를 넘는 입력은 받지 않는다 */
 function CostInput(props: {

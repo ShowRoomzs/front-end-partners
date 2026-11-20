@@ -30,8 +30,8 @@ function Input({
         data-slot="input"
         className={cn(
           // 디자인시스템 `.inp` — 13px · 글자 n-900 · 테두리 n-300 · 모서리 6px · 플레이스홀더 n-400.
-          // 높이는 상품 관리 시안(ui-partner-04 `.inp` 36px)을 따른다 — 32px 화면은 className으로 h-8을 준다
-          "file:text-foreground placeholder:text-sz-n-400 selection:bg-primary selection:text-primary-foreground h-9 w-full min-w-0 rounded-[6px] border border-sz-n-300 bg-white px-3 py-1 text-[13px] text-sz-n-900 transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-[13px] file:font-medium",
+          // 높이 32px · 좌우 10px(디자인시스템 `input` — 11-20 사용자 결정으로 시안 36px 대신 디자인시스템을 따른다)
+          "file:text-foreground placeholder:text-sz-n-400 selection:bg-primary selection:text-primary-foreground h-8 w-full min-w-0 rounded-[6px] border border-sz-n-300 bg-white px-2.5 py-1 text-[13px] text-sz-n-900 transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-[13px] file:font-medium",
           // 디자인시스템: 비활성 입력은 옅게가 아니라 회색으로 확실히 채운다
           "disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-sz-n-200 disabled:bg-sz-n-100 disabled:text-sz-n-500 disabled:opacity-100",
           "focus-visible:border-sz-accent-500 focus-visible:ring-sz-accent-50 focus-visible:ring-[3px]",

@@ -115,7 +115,7 @@ export default function OptionCombinationsForm(
                         <Input
                           type="text"
                           inputMode="numeric"
-                          className="mx-auto h-[30px] max-w-[80px]"
+                          className="mx-auto h-8 max-w-[80px]"
                           value={formatComma(stockValue)}
                           onChange={event => {
                             const next = parseDigits(
@@ -252,7 +252,7 @@ export default function OptionCombinationsForm(
                               type="text"
                               inputMode="numeric"
                               disabled={isLocked}
-                              className="mx-auto h-[30px] max-w-[90px]"
+                              className="mx-auto h-8 max-w-[90px]"
                               value={formatComma(combo.extraPrice)}
                               onChange={event => {
                                 const next = parseDigits(
@@ -271,7 +271,7 @@ export default function OptionCombinationsForm(
                           <Input
                             type="text"
                             inputMode="numeric"
-                            className="mx-auto h-[30px] max-w-[80px]"
+                            className="mx-auto h-8 max-w-[80px]"
                             value={formatComma(combo.stock)}
                             onChange={event => {
                               const next = parseDigits(

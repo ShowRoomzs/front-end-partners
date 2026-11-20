@@ -659,7 +659,7 @@ function RejectForm(props: {
           setReasonCode(event.target.value as ClaimRejectReason | "")
         }
         style={FORM_SELECT_CHEVRON_STYLE}
-        className={cn(SELECT_CLASS, "h-[34px] w-full")}
+        className={cn(SELECT_CLASS, "w-full")}
       >
         <option value="">선택하세요</option>
         {REJECT_REASON_OPTIONS.map(option => (
@@ -713,7 +713,7 @@ function RejectForm(props: {
               onChange={event =>
                 setRejectedQuantity(event.target.value.replace(/[^0-9]/g, ""))
               }
-              className={cn(INPUT_CLASS, "h-[30px] w-16 text-right")}
+              className={cn(INPUT_CLASS, "h-8 w-16 text-right")}
             />
             <span className="text-sz-n-500">/ {claimedQuantity}개</span>
           </span>
@@ -738,7 +738,7 @@ function RejectForm(props: {
           setLegalBasis(event.target.value as ClaimRejectLegalBasis | "")
         }
         style={FORM_SELECT_CHEVRON_STYLE}
-        className={cn(SELECT_CLASS, "h-[34px] w-full")}
+        className={cn(SELECT_CLASS, "w-full")}
       >
         <option value="">선택하세요</option>
         {REJECT_LEGAL_BASIS_OPTIONS.map(option => (
@@ -755,7 +755,7 @@ function RejectForm(props: {
           setFaultChangedToSeller(event.target.value === "SELLER")
         }
         style={FORM_SELECT_CHEVRON_STYLE}
-        className={cn(SELECT_CLASS, "h-[34px] w-full")}
+        className={cn(SELECT_CLASS, "w-full")}
       >
         <option value="KEEP">신청 때 귀책 유지 · 소비자 귀책</option>
         <option value="SELLER">브랜드 귀책으로 인정</option>
@@ -897,7 +897,7 @@ function ReshipBox(props: { detail: ClaimDetailResponse }) {
               setCarrier(event.target.value as DeliveryCarrier | "")
             }
             style={FORM_SELECT_CHEVRON_STYLE}
-            className="h-[30px] w-full cursor-pointer appearance-none rounded-[6px] border border-sz-n-300 bg-white pl-[9px] pr-[26px] text-[12px] outline-none focus:border-sz-accent-500"
+            className="h-8 w-full cursor-pointer appearance-none rounded-[6px] border border-sz-n-300 bg-white pl-2.5 pr-8 text-[13px] text-sz-n-900 outline-none focus:border-sz-accent-500"
           >
             <option value="">선택하세요</option>
             {CARRIER_OPTIONS.map(option => (
@@ -915,7 +915,7 @@ function ReshipBox(props: { detail: ClaimDetailResponse }) {
             placeholder="숫자만 입력"
             onChange={event => setTracking(digitsOnly(event.target.value))}
             className={cn(
-              "h-[30px] w-full rounded-[6px] border border-sz-n-300 bg-white px-[9px] text-[12px] tabular-nums outline-none focus:border-sz-accent-500",
+              "h-8 w-full rounded-[6px] border border-sz-n-300 bg-white px-[9px] text-[13px] tabular-nums outline-none focus:border-sz-accent-500",
               error && "border-sz-danger-text"
             )}
           />

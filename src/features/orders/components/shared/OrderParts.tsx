@@ -87,18 +87,18 @@ export function ActBtn(
   )
 }
 
-/** 시안 `.sel-sm` — 28px 기본, 조회 조건 줄에서는 32px로 키운다 */
-export function SelectSm(
-  props: SelectHTMLAttributes<HTMLSelectElement> & { tall?: boolean }
-) {
-  const { tall = false, className, style, ...rest } = props
+/**
+  목록 · 표 안 셀렉트 — 디자인시스템 `select`(32px · 13px · n-900).
+  시안 `.sel-sm`(28px · 12px)은 11-20 사용자 결정으로 디자인시스템 값으로 바꿨다.
+*/
+export function SelectSm(props: SelectHTMLAttributes<HTMLSelectElement>) {
+  const { className, style, ...rest } = props
   return (
     <select
       {...rest}
       style={{ ...SELECT_CHEVRON_STYLE, ...style }}
       className={cn(
-        "cursor-pointer appearance-none rounded-[6px] border border-sz-n-300 bg-white py-0 pl-2 text-[12px] text-sz-n-700 outline-none focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50 disabled:cursor-not-allowed disabled:bg-sz-n-100 disabled:text-sz-n-400",
-        tall ? "h-8 pr-[26px]" : "h-7 pr-[22px]",
+        "h-8 cursor-pointer appearance-none rounded-[6px] border border-sz-n-300 bg-white py-0 pl-2.5 pr-8 text-[13px] text-sz-n-900 outline-none focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50 disabled:cursor-not-allowed disabled:bg-sz-n-100 disabled:text-sz-n-400",
         className
       )}
     />

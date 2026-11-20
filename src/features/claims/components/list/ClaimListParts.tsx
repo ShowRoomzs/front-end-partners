@@ -27,7 +27,7 @@ import type { ReactNode } from "react"
 import { useNavigate } from "react-router-dom"
 
 export const SELECT_SM_CLASS =
-  "h-7 cursor-pointer appearance-none rounded-[6px] border border-sz-n-300 bg-white py-0 pl-2 pr-[22px] text-[12px] text-sz-n-700 outline-none focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50"
+  "h-8 cursor-pointer appearance-none rounded-[6px] border border-sz-n-300 bg-white py-0 pl-2.5 pr-8 text-[13px] text-sz-n-900 outline-none focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50"
 
 /** KPI 4칸 — 누르면 그 일을 하는 탭으로 간다. 「지연」은 전체 탭에서 경과 열로 찾는다 */
 const KPI_ITEMS: Array<{
@@ -330,7 +330,7 @@ export function ClaimFilters(props: {
             })
           }
           style={SELECT_CHEVRON_STYLE}
-          className={cn(SELECT_SM_CLASS, "h-8 pr-[26px]")}
+          className={SELECT_SM_CLASS}
         >
           <option value="">전체</option>
           {CLAIM_REASON_OPTIONS.map(option => (

@@ -119,7 +119,6 @@ export function OrderQueryForm(props: {
           조회 기준
         </span>
         <SelectSm
-          tall
           aria-label="조회 기준"
           value={localParams.dateBasis}
           onChange={event =>
@@ -208,7 +207,6 @@ export function OrderQueryForm(props: {
           검색
         </span>
         <SelectSm
-          tall
           aria-label="검색 대상"
           value={localParams.searchType}
           onChange={event =>

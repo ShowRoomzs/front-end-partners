@@ -130,11 +130,12 @@ export default function Editor(props: EditorProps) {
       </div>
 
       {isHtmlMode ? (
+        // HTML 모드 — 디자인시스템에 코드 입력칸 정의가 없어 입력칸 서체(Pretendard 13px)를 그대로 쓴다(11-20 사용자 결정)
         <textarea
           value={htmlValue}
           onChange={e => handleHtmlChange(e.target.value)}
           disabled={disabled}
-          className="w-full min-h-[300px] p-4 font-mono text-sm focus:outline-none disabled:bg-sz-n-50 disabled:text-sz-n-500"
+          className="block min-h-[300px] w-full resize-y px-3.5 py-3 text-[13px] leading-[1.65] text-sz-n-900 placeholder:text-sz-n-400 focus:outline-none disabled:bg-sz-n-50 disabled:text-sz-n-500"
           placeholder="HTML 코드를 입력하세요..."
         />
       ) : (

@@ -548,7 +548,7 @@ export default function OnboardingGatePage() {
           type="submit"
           disabled={!isValid || isSubmitting}
           className={cn(
-            "flex h-10 w-full items-center justify-center gap-2 rounded-[6px] text-[13px] font-medium transition-colors",
+            "flex h-10 w-full items-center justify-center gap-2 rounded-[6px] text-[12px] font-medium transition-colors",
             !isValid || isSubmitting
               ? "cursor-not-allowed border border-sz-n-200 bg-sz-n-100 text-sz-n-400"
               : "bg-sz-auth-action text-white hover:bg-sz-auth-action-hover"

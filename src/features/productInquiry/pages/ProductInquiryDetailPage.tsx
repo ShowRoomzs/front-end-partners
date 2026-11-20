@@ -525,7 +525,7 @@ export default function ProductInquiryDetailPage() {
                 <button
                   type="button"
                   onClick={() => setIsDeleteOpen(true)}
-                  className="inline-flex h-8 w-full items-center justify-center rounded-[6px] border border-[#E9C9C9] bg-white px-3.5 text-[12px] font-medium text-sz-danger-text hover:bg-sz-danger-bg"
+                  className="inline-flex h-8 w-full items-center justify-center rounded-[6px] bg-sz-danger-text px-3.5 text-[12px] font-medium text-white hover:bg-[#8f2828]"
                 >
                   {isRejected ? "문의 삭제 재요청" : "문의 삭제 요청"}
                 </button>

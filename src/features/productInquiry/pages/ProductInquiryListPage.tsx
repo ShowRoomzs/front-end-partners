@@ -212,7 +212,7 @@ export default function ProductInquiryListPage() {
                 handleSortChange(event.target.value as InquirySort)
               }
               style={SELECT_CHEVRON_STYLE}
-              className="h-7 appearance-none rounded-[6px] border border-sz-n-300 bg-white py-0 pl-2 pr-[22px] text-[12px] text-sz-n-700 outline-none focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50"
+              className="h-8 appearance-none rounded-[6px] border border-sz-n-300 bg-white py-0 pl-2.5 pr-8 text-[13px] text-sz-n-900 outline-none focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50"
             >
               {INQUIRY_SORT_OPTIONS.map(option => (
                 <option key={option.value} value={option.value}>
@@ -226,7 +226,7 @@ export default function ProductInquiryListPage() {
               value={params.size}
               onChange={event => handleSizeChange(Number(event.target.value))}
               style={SELECT_CHEVRON_STYLE}
-              className="h-7 appearance-none rounded-[6px] border border-sz-n-300 bg-white py-0 pl-2 pr-[22px] text-[12px] text-sz-n-700 outline-none focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50"
+              className="h-8 appearance-none rounded-[6px] border border-sz-n-300 bg-white py-0 pl-2.5 pr-8 text-[13px] text-sz-n-900 outline-none focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50"
             >
               {INQUIRY_PAGE_SIZES.map(size => (
                 <option key={size} value={size}>

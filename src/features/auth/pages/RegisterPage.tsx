@@ -441,7 +441,7 @@ export default function RegisterPage() {
       onClick={onClick}
       disabled={disabled || loading}
       className={cn(
-        "flex h-10 flex-1 items-center justify-center gap-2 rounded-[6px] text-[13px] font-medium transition-colors",
+        "flex h-10 flex-1 items-center justify-center gap-2 rounded-[6px] text-[12px] font-medium transition-colors",
         loading
           ? "cursor-progress bg-sz-n-700 text-white"
           : disabled
@@ -461,7 +461,7 @@ export default function RegisterPage() {
       type="button"
       onClick={onClick}
       disabled={submitting}
-      className="h-10 flex-[0_0_120px] rounded-[6px] border border-sz-n-300 bg-white text-[13px] font-medium text-sz-n-700 hover:enabled:bg-sz-n-100 disabled:cursor-not-allowed disabled:opacity-60"
+      className="h-10 flex-[0_0_120px] rounded-[6px] border border-sz-n-300 bg-white text-[12px] font-medium text-sz-n-700 hover:enabled:bg-sz-n-100 disabled:cursor-not-allowed disabled:opacity-60"
     >
       {label}
     </button>
@@ -509,7 +509,7 @@ export default function RegisterPage() {
           <button
             type="button"
             onClick={() => navigate("/login")}
-            className="h-10 w-full rounded-[6px] bg-sz-auth-action text-[13px] font-medium text-white hover:bg-sz-auth-action-hover"
+            className="h-10 w-full rounded-[6px] bg-sz-auth-action text-[12px] font-medium text-white hover:bg-sz-auth-action-hover"
           >
             로그인으로 이동
           </button>
@@ -931,7 +931,7 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={() => setViewingTerm(null)}
-                className="h-10 w-full rounded-[6px] bg-sz-auth-action text-[13px] font-medium text-white hover:bg-sz-auth-action-hover"
+                className="h-10 w-full rounded-[6px] bg-sz-auth-action text-[12px] font-medium text-white hover:bg-sz-auth-action-hover"
               >
                 확인
               </button>

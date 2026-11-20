@@ -31,11 +31,12 @@ import { useNavigate } from "react-router-dom"
 
 const PAGE_SIZE_OPTIONS = [20, 50, 100]
 
+// 디자인시스템 `select` 갈매기표(시안 `.sel-sm` 채운 삼각형 대신, 11-20 사용자 결정)
 const SELECT_CHEVRON_STYLE = {
   backgroundImage:
-    "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='5'><path d='M0 0L4.5 5L9 0Z' fill='%237B7F89'/></svg>\")",
+    "url(\"data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%235B5F68' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")",
   backgroundRepeat: "no-repeat",
-  backgroundPosition: "right 8px center",
+  backgroundPosition: "right 10px center",
 }
 
 const EMPTY_DISPLAY_COUNTS = {
@@ -238,7 +239,7 @@ export default function ProductListPage(props: ProductListPageProps) {
                 )
               }
               style={SELECT_CHEVRON_STYLE}
-              className="h-7 appearance-none rounded-[6px] border border-sz-n-300 bg-white pl-2 pr-[22px] text-[12px] text-sz-n-700 outline-none"
+              className="h-8 appearance-none rounded-[6px] border border-sz-n-300 bg-white pl-2.5 pr-8 text-[13px] text-sz-n-900 outline-none"
             >
               {PRODUCT_SORT_OPTIONS.map(option => (
                 <option key={option.value} value={option.value}>
@@ -252,7 +253,7 @@ export default function ProductListPage(props: ProductListPageProps) {
                 updateParam("size", Number(event.target.value))
               }
               style={SELECT_CHEVRON_STYLE}
-              className="h-7 appearance-none rounded-[6px] border border-sz-n-300 bg-white pl-2 pr-[22px] text-[12px] text-sz-n-700 outline-none"
+              className="h-8 appearance-none rounded-[6px] border border-sz-n-300 bg-white pl-2.5 pr-8 text-[13px] text-sz-n-900 outline-none"
             >
               {PAGE_SIZE_OPTIONS.map(size => (
                 <option key={size} value={size}>

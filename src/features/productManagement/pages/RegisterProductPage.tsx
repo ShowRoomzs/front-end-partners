@@ -540,13 +540,8 @@ function ProductFormPage() {
                   >
                     <Button
                       type="button"
-                      variant="outline"
-                      size="sm"
-                      /*
-                        시안 `.btn-danger`는 흰 배경 + 빨간 테두리·글자다(solid 아님).
-                        solid 빨강인 destructive variant와는 다른 물건이라 여기서만 덧칠한다.
-                      */
-                      className="border-sz-danger-bg px-3.5 text-[12px] text-sz-danger-text hover:bg-sz-danger-bg hover:text-sz-danger-text"
+                      // 디자인시스템 `.btn-danger` — 채운 빨강(시안의 흰 배경 버전 대신, 11-20 사용자 결정)
+                      variant="destructive"
                       disabled={deleteBlocked}
                       onClick={handleClickDelete}
                     >

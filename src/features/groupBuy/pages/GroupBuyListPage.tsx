@@ -30,7 +30,7 @@ import { useCallback, useMemo } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 
 const SELECT_SM_CLASS =
-  "h-7 appearance-none rounded-[6px] border border-sz-n-300 bg-white py-0 pl-2 pr-[22px] text-[12px] text-sz-n-700 outline-none focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50"
+  "h-8 appearance-none rounded-[6px] border border-sz-n-300 bg-white py-0 pl-2.5 pr-8 text-[13px] text-sz-n-900 outline-none focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50"
 
 /**
  * A1~A3 — 공구 목록(파트너센터).

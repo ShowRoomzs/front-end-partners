@@ -24,7 +24,7 @@ interface TimeSelectProps {
 export default function TimeSelect(props: TimeSelectProps) {
   const { label, hour, minute, onChange } = props
 
-  const selectClass = cn(SELECT_CLASS, "h-[34px] w-[70px] pr-6")
+  const selectClass = cn(SELECT_CLASS, "w-[70px] pr-6")
 
   return (
     <div className="mt-4 flex items-center justify-between gap-3 border-t border-sz-n-100 pt-[14px]">

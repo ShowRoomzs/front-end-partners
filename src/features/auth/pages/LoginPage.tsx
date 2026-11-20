@@ -152,7 +152,7 @@ export default function LoginPage() {
           type="submit"
           disabled={isSubmitting}
           className={cn(
-            "mt-6 flex h-10 w-full items-center justify-center gap-2 rounded-[6px] text-[13px] font-medium text-white transition-colors",
+            "mt-6 flex h-10 w-full items-center justify-center gap-2 rounded-[6px] text-[12px] font-medium text-white transition-colors",
             isSubmitting
               ? "cursor-progress bg-sz-n-700"
               : "bg-sz-auth-action hover:bg-sz-auth-action-hover"

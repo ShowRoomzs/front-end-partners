@@ -208,7 +208,7 @@ export default function RegisterCreatorPage() {
               render={({ field }) => (
                 <Select onValueChange={field.onChange} value={field.value}>
                   <SelectTrigger
-                    className={`w-full h-10 ${errors.snsType ? "border-sz-danger-text" : ""}`}
+                    className={`w-full ${errors.snsType ? "border-sz-danger-text" : ""}`}
                   >
                     <SelectValue placeholder="현재 팔로워가 가장 많은 플랫폼을 선택해 주세요" />
                   </SelectTrigger>
