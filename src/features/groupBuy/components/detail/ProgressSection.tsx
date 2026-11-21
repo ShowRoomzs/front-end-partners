@@ -15,7 +15,7 @@ import {
 } from "@/features/groupBuy/components/shared/GbParts"
 import {
   EMERGENCY_REASON_LABEL,
-  PAYOUT_FLOW_TEXT,
+  payoutFlowText,
   PLATFORM_FEE_RATE,
   SETTLEMENT_WATCH_DAYS_FALLBACK,
   SUSPENSION_CLAUSE_TEXT,
@@ -32,6 +32,10 @@ import {
   minQuantityText,
 } from "@/features/groupBuy/utils/view"
 import { parseServerDateTime } from "@/common/utils/formatDate"
+import {
+  businessDaysText,
+  usePolicyValues,
+} from "@/common/hooks/usePolicyValues"
 import type { ReactNode } from "react"
 
 /*
@@ -565,6 +569,7 @@ export function ClosedProgressCard(props: { detail: Detail }) {
   const { detail } = props
   const { groupBuy, timeline, orderClosure, closure } = detail
   const unclosed = orderClosure?.unclosedCount
+  const { data: policy } = usePolicyValues()
 
   if (groupBuy.status === "SUSPENDED") {
     const isAdmin =
@@ -709,11 +714,17 @@ export function ClosedProgressCard(props: { detail: Detail }) {
         </Notice>
       )}
       <GbStepper steps={steps} />
-      {/* 시안 B5 · B5d 공통(기-10) — 「영업일 5일 안에 이체」는 삭제됐고 지급 영업일은 [정책값 미정] */}
+      {/* 시안 B5 · B5d 공통(기-10) — 「영업일 5일 안에 이체」는 삭제됐고 영업일은 서버 정책값 */}
       <Notice tone="info" className="mt-4">
         <B>{unclosedText}의 배송·반품·교환이 모두 끝나면 정산이 시작됩니다.</B>{" "}
-        <B>{PAYOUT_FLOW_TEXT}</B> 순서로 진행됩니다. 종료 후{" "}
-        <B>{watchDays}일이 지나도 남아 있으면</B> 운영자가 확인합니다.
+        <B>
+          {payoutFlowText(
+            businessDaysText(policy?.settlementReviewBusinessDays),
+            businessDaysText(policy?.settlementPayoutBusinessDays)
+          )}
+        </B>{" "}
+        순서로 진행됩니다. 종료 후 <B>{watchDays}일이 지나도 남아 있으면</B>{" "}
+        운영자가 확인합니다.
       </Notice>
     </DetailCard>
   )

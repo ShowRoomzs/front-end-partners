@@ -11,7 +11,6 @@ import {
 import { FORM_SELECT_CHEVRON_STYLE } from "@/features/contracts/constants/params"
 import {
   CARRIER_OPTIONS,
-  INSPECT_DUE_LABEL,
   OPERATOR_THREAD_PATH,
   REJECT_CONSUMER_MESSAGE_MAX,
   REJECT_LEGAL_BASIS_OPTIONS,
@@ -224,9 +223,7 @@ function DetailBody(props: { detail: ClaimDetailResponse }) {
         toast.error(result.skipped[0].message)
         return
       }
-      toast.success(
-        `입고 확인했습니다. ${INSPECT_DUE_LABEL} 안에 검수를 완료해 주세요.`
-      )
+      toast.success("입고 확인했습니다. 검수 기한 안에 검수를 완료해 주세요.")
     } catch {
       // 토스트는 apiInstance가 띄운다
     }
@@ -329,7 +326,7 @@ function DetailBody(props: { detail: ClaimDetailResponse }) {
                   <b className="font-semibold">
                     {formatFullDateTime(summary.inspectDueAt)}
                   </b>
-                  까지 · {INSPECT_DUE_LABEL}
+                  까지
                 </>
               ) : detail.inspection?.autoReceived ? (
                 "자동 입고"
@@ -404,9 +401,9 @@ function DetailBody(props: { detail: ClaimDetailResponse }) {
               입고 확인
             </Btn>
             <Hint>
-              상품이 도착했다면 입고 확인을 눌러 주세요. 이 순간{" "}
-              <b>검수 기한(입고 확인 + 2영업일)</b>이 발급됩니다. 되돌릴 수
-              없습니다.
+              상품이 도착했다면 입고 확인을 눌러 주세요. 되돌릴 수 없습니다.{" "}
+              <b>검수 기한은 반품을 돌려받은 날부터</b> 세고, 기한 안에 판정이
+              없으면 반품은 자동 승인됩니다.
             </Hint>
           </MBox>
         )}
