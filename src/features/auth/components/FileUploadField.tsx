@@ -101,7 +101,7 @@ export function FileUploadField({
           type="button"
           disabled={disabled || exempt || uploading}
           onClick={() => inputRef.current?.click()}
-          className="h-8 whitespace-nowrap rounded-[6px] border border-sz-n-300 bg-white px-3.5 text-[11px] font-medium text-sz-n-700 hover:enabled:bg-sz-n-100 disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-8 whitespace-nowrap rounded-[6px] border border-sz-n-300 bg-white px-3.5 text-[12px] font-medium text-sz-n-700 hover:enabled:bg-sz-n-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {uploaded ? "다시 선택" : "파일 선택"}
         </button>

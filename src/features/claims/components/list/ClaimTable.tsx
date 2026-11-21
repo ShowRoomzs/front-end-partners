@@ -47,12 +47,12 @@ const TD =
 const NOTE = "mt-[3px] block text-[11px] text-sz-n-600"
 const DIM = "text-sz-n-300"
 const ACT_BTN =
-  "inline-flex h-[26px] cursor-pointer items-center justify-center whitespace-nowrap rounded-[6px] border px-[11px] text-[11px] font-medium disabled:cursor-not-allowed disabled:border-sz-n-200 disabled:bg-sz-n-100 disabled:text-sz-n-400"
+  "inline-flex h-7 cursor-pointer items-center justify-center whitespace-nowrap rounded-[6px] border px-3.5 text-[11px] font-medium disabled:cursor-not-allowed disabled:border-sz-n-200 disabled:bg-sz-n-100 disabled:text-sz-n-400"
 const ACT_PRIMARY = `${ACT_BTN} border-sz-accent-500 bg-sz-accent-500 text-white hover:border-sz-accent-600 hover:bg-sz-accent-600`
 const GRID_SELECT =
-  "h-[30px] w-full cursor-pointer appearance-none rounded-[6px] border border-sz-n-300 bg-white pl-2 pr-6 text-[12px] text-sz-n-900 outline-none focus:border-sz-accent-500"
+  "h-8 w-full cursor-pointer appearance-none rounded-[6px] border border-sz-n-300 bg-white pl-2.5 pr-8 text-[13px] text-sz-n-900 outline-none focus:border-sz-accent-500"
 const GRID_INPUT =
-  "h-[30px] w-full rounded-[6px] border border-sz-n-300 bg-white px-[9px] text-[12px] tabular-nums text-sz-n-900 outline-none placeholder:text-sz-n-400 focus:border-sz-accent-500"
+  "h-8 w-full rounded-[6px] border border-sz-n-300 bg-white px-[9px] text-[13px] tabular-nums text-sz-n-900 outline-none placeholder:text-sz-n-400 focus:border-sz-accent-500"
 
 /** 너비 없는(남는 폭을 받는) 열이 좁은 화면에서도 지키는 최소 폭 */
 const FLEX_COL_MIN_WIDTH = 100

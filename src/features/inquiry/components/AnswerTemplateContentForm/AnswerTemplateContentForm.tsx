@@ -25,7 +25,7 @@ export default function AnswerTemplateContentForm(
             value={field.value}
             onChange={field.onChange}
             onBlur={field.onBlur}
-            className="min-h-[220px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none"
+            className="min-h-[220px] w-full resize-y rounded-[6px] border border-sz-n-300 bg-white px-3 py-2 text-[13px] leading-[1.6] text-sz-n-900 outline-none placeholder:text-sz-n-400 focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50"
             placeholder="답변 내용을 입력해 주세요."
           />
         </FormItem>

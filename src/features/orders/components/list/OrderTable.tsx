@@ -345,7 +345,7 @@ function buildColumns(
             return (
               <SelectSm
                 aria-label={`${row.orderNumber} 택배사`}
-                className="h-[30px] w-full pr-6 text-sz-n-900"
+                className="w-full"
                 value={draft?.carrier ?? ""}
                 onClick={event => event.stopPropagation()}
                 onChange={event =>
@@ -387,7 +387,7 @@ function buildColumns(
                   }
                   onBlur={() => ctx.onInvoiceBlur(row)}
                   className={cn(
-                    "h-[30px] w-full rounded-[6px] border bg-white px-[9px] text-[12px] tabular-nums text-sz-n-900 outline-none placeholder:text-sz-n-400 focus:ring-[3px] focus:ring-sz-accent-50",
+                    "h-8 w-full rounded-[6px] border bg-white px-[9px] text-[13px] tabular-nums text-sz-n-900 outline-none placeholder:text-sz-n-400 focus:ring-[3px] focus:ring-sz-accent-50",
                     error
                       ? "border-sz-danger-text"
                       : "border-sz-n-300 focus:border-sz-accent-500"
@@ -833,7 +833,7 @@ function TrackingCell(props: { row: OrderListItem; ctx: OrderTableContext }) {
             )
           }
           className={cn(
-            "h-[30px] w-full rounded-[6px] border bg-white px-[9px] text-[12px] tabular-nums text-sz-n-900 outline-none focus:ring-[3px] focus:ring-sz-accent-50",
+            "h-8 w-full rounded-[6px] border bg-white px-[9px] text-[13px] tabular-nums text-sz-n-900 outline-none focus:ring-[3px] focus:ring-sz-accent-50",
             edit.error
               ? "border-sz-danger-text"
               : "border-sz-n-300 focus:border-sz-accent-500"

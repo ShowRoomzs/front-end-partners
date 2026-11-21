@@ -12,17 +12,20 @@ export const BTN_BASE =
 export const BTN_PRIMARY = `${BTN_BASE} bg-sz-accent-500 text-white hover:bg-sz-accent-600 disabled:bg-sz-n-200 disabled:text-sz-n-400`
 export const BTN_SECONDARY = `${BTN_BASE} border border-sz-n-300 bg-white text-sz-n-900 hover:bg-sz-n-100 disabled:border-sz-n-200 disabled:bg-sz-n-100 disabled:text-sz-n-400`
 export const BTN_GHOST = `${BTN_BASE} bg-transparent text-sz-n-600 hover:bg-sz-n-100`
-/** 시안 `.btn-danger` — 흰 배경 + 위험색 글자(테두리 #E9C9C9). 종결·거절처럼 되돌릴 수 없는 액션 */
-export const BTN_DANGER = `${BTN_BASE} border border-[#E9C9C9] bg-white text-sz-danger-text hover:bg-sz-danger-bg disabled:border-sz-n-200 disabled:bg-sz-n-100 disabled:text-sz-n-400`
+/**
+  디자인시스템 `.btn-danger` — 채운 위험색(#B23434 · 호버 #8F2828). 종결·거절처럼 되돌릴 수 없는 액션.
+  파트너 시안은 흰 배경 + 빨간 글자였지만 11-20 사용자 결정으로 디자인시스템을 따른다.
+*/
+export const BTN_DANGER = `${BTN_BASE} bg-sz-danger-text text-white hover:bg-[#8f2828] disabled:border disabled:border-sz-n-200 disabled:bg-sz-n-100 disabled:text-sz-n-400`
 /** 시안 `.btn-del` — 작성 내용 삭제(회색 테두리 · 위험색 글자) */
 export const BTN_DELETE = `${BTN_BASE} border border-sz-n-300 bg-white text-sz-danger-text hover:border-[#E9C9C9] hover:bg-sz-danger-bg`
-/** 채운 위험색 — 확인 모달의 [삭제]·[거절] 확정 버튼(디자인시스템 `.btn-danger`) */
-export const BTN_DANGER_SOLID = `${BTN_BASE} bg-sz-danger-text text-white hover:bg-[#8f2828] disabled:bg-sz-n-200 disabled:text-sz-n-400`
+/** 확인 모달의 [삭제]·[거절] 확정 버튼 — 지금은 `BTN_DANGER`와 같은 값이다 */
+export const BTN_DANGER_SOLID = BTN_DANGER
 export const BTN_LG = "h-[38px] px-5 text-[13px]"
 
-/** 시안 `.inp` — 36px · 13px · 패딩 8/12 · 포커스 링 */
+/** 디자인시스템 `input` — 32px · 13px · 패딩 6/10 · 포커스 링(시안 `.inp` 36px 대신, 11-20 사용자 결정) */
 export const INPUT_CLASS =
-  "h-9 rounded-[6px] border border-sz-n-300 bg-white px-3 py-2 text-[13px] text-sz-n-900 outline-none placeholder:text-sz-n-400 focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50 disabled:cursor-not-allowed disabled:bg-sz-n-100 disabled:text-sz-n-500"
+  "h-8 rounded-[6px] border border-sz-n-300 bg-white px-2.5 py-1.5 text-[13px] text-sz-n-900 outline-none placeholder:text-sz-n-400 focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50 disabled:cursor-not-allowed disabled:bg-sz-n-100 disabled:text-sz-n-500"
 export const INPUT_ERROR_CLASS = "border-sz-danger-text"
 /** 시안 `.sel` — `.inp`에 갈매기표를 얹은 셀렉트 */
 export const SELECT_CLASS = `${INPUT_CLASS} cursor-pointer appearance-none pr-[30px]`

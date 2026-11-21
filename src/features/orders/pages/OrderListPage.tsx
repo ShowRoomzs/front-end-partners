@@ -858,7 +858,6 @@ export default function OrderListPage() {
             택배사 일괄 적용
           </span>
           <SelectSm
-            tall
             aria-label="택배사 일괄 적용"
             value={bulkCarrier}
             onChange={event =>

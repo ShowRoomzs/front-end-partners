@@ -31,6 +31,7 @@ import {
   TerminationRequestModal,
 } from "@/features/groupBuy/components/modals/GroupBuyModals"
 import {
+  GROUP_BUY_INITIAL_PARAMS,
   GROUP_BUY_LIST_PATH,
   TERMINATION_TEXT,
 } from "@/features/groupBuy/constants/params"
@@ -81,7 +82,8 @@ export default function GroupBuyDetailPage() {
     return {
       tab: query.get("tab") ?? undefined,
       keyword: query.get("keyword") || undefined,
-      sort: query.get("sort") ?? undefined,
+      // 목록 없이 바로 들어온 경우(알림 등)도 목록 기본 정렬로 이웃을 계산한다 — 서버 기본값은 시작일순이다
+      sort: query.get("sort") ?? GROUP_BUY_INITIAL_PARAMS.sort,
     }
   }, [location.search])
 

@@ -608,7 +608,8 @@ function ItemsBox(props: { detail: OrderDetailResponse }) {
         </tbody>
       </table>
 
-      <div className="mt-3 border-t border-sz-n-200 pt-3">
+      {/* 결제 금액 명세 — 디자인시스템 v1.3 `.calc`의 선 · 색(n-100 선 · 총계 위 1.5px n-300 · 16px/600). 행 간격은 시안(5px · 11-21 사용자 결정) */}
+      <div className="mt-3 border-t border-sz-n-200 pt-3 [&>div:first-child]:border-t-0">
         <SumRow
           label="상품 금액"
           value={formatWon(amounts.productTotal)}
@@ -664,7 +665,7 @@ function ItemsBox(props: { detail: OrderDetailResponse }) {
             tone="minus"
           />
         )}
-        <div className="mt-1.5 flex justify-between border-t border-sz-n-200 pt-2.5 text-[16px] font-semibold text-sz-n-900">
+        <div className="mt-1.5 flex justify-between border-t-[1.5px] border-sz-n-300 pt-2.5 text-[16px] font-semibold text-sz-n-900">
           <span>
             {isWholeCancelled || amounts.cancelledAmount > 0
               ? "실 결제금액"
@@ -694,7 +695,7 @@ function SumRow(props: {
   return (
     <div
       className={cn(
-        "flex justify-between py-[5px] text-[12px]",
+        "flex justify-between border-t border-sz-n-100 py-[5px] text-[12px]",
         tone === "warn" && "text-sz-warning-text"
       )}
     >
@@ -705,13 +706,11 @@ function SumRow(props: {
       <span
         className={cn(
           "tabular-nums",
-          tone === "minus"
-            ? "text-sz-danger-text"
-            : muted
-              ? "text-sz-n-400"
-              : tone === "warn"
-                ? undefined
-                : "text-sz-n-900"
+          muted
+            ? "text-sz-n-400"
+            : tone === "warn"
+              ? undefined
+              : "text-sz-n-900"
         )}
       >
         {value}
@@ -1311,7 +1310,7 @@ function InlineInvoice(props: {
       <label className="mb-[3px] block text-[11px] text-sz-n-600">택배사</label>
       <SelectSm
         aria-label="택배사"
-        className="h-[30px] w-full pr-[26px] text-sz-n-900"
+        className="w-full"
         value={carrier}
         onChange={event =>
           onCarrierChange(event.target.value as DeliveryCarrier | "")
@@ -1341,7 +1340,7 @@ function InlineInvoice(props: {
           }
         }}
         className={cn(
-          "h-[30px] w-full rounded-[6px] border bg-white px-[9px] text-[12px] tabular-nums text-sz-n-900 outline-none placeholder:text-sz-n-400 focus:ring-[3px] focus:ring-sz-accent-50",
+          "h-8 w-full rounded-[6px] border bg-white px-[9px] text-[13px] tabular-nums text-sz-n-900 outline-none placeholder:text-sz-n-400 focus:ring-[3px] focus:ring-sz-accent-50",
           error
             ? "border-sz-danger-text"
             : "border-sz-n-300 focus:border-sz-accent-500"
@@ -1360,16 +1359,12 @@ function InlineInvoice(props: {
         </div>
       )}
       <div className="mt-3 flex gap-1.5">
-        <Btn
-          variant="ghost"
-          className="h-7 flex-1 text-[11px]"
-          onClick={onCancel}
-        >
+        <Btn variant="ghost" className="h-7 flex-1 px-3" onClick={onCancel}>
           취소
         </Btn>
         <Btn
           variant="primary"
-          className="h-7 flex-1 text-[11px]"
+          className="h-7 flex-1 px-3"
           disabled={
             !carrier || !trackingNumber || Boolean(error) || submitDisabled
           }

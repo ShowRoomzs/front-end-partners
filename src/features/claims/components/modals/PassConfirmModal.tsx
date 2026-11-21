@@ -124,7 +124,7 @@ export default function PassConfirmModal(props: {
               setFaultToSeller(event.target.value === "SELLER")
             }
             style={FORM_SELECT_CHEVRON_STYLE}
-            className={cn(SELECT_CLASS, "h-[34px] w-full")}
+            className={cn(SELECT_CLASS, "w-full")}
           >
             <option value="KEEP">
               신청 때 귀책 유지 · 소비자 귀책({summary.reasonLabel})

@@ -441,7 +441,7 @@ export default function RegisterPage() {
       onClick={onClick}
       disabled={disabled || loading}
       className={cn(
-        "flex h-10 flex-1 items-center justify-center gap-2 rounded-[6px] text-[13px] font-medium transition-colors",
+        "flex h-[38px] flex-1 items-center justify-center gap-2 rounded-[6px] px-5 text-[13px] font-medium transition-colors",
         loading
           ? "cursor-progress bg-sz-n-700 text-white"
           : disabled
@@ -461,7 +461,7 @@ export default function RegisterPage() {
       type="button"
       onClick={onClick}
       disabled={submitting}
-      className="h-10 flex-[0_0_120px] rounded-[6px] border border-sz-n-300 bg-white text-[13px] font-medium text-sz-n-700 hover:enabled:bg-sz-n-100 disabled:cursor-not-allowed disabled:opacity-60"
+      className="h-[38px] flex-[0_0_120px] rounded-[6px] border border-sz-n-300 bg-white text-[13px] font-medium text-sz-n-700 hover:enabled:bg-sz-n-100 disabled:cursor-not-allowed disabled:opacity-60"
     >
       {label}
     </button>
@@ -497,7 +497,7 @@ export default function RegisterPage() {
             <InfoRow label="결과 안내" value="가입 시 등록한 이메일" />
             <InfoRow label="처리 예상" value="영업일 기준 3~5일 이내" />
           </div>
-          <div className="mb-5 flex gap-2 rounded-[6px] bg-sz-info-bg px-3.5 py-3 text-left text-[12px] leading-relaxed text-sz-n-700">
+          <div className="mb-5 flex gap-2 text-left rounded-[6px] bg-sz-info-bg px-[13px] py-[11px] text-[11px] leading-[1.6] text-sz-info-text [&_b]:font-semibold">
             <span className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-sz-info-text text-[10px] font-bold text-white">
               i
             </span>
@@ -509,7 +509,7 @@ export default function RegisterPage() {
           <button
             type="button"
             onClick={() => navigate("/login")}
-            className="h-10 w-full rounded-[6px] bg-sz-auth-action text-[13px] font-medium text-white hover:bg-sz-auth-action-hover"
+            className="h-[38px] w-full rounded-[6px] bg-sz-auth-action px-5 text-[13px] font-medium text-white hover:bg-sz-auth-action-hover"
           >
             로그인으로 이동
           </button>
@@ -708,7 +708,7 @@ export default function RegisterPage() {
               disabled={submitting}
             />
             {isSimplified && (
-              <div className="mb-4 flex gap-2 rounded-[6px] bg-sz-info-bg px-3 py-2.5 text-[11px] leading-relaxed text-sz-n-700">
+              <div className="mb-4 flex gap-2 rounded-[6px] bg-sz-info-bg px-[13px] py-[11px] text-[11px] leading-[1.6] text-sz-info-text [&_b]:font-semibold">
                 <span>ⓘ</span>
                 <span>
                   <b>간이과세자</b>는 통신판매업 신고 면제 대상 → 신고증
@@ -787,7 +787,7 @@ export default function RegisterPage() {
             <div className="mt-6" />
             <SectionTitle>정산 정보</SectionTitle>
             {isCorporate && (
-              <div className="mb-4 flex gap-2 rounded-[6px] bg-sz-warning-bg px-3 py-2.5 text-[11px] font-medium leading-relaxed text-sz-warning-text">
+              <div className="mb-4 flex gap-2 rounded-[6px] bg-sz-warning-bg px-[13px] py-[11px] text-[11px] leading-[1.6] text-sz-warning-text [&_b]:font-semibold">
                 <span>⚠</span>
                 <span>
                   법인사업자는 반드시 <b>법인 명의 계좌</b>만 등록 가능합니다.
@@ -931,7 +931,7 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={() => setViewingTerm(null)}
-                className="h-10 w-full rounded-[6px] bg-sz-auth-action text-[13px] font-medium text-white hover:bg-sz-auth-action-hover"
+                className="h-[38px] w-full rounded-[6px] bg-sz-auth-action px-5 text-[13px] font-medium text-white hover:bg-sz-auth-action-hover"
               >
                 확인
               </button>

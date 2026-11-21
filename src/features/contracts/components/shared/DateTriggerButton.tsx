@@ -28,7 +28,7 @@ export default function DateTriggerButton(props: DateTriggerButtonProps) {
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "inline-flex h-9 min-w-[260px] items-center gap-2 rounded-[6px] border border-sz-n-300 bg-white px-3 text-[13px] text-sz-n-900",
+        "inline-flex h-8 min-w-[260px] items-center gap-2 rounded-[6px] border border-sz-n-300 bg-white px-3 text-[13px] text-sz-n-900",
         !disabled && "cursor-pointer hover:border-sz-accent-500",
         value === null && "text-sz-n-400",
         disabled &&

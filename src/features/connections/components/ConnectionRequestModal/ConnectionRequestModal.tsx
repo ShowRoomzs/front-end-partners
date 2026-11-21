@@ -128,7 +128,7 @@ export default function ConnectionRequestModal(
                 type="button"
                 onClick={() => setTab(item.value)}
                 className={cn(
-                  "flex-1 py-[9px] text-center text-[12px]",
+                  "inline-flex h-8 flex-1 items-center justify-center border-r border-sz-n-300 px-3 text-[12px] last:border-r-0",
                   tab === item.value
                     ? "bg-sz-accent-500 font-medium text-white"
                     : "bg-white text-sz-n-600 hover:bg-sz-n-100"

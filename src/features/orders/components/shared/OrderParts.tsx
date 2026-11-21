@@ -66,7 +66,7 @@ export function Cb(props: {
   )
 }
 
-/** 시안 `.act-btn` — 목록 관리 열의 26px 버튼 */
+/** 디자인시스템 v1.3 `.act-btn` — 목록 관리 열의 28px 버튼(11px/500 · 좌우 14) */
 export function ActBtn(
   props: ButtonHTMLAttributes<HTMLButtonElement> & { primary?: boolean }
 ) {
@@ -76,7 +76,7 @@ export function ActBtn(
       type={type}
       {...rest}
       className={cn(
-        "inline-flex h-[26px] cursor-pointer items-center justify-center whitespace-nowrap rounded-[6px] border px-[11px] text-[11px] font-medium",
+        "inline-flex h-7 cursor-pointer items-center justify-center whitespace-nowrap rounded-[6px] border px-3.5 text-[11px] font-medium",
         "disabled:cursor-not-allowed disabled:border-sz-n-200 disabled:bg-sz-n-100 disabled:text-sz-n-400",
         primary
           ? "border-sz-accent-500 bg-sz-accent-500 text-white hover:border-sz-accent-600 hover:bg-sz-accent-600"
@@ -87,18 +87,18 @@ export function ActBtn(
   )
 }
 
-/** 시안 `.sel-sm` — 28px 기본, 조회 조건 줄에서는 32px로 키운다 */
-export function SelectSm(
-  props: SelectHTMLAttributes<HTMLSelectElement> & { tall?: boolean }
-) {
-  const { tall = false, className, style, ...rest } = props
+/**
+  목록 · 표 안 셀렉트 — 디자인시스템 `select`(32px · 13px · n-900).
+  시안 `.sel-sm`(28px · 12px)은 11-20 사용자 결정으로 디자인시스템 값으로 바꿨다.
+*/
+export function SelectSm(props: SelectHTMLAttributes<HTMLSelectElement>) {
+  const { className, style, ...rest } = props
   return (
     <select
       {...rest}
       style={{ ...SELECT_CHEVRON_STYLE, ...style }}
       className={cn(
-        "cursor-pointer appearance-none rounded-[6px] border border-sz-n-300 bg-white py-0 pl-2 text-[12px] text-sz-n-700 outline-none focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50 disabled:cursor-not-allowed disabled:bg-sz-n-100 disabled:text-sz-n-400",
-        tall ? "h-8 pr-[26px]" : "h-7 pr-[22px]",
+        "h-8 cursor-pointer appearance-none rounded-[6px] border border-sz-n-300 bg-white py-0 pl-2.5 pr-8 text-[13px] text-sz-n-900 outline-none focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50 disabled:cursor-not-allowed disabled:bg-sz-n-100 disabled:text-sz-n-400",
         className
       )}
     />

@@ -11,7 +11,7 @@ export function NoticeBox({ children, className }: NoticeBoxProps) {
   return (
     <div
       className={cn(
-        "flex gap-2 rounded-[6px] bg-sz-info-bg px-3.5 py-3 text-left text-[12px] leading-relaxed text-sz-n-700",
+        "flex gap-2 text-left rounded-[6px] bg-sz-info-bg px-[13px] py-[11px] text-[11px] leading-[1.6] text-sz-info-text [&_b]:font-semibold",
         className
       )}
     >

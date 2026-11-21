@@ -84,10 +84,5 @@ export const MODAL_SELECT_CHEVRON_STYLE = {
   backgroundPosition: "right 10px center",
 }
 
-/** 시안 `.sel-sm` — 목록 툴바 셀렉트는 채운 삼각형이다 */
-export const SELECT_CHEVRON_STYLE = {
-  backgroundImage:
-    "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='5'><path d='M0 0L4.5 5L9 0Z' fill='%237B7F89'/></svg>\")",
-  backgroundRepeat: "no-repeat",
-  backgroundPosition: "right 8px center",
-}
+/** 목록 툴바 셀렉트 — 디자인시스템 갈매기표 하나로 통일(시안 `.sel-sm` 채운 삼각형 대신, 11-20 사용자 결정) */
+export const SELECT_CHEVRON_STYLE = MODAL_SELECT_CHEVRON_STYLE

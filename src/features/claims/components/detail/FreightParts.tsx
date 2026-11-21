@@ -3,7 +3,7 @@ import type { ReactNode } from "react"
 
 /** 시안 `.mwarn` — 제출 전 확정 경고(반려 · 사유 번복 · 통과 확인) */
 export const MWARN_CLASS =
-  "rounded-[6px] border border-sz-n-200 bg-sz-n-50 px-[13px] py-[11px] text-[11px] leading-[1.7] text-sz-n-700 [&_b]:font-semibold [&_b]:text-sz-n-900"
+  "rounded-[6px] border border-sz-n-200 bg-sz-n-50 px-3 py-[9px] text-[11px] leading-[1.7] text-sz-n-600 [&_b]:font-semibold [&_b]:text-sz-n-900"
 
 /**
  * 기-93 — 브랜드 귀책(착불)으로 신청한 건이 소비자 귀책으로 바뀔 때(사유 번복 B2b · 반려 B1r).

@@ -163,12 +163,12 @@ export default function InquiryFilterPanel(props: InquiryFilterPanelProps) {
             }
           }}
           placeholder="상품명 · 질문 검색"
-          className="h-9 w-[280px] rounded-[6px] border border-sz-n-300 bg-white px-2.5 text-[13px] text-sz-n-900 outline-none placeholder:text-sz-n-400 focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50"
+          className="h-8 w-[280px] rounded-[6px] border border-sz-n-300 bg-white px-2.5 text-[13px] text-sz-n-900 outline-none placeholder:text-sz-n-400 focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50"
         />
         <button
           type="button"
           onClick={onSearch}
-          className="inline-flex h-9 items-center rounded-[6px] border border-sz-n-300 bg-white px-3.5 text-[12px] font-medium text-sz-n-900 hover:bg-sz-n-100"
+          className="inline-flex h-8 items-center rounded-[6px] border border-sz-n-300 bg-white px-3.5 text-[12px] font-medium text-sz-n-900 hover:bg-sz-n-100"
         >
           검색
         </button>

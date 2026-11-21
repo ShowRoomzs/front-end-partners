@@ -183,7 +183,7 @@ export default function OptionGroupsForm(props: OptionGroupsFormProps) {
         render={({ field }) => (
           <ProductField label="옵션 그룹 사용">
             {/* 시안 `.toggle-row{height:36px}` */}
-            <div className="flex h-9 items-center gap-2.5">
+            <div className="flex h-8 items-center gap-2.5">
               <Switch
                 checked={field.value}
                 disabled={disabled}
@@ -290,7 +290,7 @@ export default function OptionGroupsForm(props: OptionGroupsFormProps) {
                               // 감싼 div의 pointer-events-none은 마우스만 막는다 —
                               // 입력 자체를 막으려면 disabled가 필요하다
                               disabled={disabled}
-                              className="h-[30px] flex-1"
+                              className="h-8 flex-1"
                             />
                             {fields.length > 1 && (
                               <button
@@ -335,7 +335,7 @@ export default function OptionGroupsForm(props: OptionGroupsFormProps) {
                                   }
                                   placeholder="예: 50ml"
                                   disabled={disabled}
-                                  className="h-[30px] flex-1"
+                                  className="h-8 flex-1"
                                 />
                                 <button
                                   type="button"

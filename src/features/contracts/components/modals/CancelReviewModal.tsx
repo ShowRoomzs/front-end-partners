@@ -56,7 +56,7 @@ export default function CancelReviewModal(props: CancelReviewModalProps) {
           <span className="text-sz-n-500">· 계약은 종결되지 않습니다</span>
         </TermRow>
       </Terms>
-      <div className="flex gap-2 rounded-[6px] border border-sz-n-200 bg-sz-n-50 px-[13px] py-[11px] text-[11px] leading-[1.7] text-sz-n-700">
+      <div className="flex gap-2 rounded-[6px] border border-sz-n-200 bg-sz-n-50 px-3 py-[9px] text-[11px] leading-[1.7] text-sz-n-600">
         <div>
           취소하면{" "}
           <b className="font-semibold text-sz-n-900">작성중으로 돌아가</b>{" "}

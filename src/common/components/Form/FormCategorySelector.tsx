@@ -80,9 +80,7 @@ const FormCategorySelector = forwardRef<
   )
 
   if (!categoryMap) {
-    return (
-      <div className="text-sm text-muted-foreground">카테고리 로딩 중...</div>
-    )
+    return <div className="text-[12px] text-sz-n-500">카테고리 로딩 중...</div>
   }
 
   // 시안 `.two-col` — 셀렉트 3개가 12px 간격으로 나란히 놓일 뿐, 사이에 구분자가 없다

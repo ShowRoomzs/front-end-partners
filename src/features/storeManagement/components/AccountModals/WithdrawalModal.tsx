@@ -150,21 +150,18 @@ export function WithdrawalModal(props: {
         />
       </div>
 
-      <div className="flex gap-2 rounded-[6px] border border-[#E9C9C9] bg-sz-danger-bg p-3.5 text-[11px] leading-[1.65] text-sz-n-700">
+      <div className="flex gap-2 rounded-[6px] bg-sz-danger-bg px-[13px] py-[11px] text-[11px] leading-[1.6] text-sz-danger-text [&_b]:font-semibold">
         <span className="mt-px flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-sz-danger-text text-[10px] font-bold text-white">
           !
         </span>
         <span>
-          <b className="text-sz-n-900">탈퇴가 처리되면</b>
-          <br />· <b className="text-sz-n-900">로그인이 차단</b>되고
-          파트너센터에 접속할 수 없습니다
-          <br />· 상품과 공구 게시물이{" "}
-          <b className="text-sz-n-900">비공개로 내려갑니다</b>
-          <br />· 거래 기록은{" "}
-          <b className="text-sz-n-900">법정 보존 기간 동안 플랫폼에 남습니다</b>
+          <b>탈퇴가 처리되면</b>
+          <br />· <b>로그인이 차단</b>되고 파트너센터에 접속할 수 없습니다
+          <br />· 상품과 공구 게시물이 <b>비공개로 내려갑니다</b>
+          <br />· 거래 기록은 <b>법정 보존 기간 동안 플랫폼에 남습니다</b>
           (소비자 분쟁·세무 대응 근거)
-          <br />· <b className="text-sz-n-900">같은 사업자등록번호로 재가입</b>
-          할 수 있으나 이전 데이터는 승계되지 않습니다
+          <br />· <b>같은 사업자등록번호로 재가입</b>할 수 있으나 이전 데이터는
+          승계되지 않습니다
         </span>
       </div>
     </ModalShell>

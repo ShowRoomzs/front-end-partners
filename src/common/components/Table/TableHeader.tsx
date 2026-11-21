@@ -80,7 +80,7 @@ export default function TableHeader<T>(props: TableHeaderProps<T>) {
               key={key}
               id={key}
               className={cn(
-                "px-4 py-2.5",
+                "px-4 py-[11px]",
                 index === 0 && "rounded-tl-[0px]",
                 index === columns.length - 1 && "rounded-tr-[0px]",
                 col.fixed && "bg-sz-n-100"

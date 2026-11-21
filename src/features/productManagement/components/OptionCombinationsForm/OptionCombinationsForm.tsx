@@ -115,7 +115,7 @@ export default function OptionCombinationsForm(
                         <Input
                           type="text"
                           inputMode="numeric"
-                          className="mx-auto h-[30px] max-w-[80px]"
+                          className="mx-auto h-8 max-w-[80px]"
                           value={formatComma(stockValue)}
                           onChange={event => {
                             const next = parseDigits(
@@ -239,7 +239,7 @@ export default function OptionCombinationsForm(
                             checked={combo.isRepresentative}
                             disabled={isLocked}
                             onChange={() => setRepresentative(combo.id)}
-                            className="h-3.5 w-3.5 accent-sz-accent-500 disabled:opacity-40"
+                            className="h-[15px] w-[15px] accent-sz-accent-500 disabled:opacity-40"
                           />
                         </td>
                         <td className={cn(CELL_CLASS, isLast && "border-b-0")}>
@@ -252,7 +252,7 @@ export default function OptionCombinationsForm(
                               type="text"
                               inputMode="numeric"
                               disabled={isLocked}
-                              className="mx-auto h-[30px] max-w-[90px]"
+                              className="mx-auto h-8 max-w-[90px]"
                               value={formatComma(combo.extraPrice)}
                               onChange={event => {
                                 const next = parseDigits(
@@ -271,7 +271,7 @@ export default function OptionCombinationsForm(
                           <Input
                             type="text"
                             inputMode="numeric"
-                            className="mx-auto h-[30px] max-w-[80px]"
+                            className="mx-auto h-8 max-w-[80px]"
                             value={formatComma(combo.stock)}
                             onChange={event => {
                               const next = parseDigits(
