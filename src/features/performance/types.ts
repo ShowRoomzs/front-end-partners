@@ -6,19 +6,20 @@ import type { BaseParams, PageInfo } from "@/common/types/page"
   시각: `LocalDateTime`은 모두 UTC 순간 + "Z"(58 시간대 규약 · 기한도 같다). 날짜(`LocalDate`)는 KST 날짜.
 */
 
-/** 성과 상태 5종 = 정산 상태 + 집계 중(서버가 파생 · 분배 실패는 지급 완료로 접힌다) */
+/** 성과 상태 = 정산 상태 + 집계 중(서버가 파생). 분배 실패는 2026-11-10부터 지급 완료로 접지 않는다(BE PerformanceStatus) */
 export const PERFORMANCE_STATUSES = [
   "AGGREGATING",
   "REVIEWING",
   "ADJUSTING",
   "PAYOUT_SCHEDULED",
   "PAID",
+  "PAYOUT_FAILED",
 ] as const
 
 export type PerformanceStatus = (typeof PERFORMANCE_STATUSES)[number]
 
-/** 성과 화면은 조치 화면이 아니라 위험색 · 정보색을 쓰지 않는다 */
-export type PerformanceTone = "NEUTRAL" | "WARNING" | "SUCCESS"
+/** 성과 화면은 조치 화면이 아니라 정보색을 쓰지 않는다. 위험색은 분배 실패 하나(서버 톤 DANGER) */
+export type PerformanceTone = "NEUTRAL" | "WARNING" | "SUCCESS" | "DANGER"
 
 export const PERFORMANCE_SORTS = ["ENDED_DESC", "SALES_DESC"] as const
 

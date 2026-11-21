@@ -157,9 +157,13 @@ export const POST_STATUS_LABEL_OVERRIDE: Partial<
   EXPOSURE_SUSPENDED: "노출 중지",
 }
 
-/** 기-10 지급 기한 흐름 — 지급 영업일은 [정책값 미정]이라 숫자를 쓰지 않고 「N영업일」로 둔다 */
-export const PAYOUT_FLOW_TEXT =
-  "주문 종결 → 정산 확인 3영업일 → 자동 확정 → N영업일 후 지급"
+/**
+ * 기-10 지급 기한 흐름 — 영업일은 서버 `policy-values`(settlementReviewBusinessDays · settlementPayoutBusinessDays).
+ * 받기 전이면 「N영업일」로 둔다(businessDaysText).
+ */
+export function payoutFlowText(reviewDays: string, payoutDays: string) {
+  return `주문 종결 → 정산 확인 ${reviewDays} → 자동 확정 → ${payoutDays} 후 지급`
+}
 
 /** 종료 후 지연 감시 기본 일수 — 서버 `afterEnd.settlementWatchAt`이 없을 때만 쓴다(시안 rev.2 「종료 +30일」) */
 export const SETTLEMENT_WATCH_DAYS_FALLBACK = 30
