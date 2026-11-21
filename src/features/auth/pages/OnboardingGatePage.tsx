@@ -551,7 +551,7 @@ export default function OnboardingGatePage() {
             "flex h-[38px] w-full items-center justify-center gap-2 rounded-[6px] px-5 text-[13px] font-medium transition-colors",
             !isValid || isSubmitting
               ? "cursor-not-allowed border border-sz-n-200 bg-sz-n-100 text-sz-n-400"
-              : "bg-sz-accent-500 text-white hover:bg-sz-accent-600"
+              : "bg-sz-auth-action text-white hover:bg-sz-auth-action-hover"
           )}
         >
           {isSubmitting && (

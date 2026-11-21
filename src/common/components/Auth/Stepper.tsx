@@ -21,7 +21,7 @@ export function Stepper({ steps, current }: StepperProps) {
                   state === "done" &&
                     "border-sz-success-text bg-sz-success-text text-white",
                   state === "active" &&
-                    "border-sz-accent-500 bg-sz-accent-500 text-white",
+                    "border-sz-n-900 bg-sz-n-900 text-white",
                   state === "todo" &&
                     "border-sz-n-300 bg-sz-n-100 text-sz-n-500"
                 )}

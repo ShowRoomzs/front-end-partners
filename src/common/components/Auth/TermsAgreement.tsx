@@ -31,9 +31,9 @@ export function TermsAgreement({
   const toggleOne = (key: string) =>
     onChange({ ...checked, [key]: !checked[key] })
 
-  // 켬 색은 디자인시스템 주 액션색 인디고(accent-500) — 11-21 세 앱 통일(이전 auth 시안은 n-900)
+  // 스펙 체크박스 on 색상은 n-900 (shadcn 기본 #5468CD 오버라이드)
   const boxOn =
-    "data-[state=checked]:bg-sz-accent-500 data-[state=checked]:border-sz-accent-500"
+    "data-[state=checked]:bg-sz-n-900 data-[state=checked]:border-sz-n-900"
 
   return (
     <div className="overflow-hidden rounded-[6px] border border-sz-n-200">

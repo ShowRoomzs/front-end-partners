@@ -167,7 +167,7 @@
   --sz-logo-color: var(--sz-brand-500);
   --sz-logo-dark: var(--sz-n-900);
   --sz-logo-white: #ffffff;
-  /* Auth 주 액션 — 11-21 세 앱 통일로 화면은 accent-500(디자인시스템 「유일한 주 액션색」)을 직접 쓴다. 이 토큰은 남겨 두기만 한다(이전 auth 시안의 검정 예외) */
+  /* Auth 전용 주 액션 (accent-500이 아닌 검정 — 두 스펙 파일 확정 예외) */
   --sz-auth-action: #1a1b1f;
   --sz-auth-action-hover: #3a3d45;
   /* 치수 토큰 (컴포넌트 내부에서 var()로 직접 참조, 유틸리티 미생성) */
