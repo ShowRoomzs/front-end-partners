@@ -208,7 +208,7 @@ function SettlementDetailView(props: {
 
       {/* 시안 15 S5 — 내 지급 행이 보류됐으면 금액 위에 알린다 */}
       {detail.payoutHold && (
-        <div className="mb-3 flex gap-2.5 rounded-[8px] bg-sz-danger-bg px-3.5 py-2.5 text-[12px] leading-[1.6] text-sz-danger-text [&_b]:font-semibold">
+        <div className="mb-3 flex gap-2 rounded-[6px] bg-sz-danger-bg px-[13px] py-[11px] text-[11px] leading-[1.6] text-sz-danger-text [&_b]:font-semibold">
           {detail.payoutHold.sanction ? (
             <div>
               <b>지급 정지 · 계정 이용 정지 중</b> — 확정된 금액{" "}

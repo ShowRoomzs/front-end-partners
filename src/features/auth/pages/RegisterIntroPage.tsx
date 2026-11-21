@@ -53,7 +53,8 @@ export default function RegisterIntroPage() {
               ))}
             </ul>
             <Button
-              className="h-10 w-full"
+              size="lg"
+              className="w-full"
               onClick={() => navigate("/register/market")}
             >
               마켓으로 시작하기
@@ -80,7 +81,8 @@ export default function RegisterIntroPage() {
               ))}
             </ul>
             <Button
-              className="h-10 w-full"
+              size="lg"
+              className="w-full"
               onClick={() => navigate("/register/creator")}
             >
               크리에이터로 시작하기

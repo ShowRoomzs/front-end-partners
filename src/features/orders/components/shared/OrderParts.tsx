@@ -66,7 +66,7 @@ export function Cb(props: {
   )
 }
 
-/** 시안 `.act-btn` — 목록 관리 열의 26px 버튼 */
+/** 디자인시스템 v1.3 `.act-btn` — 목록 관리 열의 28px 버튼(11px/500 · 좌우 14) */
 export function ActBtn(
   props: ButtonHTMLAttributes<HTMLButtonElement> & { primary?: boolean }
 ) {
@@ -76,7 +76,7 @@ export function ActBtn(
       type={type}
       {...rest}
       className={cn(
-        "inline-flex h-[26px] cursor-pointer items-center justify-center whitespace-nowrap rounded-[6px] border px-[11px] text-[11px] font-medium",
+        "inline-flex h-7 cursor-pointer items-center justify-center whitespace-nowrap rounded-[6px] border px-3.5 text-[11px] font-medium",
         "disabled:cursor-not-allowed disabled:border-sz-n-200 disabled:bg-sz-n-100 disabled:text-sz-n-400",
         primary
           ? "border-sz-accent-500 bg-sz-accent-500 text-white hover:border-sz-accent-600 hover:bg-sz-accent-600"

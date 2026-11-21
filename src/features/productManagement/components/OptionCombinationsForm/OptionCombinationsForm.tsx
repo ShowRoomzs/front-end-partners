@@ -239,7 +239,7 @@ export default function OptionCombinationsForm(
                             checked={combo.isRepresentative}
                             disabled={isLocked}
                             onChange={() => setRepresentative(combo.id)}
-                            className="h-3.5 w-3.5 accent-sz-accent-500 disabled:opacity-40"
+                            className="h-[15px] w-[15px] accent-sz-accent-500 disabled:opacity-40"
                           />
                         </td>
                         <td className={cn(CELL_CLASS, isLast && "border-b-0")}>

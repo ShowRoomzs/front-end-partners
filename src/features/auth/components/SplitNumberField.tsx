@@ -30,7 +30,7 @@ export function SplitNumberField({
   const isDisabled = disabled || exempt
   const boxClass = (filled: boolean) =>
     cn(
-      "flex h-10 items-center justify-center rounded-[6px] border bg-white text-center text-[13px] outline-none",
+      "flex h-[38px] items-center justify-center rounded-[6px] border bg-white text-center text-[13px] outline-none",
       "disabled:cursor-not-allowed",
       // 면제(간이과세자)는 흰 배경 유지하고 컨테이너 opacity로만 딤(위 파일박스와 동일 톤).
       // 제출중(비면제) 비활성일 때만 회색 채움.
@@ -38,7 +38,7 @@ export function SplitNumberField({
       filled ? "text-sz-n-900" : "text-sz-n-400",
       hasError
         ? "border-sz-danger-text focus:ring-[3px] focus:ring-sz-danger-bg"
-        : "border-sz-n-300 focus:border-sz-n-900 focus:ring-[3px] focus:ring-sz-n-200"
+        : "border-sz-n-300 focus:border-sz-accent-500 focus:ring-[3px] focus:ring-sz-accent-50"
     )
 
   return (

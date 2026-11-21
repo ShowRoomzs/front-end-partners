@@ -117,7 +117,7 @@ export default function LoginPage() {
         {info && (
           <div
             role="status"
-            className="mb-5 rounded-[6px] bg-sz-info-bg px-3.5 py-3 text-[12px] text-sz-n-700"
+            className="mb-5 rounded-[6px] bg-sz-info-bg px-[13px] py-[11px] text-[11px] leading-[1.6] text-sz-info-text [&_b]:font-semibold"
           >
             {info}
           </div>
@@ -152,7 +152,7 @@ export default function LoginPage() {
           type="submit"
           disabled={isSubmitting}
           className={cn(
-            "mt-6 flex h-10 w-full items-center justify-center gap-2 rounded-[6px] text-[12px] font-medium text-white transition-colors",
+            "mt-6 flex h-[38px] w-full items-center justify-center gap-2 rounded-[6px] px-5 text-[13px] font-medium text-white transition-colors",
             isSubmitting
               ? "cursor-progress bg-sz-n-700"
               : "bg-sz-auth-action hover:bg-sz-auth-action-hover"

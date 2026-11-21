@@ -107,7 +107,12 @@ export default function ThreadListPanel(props: ThreadListPanelProps) {
       </div>
 
       <div className="flex h-16 shrink-0 items-center border-t border-sz-n-100 px-4">
-        <Button type="button" className="h-10 w-full" onClick={onClickRequest}>
+        <Button
+          type="button"
+          size="lg"
+          className="w-full"
+          onClick={onClickRequest}
+        >
           + 연결 요청
         </Button>
       </div>

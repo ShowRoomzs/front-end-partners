@@ -33,16 +33,17 @@ export const GROUP_BUY_SORT_OPTIONS: Array<{
   label: string
   value: GroupBuySortType
 }> = [
+  { label: "최근 생성순", value: "CREATED_DESC" },
   { label: "시작일 빠른순", value: "START_AT_ASC" },
-  { label: "생성일순", value: "CREATED_DESC" },
 ]
 
 export const GROUP_BUY_PAGE_SIZES = [20, 50]
 
+/** 처음 열 때와 [초기화] 모두 최근 생성순(11-21 사용자 결정 · 계약 관리 CREATED_DESC와 같은 방식) */
 export const GROUP_BUY_INITIAL_PARAMS: GroupBuyListParams = {
   tab: "ALL",
   keyword: "",
-  sort: "START_AT_ASC",
+  sort: "CREATED_DESC",
   page: 1,
   size: 20,
 }

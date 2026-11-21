@@ -231,7 +231,7 @@ export default function ReshipExportModal(props: {
         </span>
       </button>
 
-      <div className="mt-4 rounded-[6px] border border-sz-n-200 bg-sz-n-50 px-[13px] py-[11px] text-[11px] leading-[1.7] text-sz-n-700">
+      <div className="mt-4 rounded-[6px] border border-sz-n-200 bg-sz-n-50 px-3 py-[9px] text-[11px] leading-[1.7] text-sz-n-600">
         내려받은 파일을 택배사 시스템에 올려 송장을 발급받은 뒤, 송장이 채워진
         파일을 <b className="font-semibold text-sz-n-900">[송장 일괄 업로드]</b>
         로 다시 올리거나 각 행에{" "}

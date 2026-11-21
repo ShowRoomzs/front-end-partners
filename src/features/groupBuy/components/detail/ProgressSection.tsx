@@ -107,7 +107,7 @@ function gateRows(
             detail.permissions.canConfirmStock ? (
               <Btn
                 variant="primary"
-                className="h-7 shrink-0"
+                className="h-7 shrink-0 px-3"
                 isLoading={isConfirming}
                 onClick={onConfirmStock}
               >

@@ -64,8 +64,8 @@ export function AddressField({
           onClick={onSearchClick}
           disabled={disabled}
           className={cn(
-            "h-10 whitespace-nowrap rounded-[6px] border border-sz-n-300 bg-white px-4 text-[12px] font-medium text-sz-n-700 hover:enabled:bg-sz-n-100 disabled:cursor-not-allowed disabled:opacity-60",
-            compact && "h-8 px-3.5"
+            "h-[38px] whitespace-nowrap rounded-[6px] border border-sz-n-300 bg-white px-5 text-[13px] font-medium text-sz-n-700 hover:enabled:bg-sz-n-100 disabled:cursor-not-allowed disabled:opacity-60",
+            compact && "h-8 px-3.5 text-[12px]"
           )}
         >
           {compact ? "주소 검색" : "🔍 검색"}

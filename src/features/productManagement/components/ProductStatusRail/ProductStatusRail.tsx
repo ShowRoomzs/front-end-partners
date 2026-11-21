@@ -144,7 +144,7 @@ export default function ProductStatusRail({ detail }: ProductStatusRailProps) {
           {hideReason.detail && (
             <div className="mb-3">
               <div className="mb-1 text-[11px] text-sz-n-500">상세 내용</div>
-              <div className="rounded-[6px] bg-sz-n-50 px-3 py-2.5 text-[12px] leading-relaxed text-sz-n-700">
+              <div className="rounded-[6px] border border-sz-n-200 bg-sz-n-50 px-3 py-[9px] text-[11px] leading-[1.7] text-sz-n-600">
                 {hideReason.detail}
               </div>
             </div>
@@ -193,7 +193,7 @@ export default function ProductStatusRail({ detail }: ProductStatusRailProps) {
                       .join(" · ")}
                   </div>
                   {item.hideReason && (
-                    <div className="mt-1.5 rounded-[6px] bg-sz-n-50 px-2.5 py-2 text-[11px] leading-relaxed text-sz-n-600">
+                    <div className="mt-1.5 rounded-[6px] border border-sz-n-200 bg-sz-n-50 px-3 py-[9px] text-[11px] leading-[1.7] text-sz-n-600">
                       <b className="font-semibold text-sz-n-700">사유</b> —{" "}
                       {item.hideReason.reasonDescription}
                       {item.hideReason.detail && ` · ${item.hideReason.detail}`}

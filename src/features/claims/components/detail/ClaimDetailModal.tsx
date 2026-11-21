@@ -932,7 +932,7 @@ function ReshipBox(props: { detail: ClaimDetailResponse }) {
             {isUpdate && (
               <Btn
                 variant="ghost"
-                className="h-7 flex-1 text-[11px]"
+                className="h-7 flex-1 px-3"
                 onClick={() => setEditing(false)}
               >
                 취소
@@ -940,7 +940,7 @@ function ReshipBox(props: { detail: ClaimDetailResponse }) {
             )}
             <Btn
               variant="primary"
-              className="h-7 flex-1 text-[11px]"
+              className="h-7 flex-1 px-3"
               disabled={!filled}
               isLoading={pending}
               onClick={handleSubmit}

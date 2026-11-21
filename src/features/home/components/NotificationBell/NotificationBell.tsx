@@ -107,7 +107,7 @@ function NotificationDropdown(props: {
   }
 
   return (
-    <div className="absolute top-[calc(100%+6px)] right-0 z-20 w-[380px] overflow-hidden rounded-[8px] border border-sz-n-200 bg-white shadow-[0_8px_24px_rgba(26,27,31,0.12)]">
+    <div className="absolute top-[calc(100%+6px)] right-0 z-20 w-[380px] overflow-hidden rounded-[8px] border border-sz-n-200 bg-white shadow-[0_8px_24px_rgba(26,27,31,0.12),0_2px_6px_rgba(26,27,31,0.08)]">
       <div className="flex items-center border-b border-sz-n-100 px-4 py-3">
         <span className="text-[12px] font-semibold text-sz-n-900">알림</span>
         <button
@@ -120,7 +120,7 @@ function NotificationDropdown(props: {
         </button>
       </div>
 
-      <div className="flex gap-1 border-b border-sz-n-100 px-3 py-2">
+      <div className="flex gap-1.5 border-b border-sz-n-100 px-3 py-2">
         {[
           { label: "전체", value: false },
           {
@@ -133,8 +133,9 @@ function NotificationDropdown(props: {
             type="button"
             onClick={() => setUnreadOnly(tab.value)}
             className={cn(
-              "flex h-[26px] cursor-pointer items-center rounded-[13px] px-2.5 text-[11px] text-sz-n-600",
-              unreadOnly === tab.value && "bg-sz-n-900 text-white"
+              "inline-flex h-[30px] cursor-pointer items-center rounded-[15px] border border-sz-n-300 bg-white px-[13px] text-[12px] text-sz-n-600 hover:bg-sz-n-100",
+              unreadOnly === tab.value &&
+                "border-sz-accent-500 bg-sz-accent-500 font-medium text-white hover:bg-sz-accent-500"
             )}
           >
             {tab.label}

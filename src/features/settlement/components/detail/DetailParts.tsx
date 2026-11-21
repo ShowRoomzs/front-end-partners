@@ -144,7 +144,7 @@ export function ActBtn(props: {
       type="button"
       disabled={props.disabled}
       onClick={props.onClick}
-      className="inline-flex h-[26px] items-center justify-center rounded-[6px] border border-sz-n-300 bg-white px-[11px] text-[11px] font-medium whitespace-nowrap text-sz-n-700 hover:border-sz-n-400 hover:bg-sz-n-100 disabled:cursor-not-allowed disabled:border-sz-n-200 disabled:bg-sz-n-100 disabled:text-sz-n-400"
+      className="inline-flex h-7 items-center justify-center rounded-[6px] border border-sz-n-300 bg-white px-3.5 text-[11px] font-medium whitespace-nowrap text-sz-n-700 hover:border-sz-n-400 hover:bg-sz-n-100 disabled:cursor-not-allowed disabled:border-sz-n-200 disabled:bg-sz-n-100 disabled:text-sz-n-400"
     >
       {props.children}
     </button>
@@ -157,14 +157,17 @@ export function WaitTag({ children }: { children: ReactNode }) {
 }
 
 /*
-  시안 `.mtab`(금액 분해 · 조정 내역 · C1 미리보기) — 행 사이 n-100 구분선(시안 전역 `tbody td` 규칙),
-  소계 행은 n-300 · 총계 행은 1.5px n-400. 선은 td에 그어야 border-collapse에서 색이 섞이지 않는다.
+  머리 없는 금액 표 — 디자인시스템 v1.3 `.calc`(계산 명세표) 값. 세 앱 11-21 합의.
+  12px · 행 사이 n-100 선 · 라벨 n-600 · 값 n-900 오른쪽 정렬 tabular-nums.
+  소계 행은 굵게(n-900), 총계 행은 위 1.5px n-300 선 · 16px/600. 바탕색은 두지 않는다.
+  칸 여백 · 행 높이만은 시안 `.mtab`(10px 12px)을 따른다 — 11-21 사용자 결정 「표 행 간격은 시안」.
+  선은 td에 그어야 border-collapse에서 색이 섞이지 않는다.
 */
 export const MTAB_TBODY = "[&>tr:first-child>td]:border-t-0"
-export const MTAB_ROW = "[&>td]:border-t [&>td]:border-sz-n-100"
+export const MTAB_ROW = "text-sz-n-600 [&>td]:border-t [&>td]:border-sz-n-100"
 export const MTAB_MID_ROW =
-  "bg-sz-n-50 font-semibold [&>td]:border-t [&>td]:border-sz-n-300"
+  "font-semibold text-sz-n-900 [&>td]:border-t [&>td]:border-sz-n-100"
 export const MTAB_TOT_ROW =
-  "bg-sz-n-50 text-[16px] font-semibold text-sz-n-900 [&>td]:border-t-[1.5px] [&>td]:border-sz-n-400"
+  "text-[16px] font-semibold text-sz-n-900 [&>td]:border-t-[1.5px] [&>td]:border-sz-n-300"
 export const MTAB_CELL = "px-3 py-2.5"
-export const MTAB_AMOUNT = "px-3 py-2.5 text-right tabular-nums"
+export const MTAB_AMOUNT = "px-3 py-2.5 text-right tabular-nums text-sz-n-900"

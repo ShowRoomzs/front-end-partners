@@ -22,7 +22,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
           onClick={() => setShow(s => !s)}
           disabled={disabled}
           aria-label={show ? "비밀번호 숨김" : "비밀번호 표시"}
-          className="absolute right-2 h-7 rounded px-2 text-[11px] text-sz-n-500 hover:enabled:bg-sz-n-100 hover:enabled:text-sz-n-700 disabled:cursor-not-allowed disabled:text-sz-n-400"
+          className="absolute right-2 h-7 rounded-[6px] px-2 text-[12px] text-sz-n-500 hover:enabled:bg-sz-n-100 hover:enabled:text-sz-n-700 disabled:cursor-not-allowed disabled:text-sz-n-400"
         >
           {show ? "숨김" : "표시"}
         </button>

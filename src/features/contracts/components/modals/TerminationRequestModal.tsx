@@ -94,7 +94,7 @@ export default function TerminationRequestModal(
         onChange={event => setMemo(event.target.value)}
       />
 
-      <div className="mt-4 flex gap-2 rounded-[6px] border border-sz-n-200 bg-sz-n-50 px-[13px] py-[11px] text-[11px] leading-[1.7] text-sz-n-700">
+      <div className="mt-4 flex gap-2 rounded-[6px] border border-sz-n-200 bg-sz-n-50 px-3 py-[9px] text-[11px] leading-[1.7] text-sz-n-600">
         <div>
           해지는{" "}
           <b className="font-semibold text-sz-n-900">

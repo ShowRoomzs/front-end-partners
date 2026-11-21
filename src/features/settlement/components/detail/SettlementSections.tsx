@@ -168,12 +168,12 @@ function SubRow(props: {
   amount: ReactNode
 }) {
   return (
-    <tr className={cn(MTAB_ROW, "text-sz-n-600")}>
+    <tr className={MTAB_ROW}>
       <td className={MTAB_CELL}>
         {props.label}
         {props.note && <MNote>{props.note}</MNote>}
       </td>
-      <td className={cn(MTAB_AMOUNT, "text-sz-n-700")}>{props.amount}</td>
+      <td className={MTAB_AMOUNT}>{props.amount}</td>
     </tr>
   )
 }

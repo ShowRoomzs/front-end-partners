@@ -170,11 +170,11 @@ export default function FirstGroupBuyGuide(props: {
           <div className="mt-1.5 text-[12px] leading-[1.7] text-sz-n-700">
             {rich(card.description, guide.connectedCreatorName)}
           </div>
-          <div className="mt-3.5 rounded-[6px] bg-sz-n-50 px-3.5 py-3">
+          <div className="mt-3.5 rounded-[6px] border border-sz-n-200 bg-sz-n-50 px-3 py-[9px]">
             <div className="mb-1.5 text-[11px] font-semibold text-sz-n-600">
               이후 진행
             </div>
-            <ol className="m-0 list-decimal pl-[18px] text-[12px] leading-[1.8] text-sz-n-700">
+            <ol className="m-0 list-decimal pl-[18px] text-[11px] leading-[1.7] text-sz-n-600">
               {card.next.map(text => (
                 <li key={text}>{nextItem(text)}</li>
               ))}

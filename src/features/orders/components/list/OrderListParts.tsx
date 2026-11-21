@@ -144,10 +144,10 @@ export function OrderQueryForm(props: {
                 type="button"
                 onClick={() => handlePreset(preset.value)}
                 className={cn(
-                  "inline-flex h-8 cursor-pointer items-center whitespace-nowrap border-r border-sz-n-200 px-[13px] text-[12px] last:border-r-0",
+                  "inline-flex h-8 cursor-pointer items-center whitespace-nowrap border-r border-sz-n-300 px-3 text-[12px] last:border-r-0",
                   isOn
                     ? "bg-sz-accent-500 font-medium text-white"
-                    : "bg-white text-sz-n-600 hover:bg-sz-n-50 hover:text-sz-n-900"
+                    : "bg-white text-sz-n-600 hover:bg-sz-n-100 hover:text-sz-n-900"
                 )}
               >
                 {preset.label}

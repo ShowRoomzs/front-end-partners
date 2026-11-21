@@ -281,12 +281,12 @@ function B({ children }: { children: ReactNode }) {
 /** 시안 `.mtab tr.sub` */
 function PreviewRow(props: { label: string; note: string; value: string }) {
   return (
-    <tr className={cn(MTAB_ROW, "text-sz-n-600")}>
+    <tr className={MTAB_ROW}>
       <td className={MTAB_CELL}>
         {props.label}
         <MNote>{props.note}</MNote>
       </td>
-      <td className={cn(MTAB_AMOUNT, "text-sz-n-700")}>{props.value}</td>
+      <td className={MTAB_AMOUNT}>{props.value}</td>
     </tr>
   )
 }
