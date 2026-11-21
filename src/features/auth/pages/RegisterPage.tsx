@@ -443,10 +443,10 @@ export default function RegisterPage() {
       className={cn(
         "flex h-[38px] flex-1 items-center justify-center gap-2 rounded-[6px] px-5 text-[13px] font-medium transition-colors",
         loading
-          ? "cursor-progress bg-sz-n-700 text-white"
+          ? "cursor-progress bg-sz-accent-600 text-white"
           : disabled
             ? "cursor-not-allowed bg-sz-n-100 text-sz-n-400"
-            : "bg-sz-auth-action text-white hover:bg-sz-auth-action-hover"
+            : "bg-sz-accent-500 text-white hover:bg-sz-accent-600"
       )}
     >
       {loading && (
@@ -509,7 +509,7 @@ export default function RegisterPage() {
           <button
             type="button"
             onClick={() => navigate("/login")}
-            className="h-[38px] w-full rounded-[6px] bg-sz-auth-action px-5 text-[13px] font-medium text-white hover:bg-sz-auth-action-hover"
+            className="h-[38px] w-full rounded-[6px] bg-sz-accent-500 px-5 text-[13px] font-medium text-white hover:bg-sz-accent-600"
           >
             로그인으로 이동
           </button>
@@ -931,7 +931,7 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={() => setViewingTerm(null)}
-                className="h-[38px] w-full rounded-[6px] bg-sz-auth-action px-5 text-[13px] font-medium text-white hover:bg-sz-auth-action-hover"
+                className="h-[38px] w-full rounded-[6px] bg-sz-accent-500 px-5 text-[13px] font-medium text-white hover:bg-sz-accent-600"
               >
                 확인
               </button>

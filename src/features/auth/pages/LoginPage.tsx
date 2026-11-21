@@ -154,8 +154,8 @@ export default function LoginPage() {
           className={cn(
             "mt-6 flex h-[38px] w-full items-center justify-center gap-2 rounded-[6px] px-5 text-[13px] font-medium text-white transition-colors",
             isSubmitting
-              ? "cursor-progress bg-sz-n-700"
-              : "bg-sz-auth-action hover:bg-sz-auth-action-hover"
+              ? "cursor-progress bg-sz-accent-600"
+              : "bg-sz-accent-500 hover:bg-sz-accent-600"
           )}
         >
           {isSubmitting && (
