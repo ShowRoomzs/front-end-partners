@@ -13,14 +13,15 @@ import type { BaseParams } from "@/common/types/page"
 */
 
 /**
- * 정산 확인 중 · 조정 협의 · 지급 예정 · 지급 완료. 분배 실패(`PAYOUT_FAILED`)는 어드민 전용이라
- * 서버가 지급 완료로 접어서 내린다 — 필터로 보내면 400이다.
+ * 정산 확인 중 · 조정 협의 · 지급 예정 · 지급 완료 · 분배 실패.
+ * 분배 실패(`PAYOUT_FAILED`)는 2026-11-10부터 지급 완료로 접지 않고 그대로 내리고, 필터로도 받는다(BE SettlementStatus).
  */
 export const SETTLEMENT_STATUSES = [
   "REVIEWING",
   "ADJUSTING",
   "PAYOUT_SCHEDULED",
   "PAID",
+  "PAYOUT_FAILED",
 ] as const
 
 export type SettlementStatus = (typeof SETTLEMENT_STATUSES)[number]
@@ -105,7 +106,7 @@ export interface SettlementSummary {
   /** 가장 임박한 확인 마감 */
   reviewingDueAt: string | null
   adjustingCount: number
-  /** 상태 칩 숫자 — 분배 실패는 PAID에 포함 */
+  /** 상태 칩 숫자 — 분배 실패도 따로 센다(2026-11-10) */
   statusCounts: SettlementStatusCounts
   /** GNB 「정산 관리」 배지 = 요청 창이 열린 정산 확인 중 건수 */
   attentionCount: number
@@ -203,7 +204,7 @@ export type PayoutStatus =
   | "FAILED"
   | "NOT_APPLICABLE"
 
-/** 3자 분배 행 — 남의 행의 분배 실패는 SCHEDULED로 접혀 오고, 브랜드 행 실패만 FAILED(「지급 확인 중」) */
+/** 3자 분배 행 — 분배 실패는 누구 행이든 FAILED(「지급 실패 · 재지급 예정」 · 2026-11-10). 라벨은 서버 `statusLabel` */
 export interface SettlementPayout {
   payee: SettlementPayee
   /** 브랜드 「우리」 · 인플루언서 쇼룸명 · 「플랫폼」 */

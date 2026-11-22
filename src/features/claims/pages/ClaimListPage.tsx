@@ -29,7 +29,6 @@ import {
   CLAIM_INITIAL_PARAMS,
   CLAIM_PAGE_SIZES,
   CLAIM_TAB_LABEL,
-  INSPECT_DUE_LABEL,
 } from "@/features/claims/constants/params"
 import {
   useClaimMutations,
@@ -140,7 +139,7 @@ export default function ClaimListPage() {
         toast.error(result.skipped[0].message)
       } else {
         toast.success(
-          `${row.claimNumber} 입고 확인했습니다. ${INSPECT_DUE_LABEL} 안에 검수를 완료해 주세요.`
+          `${row.claimNumber} 입고 확인했습니다. 검수 기한 안에 검수를 완료해 주세요.`
         )
       }
     } catch {
@@ -465,7 +464,7 @@ export default function ClaimListPage() {
 
 /** 탭별 상단 안내 — 시안 각 탭의 `.notice.neutral` 문구 그대로 */
 function TabNotices(props: { tab: ClaimTab }) {
-  // 기-17 자동 입고 = 택배 도착 후 N영업일(서버 `policy-values`)
+  // 검수 기한 = 반품을 돌려받은 날 + N영업일(서버 `policy-values`) — 2026-11-10 자동 입고 폐지, 기한 안에 판정이 없으면 반품은 자동 승인
   const { data: policy } = usePolicyValues()
   const text: Partial<Record<ClaimTab, ReactNode>> = {
     COLLECTING: (
@@ -478,11 +477,12 @@ function TabNotices(props: { tab: ClaimTab }) {
     INSPECTION: (
       <>
         <b className="font-semibold">
-          입고 확인 후 {INSPECT_DUE_LABEL} 안에 검수를 완료
+          반품을 돌려받은 날부터{" "}
+          {businessDaysText(policy?.claimInspectDueBusinessDays)} 안에 검수를
+          완료
         </b>
-        해 주세요. 검수 판정은 상세에서 진행합니다. 택배 도착 후{" "}
-        {businessDaysText(policy?.claimAutoReceiveBusinessDays)}이 지나도 입고
-        확인이 없으면 <b className="font-semibold">자동 입고</b> 처리됩니다.
+        해 주세요. 검수 판정은 상세에서 진행합니다. 기한 안에 판정이 없으면
+        반품은 <b className="font-semibold">자동 승인</b>되어 환불됩니다.
       </>
     ),
     RESHIP: (

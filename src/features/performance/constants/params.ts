@@ -28,9 +28,10 @@ export const PERFORMANCE_STATUS_CHIP_LABEL: Record<PerformanceStatus, string> =
     ADJUSTING: "조정 협의",
     PAYOUT_SCHEDULED: "지급 예정",
     PAID: "지급 완료",
+    PAYOUT_FAILED: "분배 실패",
   }
 
-/** 집계 중 · 정산 확인 중 · 지급 예정 = 중립 · 조정 협의 = 경고 · 지급 완료 = 성공 */
+/** 집계 중 · 정산 확인 중 · 지급 예정 = 중립 · 조정 협의 = 경고 · 지급 완료 = 성공 · 분배 실패 = 위험 */
 export const PERFORMANCE_TONE_VARIANT: Record<
   PerformanceTone,
   StatusBadgeVariant
@@ -38,6 +39,7 @@ export const PERFORMANCE_TONE_VARIANT: Record<
   NEUTRAL: "neutral",
   WARNING: "warning",
   SUCCESS: "success",
+  DANGER: "danger",
 }
 
 export const PERFORMANCE_SORT_OPTIONS: Array<{

@@ -128,10 +128,22 @@ export function SummaryBar({ detail }: Props) {
             { label: confirmLabel, value: formatFullDate(dates.confirmedAt) },
             {
               label: "지급일",
-              // 브랜드 몫 분배가 실패하면 정산은 지급 완료로 접혀 오고 지급일이 비어 있다
               value: dates.paidAt
                 ? formatFullDate(dates.paidAt)
                 : (brandPayout(detail)?.statusLabel ?? "—"),
+            },
+            { label: "정산 근거", value: dates.payoutBasis ?? "—" },
+          ]
+        // 분배 실패(2026-11-10부터 지급 완료로 접지 않는다) — 지급일 대신 내 지급 행 상태(「지급 실패 · 재지급 예정」 등)
+        case "PAYOUT_FAILED":
+          return [
+            { label: confirmLabel, value: formatFullDate(dates.confirmedAt) },
+            {
+              label: "지급",
+              value: dates.paidAt
+                ? formatFullDate(dates.paidAt)
+                : (brandPayout(detail)?.statusLabel ?? "분배 실패"),
+              warn: !dates.paidAt,
             },
             { label: "정산 근거", value: dates.payoutBasis ?? "—" },
           ]

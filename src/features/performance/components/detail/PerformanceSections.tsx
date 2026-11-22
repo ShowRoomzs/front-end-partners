@@ -997,6 +997,9 @@ function SettlementLinkBody(props: {
         )
       case "PAID":
         return `${formatEventDate(settlement.paidAt)} 지급${trail?.acceptedAt ? ` · 합의 ${formatEventMonthDay(trail.acceptedAt)}` : ""}`
+      // 분배 실패 — 금액은 확정이고 운영팀이 재지급한다(정산 관리 상세에 지급 행 상태가 있다)
+      case "PAYOUT_FAILED":
+        return "분배 실패 · 운영팀이 재지급합니다 — 정산 관리 상세에서 지급 상태를 확인하세요"
       case "ADJUSTING":
         return adjustment
           ? `합의 기한 ${formatMonthDay(adjustment.deadlineAt)}${adjustment.remainingBusinessDays != null ? ` · D-${adjustment.remainingBusinessDays}` : ""} · 합의가 없으면 원래 금액으로 확정`

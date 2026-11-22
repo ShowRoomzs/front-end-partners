@@ -41,6 +41,7 @@ export const SETTLEMENT_STATUS_CHIP_LABEL: Record<SettlementStatus, string> = {
   ADJUSTING: "조정 협의",
   PAYOUT_SCHEDULED: "지급 예정",
   PAID: "지급 완료",
+  PAYOUT_FAILED: "분배 실패",
 }
 
 /** 서버 톤 → 배지 색. 정산 확인 중 = INFO · 조정 협의 = WARNING · 지급 예정 = NEUTRAL · 지급 완료 = SUCCESS */
