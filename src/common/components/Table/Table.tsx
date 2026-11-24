@@ -385,7 +385,8 @@ export default function Table<T, K extends keyof T = keyof T>(
 
   return (
     <div
-      className="font-noto flex flex-col flex-1 min-h-0 bg-white transition-opacity duration-200 rounded-lg overflow-hidden"
+      // overflow-clip(hidden 아님) — hidden은 스크롤 컨테이너가 돼 머리글 sticky가 main 대신 이 안에 묶인다
+      className="font-noto flex flex-col flex-1 min-h-0 bg-white transition-opacity duration-200 rounded-lg overflow-clip"
       style={{ opacity: isMounted ? 1 : 0 }}
     >
       {/*
@@ -396,7 +397,7 @@ export default function Table<T, K extends keyof T = keyof T>(
       <div
         id="table-layout"
         ref={headerScrollRef}
-        className="shrink-0 overflow-x-auto overflow-y-hidden scrollbar-hidden"
+        className="sticky top-0 z-10 shrink-0 overflow-x-auto overflow-y-hidden bg-white scrollbar-hidden"
       >
         <div
           style={{
@@ -424,18 +425,15 @@ export default function Table<T, K extends keyof T = keyof T>(
           </table>
         </div>
       </div>
-      <div className="flex flex-row flex-1 overflow-hidden relative">
-        <div
-          ref={bodyScrollRef}
-          className="flex-1 overflow-auto scrollbar-hidden"
-        >
-          {renderContent()}
-        </div>
-        {hasData && (
-          <div className="absolute right-0 top-0 h-full">
-            <ScrollBar direction="vertical" scrollRef={bodyScrollRef} />
-          </div>
-        )}
+      {/*
+        본문은 가로로만 스크롤한다 — 세로는 셸 본문(main) 한 곳만(11-24 세로 스크롤바 두 개 수정).
+        머리글은 위 sticky로 화면 위에 붙어 있는다.
+      */}
+      <div
+        ref={bodyScrollRef}
+        className="overflow-x-auto overflow-y-hidden scrollbar-hidden"
+      >
+        {renderContent()}
       </div>
       {hasData && !fitWidth && (
         <ScrollBar direction="horizontal" scrollRef={bodyScrollRef} />
