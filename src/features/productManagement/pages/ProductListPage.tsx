@@ -224,7 +224,7 @@ export default function ProductListPage(props: ProductListPageProps) {
         onReset={reset}
       />
 
-      <div className="flex flex-col overflow-hidden rounded-[8px] border border-sz-n-200 bg-white">
+      <div className="flex flex-col overflow-clip rounded-[8px] border border-sz-n-200 bg-white">
         <div className="flex shrink-0 items-center justify-between border-b border-sz-n-200 px-4 py-2.5">
           <span className="text-[12px] text-sz-n-600">
             총 <b className="text-sz-n-900">{pageInfo.totalResults}</b>건

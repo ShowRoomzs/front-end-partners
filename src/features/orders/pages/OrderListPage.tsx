@@ -891,7 +891,7 @@ export default function OrderListPage() {
 
   return (
     <ListViewWrapper>
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="flex flex-col">
         <SalesHeader
           view="orders"
           summary={summary}
