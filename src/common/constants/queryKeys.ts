@@ -3,4 +3,6 @@ export const QUERY_KEYS = {
   MARKET_INFO: "marketInfo",
   BANKS: "banks",
   POLICY_VALUES: "policyValues",
+  TERMS: "terms",
+  TERMS_DETAIL: "termsDetail",
 } as const
