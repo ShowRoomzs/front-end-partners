@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import {
   useForm,
@@ -26,6 +26,9 @@ import { authInputClass } from "@/common/components/Auth/authStyles"
 import { FileUploadField } from "@/features/auth/components/FileUploadField"
 import { AddressField } from "@/features/auth/components/AddressField"
 import { SplitNumberField } from "@/features/auth/components/SplitNumberField"
+import { TermsViewerModal } from "@/features/auth/components/TermsViewerModal"
+import { useTermsList } from "@/common/hooks/useTerms"
+import { pickTermsByType, type TermsType } from "@/common/services/termsService"
 import {
   VALIDATION_RULES,
   BUSINESS_VALIDATION_RULES,
@@ -121,55 +124,29 @@ const DEFAULT_VALUES: SignupFormValues = {
   bankbookImageUrl: "",
 }
 
-// 약관 정의(내용은 임시 문안 — 추후 실제 약관으로 교체)
-const TERMS = [
+/**
+ * 가입 약관 체크 항목 — 원문은 서버 시행 중 문서(`/v1/common/terms?target=BRAND`)에서 받는다.
+ * 서버 가입 요청은 항목별 동의 여부(불린 3개)만 받는다 — 동의한 문서 · 버전은 기록하지 않는다(SellerSignUpRequest).
+ */
+const TERMS: Array<{
+  key: "agreePrivacyPolicy" | "agreeTermsOfService" | "agreeOperationPolicy"
+  label: string
+  type: TermsType
+}> = [
   {
     key: "agreePrivacyPolicy",
     label: "개인정보처리방침",
-    content: `(임시 문안) SHOWROOMZ 브랜드 파트너센터는 판매자 회원의 개인정보를 아래와 같이 처리합니다.
-
-제1조(수집 항목)
-- 필수: 이메일, 비밀번호, 담당자 이름·연락처, 사업자 정보, 정산 계좌 정보
-
-제2조(이용 목적)
-- 회원 가입 및 입점 심사, 정산, 고객 문의 대응
-
-제3조(보유 기간)
-- 회원 탈퇴 시까지. 단, 관계 법령에 따른 보존 의무가 있는 경우 해당 기간 동안 보관합니다.
-
-※ 본 문안은 임시 예시이며 실제 약관으로 대체될 예정입니다.`,
+    type: "PRIVACY_POLICY",
   },
   {
     key: "agreeTermsOfService",
     label: "서비스 이용 약관",
-    content: `(임시 문안) 본 약관은 SHOWROOMZ 브랜드 파트너센터 이용에 관한 조건과 절차를 규정합니다.
-
-제1조(목적)
-- 판매자와 회사 간의 권리·의무 및 책임사항을 정합니다.
-
-제2조(계정)
-- 판매자는 관리자 승인 후 파트너센터를 이용할 수 있습니다.
-
-제3조(금지행위)
-- 허위 정보 등록, 타인 명의 도용, 서비스 운영 방해 행위를 금지합니다.
-
-※ 본 문안은 임시 예시이며 실제 약관으로 대체될 예정입니다.`,
+    type: "TERMS_OF_SERVICE",
   },
   {
     key: "agreeOperationPolicy",
     label: "서비스 운영정책",
-    content: `(임시 문안) 본 정책은 원활한 서비스 운영을 위한 기준을 정합니다.
-
-제1조(상품 등록)
-- 상품 정보는 사실에 근거하여 정확히 등록해야 합니다.
-
-제2조(배송·정산)
-- 배송 및 정산은 회사가 정한 절차와 일정에 따릅니다.
-
-제3조(제재)
-- 정책 위반 시 노출 제한·이용 정지 등의 조치가 있을 수 있습니다.
-
-※ 본 문안은 임시 예시이며 실제 약관으로 대체될 예정입니다.`,
+    type: "OPERATION_POLICY",
   },
 ]
 
@@ -200,6 +177,13 @@ export default function RegisterPage() {
     marketName: string
     appliedAt: Date
   } | null>(null)
+
+  // 시행 중 약관(브랜드 + 전체) — 종류마다 브랜드 전용 문서를 먼저 쓴다
+  const termsList = useTermsList("BRAND")
+  const termsByType = useMemo(
+    () => pickTermsByType(termsList.data ?? [], "BRAND"),
+    [termsList.data]
+  )
 
   // "보기" 버튼 → 약관 원문 모달 노출
   const termsWithView: Term[] = TERMS.map(t => ({
@@ -901,43 +885,16 @@ export default function RegisterPage() {
         )}
       </form>
 
-      {/* 약관 원문 보기 모달 */}
+      {/* 약관 원문 보기 모달 — 서버 시행 중 문서 */}
       {viewingTerm && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-          onClick={() => setViewingTerm(null)}
-        >
-          <div
-            className="flex max-h-[80vh] w-full max-w-[480px] flex-col overflow-hidden rounded-[8px] bg-white shadow-lg"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-sz-n-200 px-5 py-3.5">
-              <h3 className="text-[14px] font-semibold text-sz-n-900">
-                {viewingTerm.label}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setViewingTerm(null)}
-                aria-label="닫기"
-                className="flex h-7 w-7 items-center justify-center rounded text-sz-n-500 hover:bg-sz-n-100 hover:text-sz-n-900"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="overflow-y-auto whitespace-pre-line px-5 py-4 text-[13px] leading-relaxed text-sz-n-700">
-              {viewingTerm.content}
-            </div>
-            <div className="border-t border-sz-n-200 px-5 py-3">
-              <button
-                type="button"
-                onClick={() => setViewingTerm(null)}
-                className="h-[38px] w-full rounded-[6px] bg-sz-auth-action px-5 text-[13px] font-medium text-white hover:bg-sz-auth-action-hover"
-              >
-                확인
-              </button>
-            </div>
-          </div>
-        </div>
+        <TermsViewerModal
+          label={viewingTerm.label}
+          document={termsByType[viewingTerm.type]}
+          isListLoading={termsList.isLoading}
+          isListError={termsList.isError}
+          onRetryList={() => void termsList.refetch()}
+          onClose={() => setViewingTerm(null)}
+        />
       )}
     </AuthShell>
   )
